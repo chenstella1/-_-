@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-TW" class="h-full">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>優華數位英文學習文法刷題網</title>
+    <title>優華數位英文學習文法刷題網 - 管理員與學員系統</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -11,922 +11,693 @@
             theme: {
                 extend: {
                     colors: {
-                        emerald: {
-                            50: '#ecfdf5',
-                            100: '#d1fae5',
-                            200: '#a7f3d0',
-                            500: '#10b981',
-                            600: '#059669',
-                            700: '#047857',
-                            800: '#065f46',
-                            900: '#064e3b',
-                        },
-                        teal: {
-                            50: '#f0fdf4',
-                            600: '#0d9488',
-                            700: '#0f766e',
+                        sky: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
                         }
                     }
                 }
             }
         }
     </script>
-    <!-- Font Awesome for Icons -->
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        body { font-family: 'Noto Sans TC', sans-serif; }
     </style>
 </head>
-<body class="bg-emerald-50 text-gray-800 h-full flex flex-col justify-between">
+<body class="bg-sky-50 text-slate-800 min-h-screen flex flex-col">
 
-    <!-- Header / Navbar -->
-    <header class="bg-gradient-to-r from-emerald-700 to-teal-700 text-white shadow-md">
-        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center">
-            <div class="flex items-center space-x-3 cursor-pointer" onclick="router.navigate('home')">
-                <div class="bg-white text-emerald-700 p-2.5 rounded-xl shadow-lg flex items-center justify-center font-bold text-xl">
-                    <i class="fa-solid fa-graduation-cap"></i>
+    <!-- 導覽列 Navigation -->
+    <nav class="bg-sky-600 text-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-graduation-cap text-2xl text-sky-200"></i>
+                    <span class="font-bold text-xl tracking-wide">優華數位英文學習文法刷題網</span>
                 </div>
-                <div>
-                    <h1 class="text-xl sm:text-2xl font-bold tracking-wide">優華數位英文學習文法刷題網</h1>
-                    <p class="text-xs text-emerald-200">Youhua Digital English Grammar Quiz Platform</p>
+                <!-- 登入資訊 / 狀態顯示 -->
+                <div id="userInfoArea" class="flex items-center gap-4">
+                    <!-- JavaScript 動態渲染 -->
                 </div>
-            </div>
-            
-            <!-- Navigation / User Status Bar -->
-            <div id="nav-user-area" class="mt-3 sm:mt-0 flex items-center space-x-4">
-                <!-- Populated dynamically by JS -->
             </div>
         </div>
-    </header>
+    </nav>
 
-    <!-- Main Content Container -->
-    <main class="max-w-7xl mx-auto px-4 py-8 w-full flex-grow">
-        <!-- Dynamic View Container -->
-        <div id="app-view"></div>
+    <!-- 主要內容區區 Main Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- 未登入畫面 / Google 模擬登入視窗 -->
+        <div id="loginView" class="max-w-md mx-auto bg-white rounded-2xl shadow-xl p-8 border border-sky-100 text-center my-12">
+            <div class="w-20 h-20 bg-sky-100 rounded-full flex items-center justify-center mx-auto mb-6 text-sky-600">
+                <i class="fa-solid fa-user-lock text-3xl"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-slate-800 mb-2">歡迎使用題庫系統</h2>
+            <p class="text-slate-500 mb-6 text-sm">請以 Google Gmail 帳號登入系統使用刷題與管理功能</p>
+            
+            <form onsubmit="handleGoogleLogin(event)" class="space-y-4">
+                <div class="text-left">
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">輸入 Gmail 帳號進行登入/模擬：</label>
+                    <input type="email" id="gmailInput" placeholder="example@gmail.com" required 
+                        class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent text-sm">
+                </div>
+                
+                <button type="submit" class="w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-50 text-slate-700 font-semibold py-2.5 px-4 border border-slate-300 rounded-lg shadow-sm transition">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                    </svg>
+                    使用 Google 帳號登入
+                </button>
+            </form>
+            <div class="mt-6 text-xs text-slate-400 bg-sky-50 p-3 rounded-lg text-left">
+                <span class="font-bold text-sky-700">測試帳號提示：</span><br>
+                • 管理員：<code>admin@gmail.com</code> (預設獲准)<br>
+                • 一般學生：填寫任意 gmail 帳號即可模擬
+            </div>
+        </div>
+
+        <!-- 登入後主要控制面板 App Content -->
+        <div id="appView" class="hidden space-y-6">
+            
+            <!-- 頂部功能切換頁籤 Tabs -->
+            <div class="flex border-b border-sky-200 gap-2 bg-white p-2 rounded-t-xl shadow-sm">
+                <button onclick="switchTab('quiz')" id="tabQuiz" class="px-5 py-2.5 rounded-lg text-sm font-semibold transition flex items-center gap-2 bg-sky-600 text-white">
+                    <i class="fa-solid fa-pen-to-square"></i> 線上刷題測驗
+                </button>
+                <button onclick="switchTab('wrongBank')" id="tabWrong" class="px-5 py-2.5 rounded-lg text-sm font-semibold transition flex items-center gap-2 text-slate-600 hover:bg-sky-50">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-500"></i> 個人錯題集 (<span id="wrongCountBadge">0</span>)
+                </button>
+                <button onclick="switchTab('admin')" id="tabAdmin" class="px-5 py-2.5 rounded-lg text-sm font-semibold transition flex items-center gap-2 text-slate-600 hover:bg-sky-50 hidden">
+                    <i class="fa-solid fa-user-gear text-sky-600"></i> 管理員後台 (分級/權限/題庫)
+                </button>
+            </div>
+
+            <!-- Tab 1: 刷題測驗區 -->
+            <div id="viewQuiz" class="bg-white rounded-b-xl shadow-md p-6 border border-sky-100">
+                <!-- 篩選選單 -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 bg-sky-50 p-4 rounded-xl border border-sky-200">
+                    <div>
+                        <label class="block text-xs font-bold text-sky-900 mb-1">選擇階段與年級：</label>
+                        <select id="quizGradeSelect" onchange="onQuizGradeChange()" class="w-full px-3 py-2 rounded-lg border border-sky-300 text-sm focus:ring-2 focus:ring-sky-400 focus:outline-none">
+                            <option value="">-- 請選擇年級 --</option>
+                            <optgroup label="國小階段">
+                                <option value="國小初級">國小初級</option>
+                            </optgroup>
+                            <optgroup label="國中階段">
+                                <option value="國七">國七 (七年級)</option>
+                                <option value="國八">國八 (八年級)</option>
+                                <option value="國九">國九 (九年級)</option>
+                            </optgroup>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-sky-900 mb-1">選擇文法單元：</label>
+                        <select id="quizUnitSelect" class="w-full px-3 py-2 rounded-lg border border-sky-300 text-sm focus:ring-2 focus:ring-sky-400 focus:outline-none">
+                            <option value="">-- 請先選擇年級 --</option>
+                        </select>
+                    </div>
+
+                    <div class="flex items-end">
+                        <button onclick="startQuiz()" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded-lg shadow transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-play"></i> 開始刷題
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 題目顯示區 -->
+                <div id="quizDisplayArea" class="hidden space-y-6">
+                    <div class="flex justify-between items-center border-b border-sky-100 pb-3">
+                        <span class="text-xs font-bold bg-sky-100 text-sky-800 px-3 py-1 rounded-full" id="quizTag">標籤</span>
+                        <span class="text-xs text-slate-400" id="quizProgress">題目 1 / 1</span>
+                    </div>
+
+                    <div class="text-lg font-medium text-slate-800 leading-relaxed" id="quizQuestionText">
+                        題目內容載入中...
+                    </div>
+
+                    <!-- 選項按鈕 -->
+                    <div id="quizOptionsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <!-- JS 動態生成選項 -->
+                    </div>
+
+                    <!-- 解析與結果回饋 -->
+                    <div id="quizFeedback" class="hidden p-4 rounded-xl border">
+                        <div id="feedbackStatus" class="font-bold text-base mb-1"></div>
+                        <div id="feedbackExplanation" class="text-sm text-slate-600"></div>
+                    </div>
+
+                    <div class="flex justify-end gap-3 pt-4 border-t border-sky-100">
+                        <button id="btnNextQuestion" onclick="nextQuestion()" class="hidden bg-sky-600 text-white px-5 py-2 rounded-lg text-sm font-bold hover:bg-sky-700 transition">
+                            下一題 <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 空狀態 -->
+                <div id="quizEmptyState" class="text-center py-12 text-slate-400">
+                    <i class="fa-solid fa-folder-open text-4xl mb-2 text-sky-200"></i>
+                    <p>請先選取「年級」與「文法單元」並點擊「開始刷題」</p>
+                </div>
+            </div>
+
+            <!-- Tab 2: 個人錯題區 -->
+            <div id="viewWrongBank" class="hidden bg-white rounded-b-xl shadow-md p-6 border border-sky-100">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-800">專屬自動錯題本</h3>
+                        <p class="text-xs text-slate-500">系統自動記錄您在刷題時答錯的題目，方便重點複習與徹底掌握</p>
+                    </div>
+                    <button onclick="clearWrongBank()" class="text-xs text-rose-600 hover:text-rose-800 border border-rose-200 hover:bg-rose-50 px-3 py-1.5 rounded-lg transition">
+                        <i class="fa-solid fa-trash-can"></i> 清空錯題本
+                    </button>
+                </div>
+
+                <div id="wrongQuestionsList" class="space-y-4">
+                    <!-- 錯題列表動態生成 -->
+                </div>
+            </div>
+
+            <!-- Tab 3: 管理員後台 (分級/題庫/權限) -->
+            <div id="viewAdmin" class="hidden space-y-6">
+                
+                <!-- 管理員子分頁導覽 -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    
+                    <!-- 分級與文法單元結構說明面板 -->
+                    <div class="bg-white rounded-xl shadow-md p-6 border border-sky-100">
+                        <h3 class="font-bold text-slate-800 border-b border-sky-100 pb-3 mb-4 flex items-center gap-2">
+                            <i class="fa-solid fa-sitemap text-sky-600"></i> 題庫分級架構表
+                        </h3>
+                        <div class="space-y-3 text-sm">
+                            <div class="p-3 bg-sky-50 rounded-lg border border-sky-200">
+                                <span class="font-bold text-sky-800 block mb-1">🌱 國小階段</span>
+                                <ul class="list-disc list-inside text-slate-600 text-xs space-y-1">
+                                    <li><b>國小初級</b>：基礎Be動詞、單複數、基礎動詞</li>
+                                </ul>
+                            </div>
+                            <div class="p-3 bg-sky-50 rounded-lg border border-sky-200">
+                                <span class="font-bold text-sky-800 block mb-1">📘 國中階段</span>
+                                <ul class="list-disc list-inside text-slate-600 text-xs space-y-1">
+                                    <li><b>國七 (七年級)</b>：現在進行式、祈使句、問句</li>
+                                    <li><b>國八 (八年級)</b>：過去式、比較級/最高級、感官動詞</li>
+                                    <li><b>國九 (九年級)</b>：完成式、被動語態、關係代名詞</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 題目新增與維護 -->
+                    <div class="md:col-span-2 bg-white rounded-xl shadow-md p-6 border border-sky-100">
+                        <h3 class="font-bold text-slate-800 border-b border-sky-100 pb-3 mb-4 flex items-center gap-2">
+                            <i class="fa-solid fa-file-circle-plus text-sky-600"></i> 新增題目至題庫
+                        </h3>
+                        <form onsubmit="handleAddQuestion(event)" class="space-y-4">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">分級 (年級)：</label>
+                                    <select id="adminGradeInput" required class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm">
+                                        <option value="國小初級">國小初級</option>
+                                        <option value="國七">國七</option>
+                                        <option value="國八">國八</option>
+                                        <option value="國九">國九</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">文法單元：</label>
+                                    <input type="text" id="adminUnitInput" placeholder="例如：現在進行式" required class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">題目內容：</label>
+                                <textarea id="adminQuestionInput" rows="2" placeholder="請輸入英文題目..." required class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm"></textarea>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">選項 A：</label>
+                                    <input type="text" id="adminOptA" required class="w-full px-3 py-1.5 rounded-lg border border-slate-300 text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">選項 B：</label>
+                                    <input type="text" id="adminOptB" required class="w-full px-3 py-1.5 rounded-lg border border-slate-300 text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">選項 C：</label>
+                                    <input type="text" id="adminOptC" required class="w-full px-3 py-1.5 rounded-lg border border-slate-300 text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">選項 D：</label>
+                                    <input type="text" id="adminOptD" required class="w-full px-3 py-1.5 rounded-lg border border-slate-300 text-sm">
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-3 gap-3">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">正確答案：</label>
+                                    <select id="adminAnswerInput" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm">
+                                        <option value="A">A</option>
+                                        <option value="B">B</option>
+                                        <option value="C">C</option>
+                                        <option value="D">D</option>
+                                    </select>
+                                </div>
+                                <div class="col-span-2">
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">中文解析：</label>
+                                    <input type="text" id="adminExplanationInput" placeholder="題目解析與翻譯" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm">
+                                </div>
+                            </div>
+
+                            <button type="submit" class="w-full bg-sky-600 text-white font-bold py-2 rounded-lg text-sm hover:bg-sky-700 transition">
+                                新增至本機題庫
+                            </button>
+                        </form>
+                    </div>
+
+                </div>
+
+                <!-- Google Sheet 資料匯出 / 備份提示區 -->
+                <div class="bg-white rounded-xl shadow-md p-6 border border-sky-100">
+                    <h3 class="font-bold text-slate-800 border-b border-sky-100 pb-3 mb-4 flex items-center justify-between">
+                        <span><i class="fa-solid fa-file-excel text-emerald-600"></i> Google Sheet 題庫同步區</span>
+                        <span class="text-xs text-slate-400 font-normal">適合大批次維護備份</span>
+                    </h3>
+                    <p class="text-xs text-slate-600 mb-4">
+                        您可以在 Google 試算表中依照欄位整理題目：<code>ID | 年級 | 文法單元 | 題目 | 選項A | 選項B | 選項C | 選項D | 正確答案 | 解析</code>。
+                    </p>
+                    <div class="flex gap-3">
+                        <button onclick="exportToGoogleSheetFormat()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2 px-4 rounded-lg transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-download"></i> 導出為 Google Sheet 格式
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
     </main>
 
-    <!-- Footer -->
-    <footer class="bg-emerald-900 text-emerald-200 py-6 border-t border-emerald-800 text-center text-sm">
-        <div class="max-w-7xl mx-auto px-4">
-            <p>&copy; 2026 優華數位英文學習文法刷題網. 版權所有.</p>
-            <p class="text-xs text-emerald-400 mt-1">高國中系統化文法刷題與智慧錯題複習平台</p>
-        </div>
+    <!-- 腳底宣示 Footbar -->
+    <footer class="bg-white border-t border-sky-100 py-4 text-center text-xs text-slate-400">
+        優華數位英文學習文法刷題網 &copy; 2026 - 天藍色題庫與錯題本管理系統
     </footer>
 
-    <!-- Custom Modal for Notifications / Alerts -->
-    <div id="custom-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 transform transition-all scale-100">
-            <div id="modal-icon" class="text-3xl mb-3 text-emerald-600"></div>
-            <h3 id="modal-title" class="text-lg font-bold text-gray-900 mb-2">提示訊息</h3>
-            <p id="modal-message" class="text-gray-600 text-sm mb-6"></p>
-            <div class="flex justify-end space-x-3" id="modal-actions">
-                <button onclick="closeModal()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-xl shadow transition">確定</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Application JavaScript Logic -->
+    <!-- JavaScript 邏輯程式碼 -->
     <script>
-        // --- Mock Data & Initial State ---
-        const DEFAULT_ADMIN_EMAIL = "admin@example.com";
-        
-        // Sample questions matching user's exact import format
-        const SAMPLE_QUESTIONS = [
-            { id: "101", level: "高中文法", grade: "高一", unit: "分詞構句與關代簡化", question: "The ruined castle ________ on top of the hill was built in the 17th century.", options: ["was standing", "to stand", "standing", "stood"], answer: "C", explanation: "佇立在（standing）山頂上的廢棄城堡建造於17世紀。（關代簡化：castle which stands... → castle standing...；stand 表示「佇立／聳立」時為主動語態。）" },
-            { id: "102", level: "高中文法", grade: "高一", unit: "分詞構句與關代簡化", question: "The innocent suspect ________ by the police last night was released this morning.", options: ["was arrested", "to arrest", "arresting", "arrested"], answer: "D", explanation: "昨晚被警方逮捕（arrested）的無辜嫌犯今天早上被釋放了。（關代簡化：suspect who was arrested... → suspect arrested...）" },
-            { id: "103", level: "高中文法", grade: "高二", unit: "進階單字與法規應用", question: "The city government has introduced a new ________ to limit the noise level in residential areas after 10 p.m.", options: ["complaint", "facility", "regulation", "championship"], answer: "C", explanation: "市府出台了新的法規（regulation），以限制晚間十點後住宅區的噪音分貝。facility n. 設施；complaint n. 抱怨；championship n. 冠軍賽。" },
-            { id: "104", level: "高中文法", grade: "高二", unit: "進階單字與法規應用", question: "The landlady reminded the new ________ to pay the rent on time every month.", options: ["athlete", "minister", "protester", "tenant"], answer: "D", explanation: "房東太太提醒新房客（tenant）每個月要準時交租金。minister n. 部長；athlete n. 運動員；protester n. 抗議者。" },
-            { id: "105", level: "高中文法", grade: "高三", unit: "動詞用法與使役情態", question: "Before entering the laboratory, all workers must wear safety goggles to ________ their eyes are protected.", options: ["ensure", "enforce", "unveil", "complain"], answer: "A", explanation: "進入實驗室前，所有工作人員必須佩戴護目鏡，以確保（ensure）眼睛得到保護。enforce v. 執行；complain v. 抱怨；unveil v. 發表。" },
-            { id: "106", level: "國中文法", grade: "八年級", unit: "現在分詞當形容詞", question: "The injured athlete ________ on a stretcher was carried out of the stadium immediately.", options: ["lying", "lain", "to lie", "was lying"], answer: "A", explanation: "躺在（lying）擔架上的受傷運動員立即被抬出了體育館。（關代簡化：athlete who was lying... → athlete lying...；lie 表示「躺」時為主動語態。）" },
-            { id: "107", level: "國中文法", grade: "九年級", unit: "過去分詞當形容詞", question: "The detailed report ________ by the famous journalist exposed the secret operation.", options: ["wrote", "writing", "was written", "written"], answer: "D", explanation: "這篇由著名記者所撰寫的（written）詳細報導揭露了這項秘密行動。（關代簡化：report which was written... → report written...）" },
-            { id: "108", level: "高中文法", grade: "高三", unit: "進階動詞與發表", question: "The tech giant plans to ________ its latest artificial intelligence features at the global conference.", options: ["arrest", "unveil", "cancel", "ransack"], answer: "B", explanation: "這家科技巨頭計畫在全球大會上發表／公開（unveil）其最新的人工智慧功能。arrest v. 逮捕；ransack v. 洗劫；cancel v. 取消。" },
-            { id: "109", level: "高中文法", grade: "高二", unit: "法規與執行", question: "The police department will strictly ________ the new speed limits on the highway starting next Monday.", options: ["hover", "purchase", "invest", "enforce"], answer: "D", explanation: "警局將從下週一開始嚴格執行（enforce）高速公路上的新速限。invest v. 投資；hover v. 盤旋；purchase v. 購買。" },
-            { id: "110", level: "高中文法", grade: "高一", unit: "商業與投資名詞", question: "Buying stock in growing technology companies can be a very profitable ________.", options: ["protest", "condition", "eviction", "investment"], answer: "D", explanation: "購買成長型科技公司的股票可能是一筆非常有利可圖的投資（investment）。eviction n. 驅逐；protest n. 抗議；condition n. 條件。" },
-            { id: "201", level: "國中文法", grade: "七年級", unit: "be動詞與代名詞", question: "Mary and John ________ good friends. They study together every day.", options: ["am", "is", "are", "be"], answer: "C", explanation: "主語為 Mary and John 複數，be 動詞應使用 are。" },
-            { id: "202", level: "國中文法", grade: "八年級", unit: "過去式與助動詞", question: "What ________ you doing at 8 PM yesterday?", options: ["are", "were", "was", "is"], answer: "B", explanation: "過去進行式主詞為 you 搭配 were。" }
+        // 1. 初始化預設資料 (包含 國小初級, 國七, 國八, 國九)
+        const initialQuestions = [
+            {
+                id: 'Q101',
+                grade: '國小初級',
+                unit: 'be動詞基礎',
+                question: 'They _____ happy students in elementary school.',
+                options: ['A. is', 'B. am', 'C. are', 'D. be'],
+                answer: 'C',
+                explanation: '主詞 They 為複數，be 動詞搭配 are。'
+            },
+            {
+                id: 'Q102',
+                grade: '國小初級',
+                unit: '單複數名詞',
+                question: 'There are three _____ on the table.',
+                options: ['A. apple', 'B. apples', 'C. an apple', 'D. appless'],
+                answer: 'B',
+                explanation: '數字 three 後方需接複數名詞 apples。'
+            },
+            {
+                id: 'Q201',
+                grade: '國七',
+                unit: '現在進行式',
+                question: 'Look! The boys _____ basketball on the playground.',
+                options: ['A. play', 'B. is playing', 'C. are playing', 'D. played'],
+                answer: 'C',
+                explanation: '由 Look! 可知為現在進行式，主詞 The boys 為複數，用 are playing。'
+            },
+            {
+                id: 'Q202',
+                grade: '國七',
+                unit: '祈使句',
+                question: '_____ make noise in the library, please.',
+                options: ['A. Don\'t', 'B. Not', 'C. No', 'D. Aren\'t'],
+                answer: 'A',
+                explanation: '否定祈使句句首使用 Don\'t + 原形動詞。'
+            },
+            {
+                id: 'Q301',
+                grade: '國八',
+                unit: '過去進行式',
+                question: 'What _____ you doing at eight last night?',
+                options: ['A. do', 'B. are', 'C. was', 'D. were'],
+                answer: 'D',
+                explanation: '過去特定時間點正在發生的動作使用過去進行式，主詞 you 搭配 were。'
+            },
+            {
+                id: 'Q302',
+                grade: '國八',
+                unit: '感官動詞',
+                question: 'I saw him _____ across the street a few minutes ago.',
+                options: ['A. walked', 'B. walk', 'C. to walk', 'D. walks'],
+                answer: 'B',
+                explanation: '感官動詞 see + 0 + 原形動詞/Ving。'
+            },
+            {
+                id: 'Q401',
+                grade: '國九',
+                unit: '關係代名詞',
+                question: 'The ruined castle _____ on top of the hill was built in the 17th century.',
+                options: ['A. standing', 'B. stood', 'C. was standing', 'D. to stand'],
+                answer: 'A',
+                explanation: '關代簡化：castle which stands... -> castle standing... (分詞修飾)。'
+            },
+            {
+                id: 'Q402',
+                grade: '國九',
+                unit: '被動語態',
+                question: 'The innocent suspect _____ by the police last night was released today.',
+                options: ['A. arrested', 'B. was arrested', 'C. arresting', 'D. to arrest'],
+                answer: 'A',
+                explanation: '關代被動簡化：suspect who was arrested... -> suspect arrested...'
+            }
         ];
 
-        // Local Storage State Initialization
-        function initStorage() {
-            if (!localStorage.getItem('users')) {
-                const initialUsers = [
-                    { email: DEFAULT_ADMIN_EMAIL, role: 'admin', status: 'approved' },
-                    { email: 'student1@example.com', role: 'student', status: 'approved' },
-                    { email: 'student2@example.com', role: 'student', status: 'pending' }
-                ];
-                localStorage.setItem('users', JSON.stringify(initialUsers));
-            }
-            if (!localStorage.getItem('questions')) {
-                localStorage.setItem('questions', JSON.stringify(SAMPLE_QUESTIONS));
-            }
-            if (!localStorage.getItem('currentUser')) {
-                localStorage.setItem('currentUser', JSON.stringify(null));
-            }
-            if (!localStorage.getItem('wrongQuestions')) {
-                localStorage.setItem('wrongQuestions', JSON.stringify({})); // { email: [questionIds...] }
-            }
-        }
-        initStorage();
+        // 狀態變數 (LocalStorage 儲存)
+        let questionsDB = JSON.parse(localStorage.getItem('youhua_questions')) || initialQuestions;
+        let currentUser = JSON.parse(localStorage.getItem('youhua_user')) || null;
+        let wrongBank = JSON.parse(localStorage.getItem('youhua_wrong_bank')) || [];
 
-        // --- Helper Functions ---
-        function getCurrentUser() {
-            return JSON.parse(localStorage.getItem('currentUser'));
-        }
-        function setCurrentUser(user) {
-            localStorage.setItem('currentUser', JSON.stringify(user));
-            renderNav();
-        }
-        function getUsers() {
-            return JSON.parse(localStorage.getItem('users')) || [];
-        }
-        function setUsers(users) {
-            localStorage.setItem('users', JSON.stringify(users));
-        }
-        function getQuestions() {
-            return JSON.parse(localStorage.getItem('questions')) || [];
-        }
-        function setQuestions(qs) {
-            localStorage.setItem('questions', JSON.stringify(qs));
-        }
-        function getWrongQuestions(email) {
-            const wq = JSON.parse(localStorage.getItem('wrongQuestions')) || {};
-            return wq[email] || [];
-        }
-        function addWrongQuestion(email, qId) {
-            const wq = JSON.parse(localStorage.getItem('wrongQuestions')) || {};
-            if (!wq[email]) wq[email] = [];
-            if (!wq[email].includes(qId)) {
-                wq[email].push(qId);
-                localStorage.setItem('wrongQuestions', JSON.stringify(wq));
-            }
-        }
-        function removeWrongQuestion(email, qId) {
-            const wq = JSON.parse(localStorage.getItem('wrongQuestions')) || {};
-            if (wq[email]) {
-                wq[email] = wq[email].filter(id => id !== qId);
-                localStorage.setItem('wrongQuestions', JSON.stringify(wq));
-            }
-        }
+        // 刷題當前狀態
+        let currentQuizList = [];
+        let currentQuizIndex = 0;
 
-        function showModal(title, message, iconClass = "fa-solid fa-circle-info text-emerald-600") {
-            document.getElementById('modal-title').innerText = title;
-            document.getElementById('modal-message').innerText = message;
-            document.getElementById('modal-icon').className = `text-3xl mb-3 ${iconClass}`;
-            document.getElementById('custom-modal').classList.remove('hidden');
-        }
-        function closeModal() {
-            document.getElementById('custom-modal').classList.add('hidden');
-        }
-
-        // --- Router State ---
-        const router = {
-            currentView: 'home',
-            params: {},
-            navigate: function(view, params = {}) {
-                this.currentView = view;
-                this.params = params;
-                renderView();
-                window.scrollTo(0, 0);
+        // 初始化頁面
+        window.onload = function() {
+            renderUserInfo();
+            if (currentUser) {
+                showAppView();
+                updateWrongCountBadge();
             }
         };
 
-        // --- Render Navigation ---
-        function renderNav() {
-            const user = getCurrentUser();
-            const navArea = document.getElementById('nav-user-area');
-            if (!user) {
-                navArea.innerHTML = `
-                    <button onclick="router.navigate('login')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-4 py-2 rounded-xl shadow transition flex items-center space-x-2">
-                        <i class="fa-solid fa-right-to-bracket"></i>
-                        <span>登入 / 註冊</span>
-                    </button>
-                `;
-            } else {
-                navArea.innerHTML = `
-                    <div class="flex items-center space-x-3">
-                        <div class="text-right hidden sm:block">
-                            <div class="text-sm font-semibold">${user.email}</div>
-                            <div class="text-xs text-emerald-200">${user.role === 'admin' ? '👑 管理員' : '🎓 學生'}</div>
-                        </div>
-                        <button onclick="router.navigate('home')" class="text-xs bg-emerald-800 hover:bg-emerald-700 text-emerald-100 px-3 py-1.5 rounded-lg transition">首頁</button>
-                        ${user.role === 'admin' ? `<button onclick="router.navigate('admin')" class="text-xs bg-teal-600 hover:bg-teal-500 text-white px-3 py-1.5 rounded-lg transition">管理後台</button>` : ''}
-                        <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1.5 rounded-lg transition flex items-center space-x-1">
-                            <i class="fa-solid fa-right-from-bracket"></i>
-                            <span>登出</span>
-                        </button>
-                    </div>
-                `;
-            }
+        // 2. 登入邏輯
+        function handleGoogleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('gmailInput').value.trim();
+            if(!email) return;
+
+            const isAdmin = email.toLowerCase() === 'admin@gmail.com';
+            currentUser = {
+                email: email,
+                name: email.split('@')[0],
+                isAdmin: isAdmin
+            };
+
+            localStorage.setItem('youhua_user', JSON.stringify(currentUser));
+            renderUserInfo();
+            showAppView();
         }
 
         function logout() {
-            setCurrentUser(null);
-            router.navigate('login');
+            currentUser = null;
+            localStorage.removeItem('youhua_user');
+            document.getElementById('loginView').classList.remove('hidden');
+            document.getElementById('appView').classList.add('hidden');
+            renderUserInfo();
         }
 
-        // --- View Controller ---
-        function renderView() {
-            const user = getCurrentUser();
-            const viewContainer = document.getElementById('app-view');
-            
-            // Check login requirement for protected views
-            if (!user && router.currentView !== 'login') {
-                router.navigate('login');
-                return;
-            }
-
-            switch(router.currentView) {
-                case 'login':
-                    viewContainer.innerHTML = getLoginViewHTML();
-                    break;
-                case 'pending':
-                    viewContainer.innerHTML = getPendingViewHTML();
-                    break;
-                case 'home':
-                    if (user && user.role === 'admin') {
-                        viewContainer.innerHTML = getAdminHomeHTML();
-                    } else {
-                        viewContainer.innerHTML = getStudentHomeHTML();
-                    }
-                    break;
-                case 'admin':
-                    if (user && user.role === 'admin') {
-                        viewContainer.innerHTML = getAdminDashboardHTML();
-                    } else {
-                        router.navigate('home');
-                    }
-                    break;
-                case 'quiz':
-                    viewContainer.innerHTML = getQuizRunnerHTML(router.params);
-                    break;
-                case 'wrong_book':
-                    viewContainer.innerHTML = getWrongBookHTML();
-                    break;
-                default:
-                    viewContainer.innerHTML = `<div class="text-center py-20">頁面不存在</div>`;
-            }
-        }
-
-        // --- View Templates ---
-
-        function getLoginViewHTML() {
-            return `
-                <div class="max-w-md mx-auto mt-12 bg-white rounded-2xl shadow-xl overflow-hidden border border-emerald-100">
-                    <div class="bg-gradient-to-r from-emerald-600 to-teal-600 p-6 text-white text-center">
-                        <div class="w-16 h-16 bg-white/10 rounded-2xl mx-auto flex items-center justify-center text-3xl mb-3 shadow-inner">
-                            <i class="fa-brands fa-google"></i>
-                        </div>
-                        <h2 class="text-2xl font-bold">Google 帳號登入</h2>
-                        <p class="text-emerald-100 text-sm mt-1">優華數位英文學習文法刷題網</p>
-                    </div>
-                    <div class="p-8">
-                        <form onsubmit="handleLogin(event)" class="space-y-5">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Google Email 帳號</label>
-                                <div class="relative">
-                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
-                                        <i class="fa-solid fa-envelope"></i>
-                                    </span>
-                                    <input type="email" id="login-email" required placeholder="your.name@gmail.com"
-                                        class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-sm transition">
-                                </div>
-                                <p class="text-xs text-gray-500 mt-1.5">提示：預設管理員為 <code class="bg-emerald-50 text-emerald-700 px-1 rounded font-semibold">admin@example.com</code></p>
-                            </div>
-                            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-xl shadow-lg shadow-emerald-600/20 transition flex items-center justify-center space-x-2">
-                                <i class="fa-solid fa-arrow-right-to-bracket"></i>
-                                <span>確認登入 / 註冊</span>
-                            </button>
-                        </form>
-                        <div class="mt-6 pt-6 border-t border-gray-100 text-center">
-                            <p class="text-xs text-gray-500">新帳號登入後需經管理員審核通過方可開始刷題。</p>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        function handleLogin(e) {
-            e.preventDefault();
-            const email = document.getElementById('login-email').value.trim().toLowerCase();
-            let users = getUsers();
-            let user = users.find(u => u.email === email);
-
-            if (!user) {
-                // Register new user as student
-                user = { email: email, role: email === DEFAULT_ADMIN_EMAIL ? 'admin' : 'student', status: email === DEFAULT_ADMIN_EMAIL ? 'approved' : 'pending' };
-                users.push(user);
-                setUsers(users);
-            }
-
-            setCurrentUser(user);
-
-            if (user.status !== 'approved' && user.role !== 'admin') {
-                router.navigate('pending');
-            } else {
-                router.navigate('home');
-            }
-        }
-
-        function getPendingViewHTML() {
-            return `
-                <div class="max-w-md mx-auto mt-16 bg-white rounded-2xl shadow-xl p-8 text-center border border-emerald-100">
-                    <div class="w-20 h-20 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto text-4xl mb-4 shadow-inner">
-                        <i class="fa-solid fa-clock-rotate-left"></i>
-                    </div>
-                    <h2 class="text-2xl font-bold text-gray-800 mb-2">等待管理員審核中</h2>
-                    <p class="text-gray-600 text-sm mb-6">您的帳號 <span class="font-semibold text-emerald-700">${getCurrentUser()?.email}</span> 已成功註冊，請等候管理員開通刷題權限。</p>
-                    <div class="space-y-3">
-                        <button onclick="router.navigate('home')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl text-sm font-medium transition shadow">重新整理狀態</button>
-                        <button onclick="logout()" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-2.5 rounded-xl text-sm font-medium transition">登出帳號</button>
-                    </div>
-                </div>
-            `;
-        }
-
-        function getStudentHomeHTML() {
-            const user = getCurrentUser();
-            const users = getUsers();
-            const currentUserObj = users.find(u => u.email === user.email);
-            if (currentUserObj && currentUserObj.status !== 'approved' && currentUserObj.role !== 'admin') {
-                return getPendingViewHTML();
-            }
-
-            const questions = getQuestions();
-            // Get unique levels, grades, units
-            const levels = [...new Set(questions.map(q => q.level))];
-            const wrongCount = getWrongQuestions(user.email).length;
-
-            return `
-                <div class="space-y-8">
-                    <!-- Welcome Banner & Wrong Question Quick Link -->
-                    <div class="bg-gradient-to-r from-emerald-600 to-teal-700 rounded-3xl p-8 text-white shadow-xl flex flex-col md:flex-row justify-between items-center">
-                        <div class="space-y-2 mb-4 md:mb-0">
-                            <span class="bg-white/20 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider">學生專區</span>
-                            <h2 class="text-3xl font-bold">歡迎回來，${user.email.split('@')[0]}！</h2>
-                            <p class="text-emerald-100 text-sm">選擇下方的文法主題，立即開始高效刷題與複習。</p>
-                        </div>
-                        <div class="flex space-x-3">
-                            <button onclick="router.navigate('wrong_book')" class="bg-white text-emerald-800 hover:bg-emerald-50 px-5 py-3 rounded-2xl font-bold shadow-lg transition flex items-center space-x-2">
-                                <i class="fa-solid fa-book-bookmark text-red-500"></i>
-                                <span>錯題本 (${wrongCount})</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Category Selector Hub -->
-                    <div class="space-y-6">
-                        <div class="border-b border-emerald-200 pb-3 flex justify-between items-center">
-                            <h3 class="text-xl font-bold text-emerald-900 flex items-center space-x-2">
-                                <i class="fa-solid fa-layer-group text-emerald-600"></i>
-                                <span>選擇題庫分類與單元</span>
-                            </h3>
-                            <span class="text-xs text-gray-500">總題數：${questions.length} 題</span>
-                        </div>
-
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            <!-- 國中文法卡片 -->
-                            <div class="bg-white rounded-3xl p-6 shadow-md border border-emerald-100 flex flex-col justify-between">
-                                <div>
-                                    <div class="flex items-center space-x-3 mb-4">
-                                        <div class="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-2xl flex items-center justify-center text-xl font-bold">國</div>
-                                        <div>
-                                            <h4 class="text-lg font-bold text-gray-800">國中文法題庫</h4>
-                                            <p class="text-xs text-gray-500">涵蓋七、八、九年級核心文法與單字</p>
-                                        </div>
-                                    </div>
-                                    ${renderGradesForLevel(questions, '國中文法')}
-                                </div>
-                            </div>
-
-                            <!-- 高中文法卡片 -->
-                            <div class="bg-white rounded-3xl p-6 shadow-md border border-teal-100 flex flex-col justify-between">
-                                <div>
-                                    <div class="flex items-center space-x-3 mb-4">
-                                        <div class="w-12 h-12 bg-teal-100 text-teal-700 rounded-2xl flex items-center justify-center text-xl font-bold">高</div>
-                                        <div>
-                                            <h4 class="text-lg font-bold text-gray-800">高中文法題庫</h4>
-                                            <p class="text-xs text-gray-500">涵蓋高一、高二、高三進階分詞與句型</p>
-                                        </div>
-                                    </div>
-                                    ${renderGradesForLevel(questions, '高中文法')}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        function renderGradesForLevel(questions, levelName) {
-            const levelQuestions = questions.filter(q => q.level === levelName);
-            const grades = [...new Set(levelQuestions.map(q => q.grade))];
-
-            if (grades.length === 0) {
-                return `<div class="text-sm text-gray-400 py-4 text-center">目前尚無此分類題目，請至管理員後台匯入。</div>`;
-            }
-
-            return grades.map(grade => {
-                const gradeQs = levelQuestions.filter(q => q.grade === grade);
-                const units = [...new Set(gradeQs.map(q => q.unit))];
-                return `
-                    <div class="mb-4 last:mb-0 bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100/60">
-                        <div class="font-bold text-emerald-900 text-sm mb-2 flex items-center justify-between">
-                            <span><i class="fa-solid fa-angles-right text-emerald-600 mr-1.5"></i>${grade}</span>
-                            <span class="text-xs bg-emerald-200 text-emerald-800 px-2 py-0.5 rounded-full">${gradeQs.length} 題</span>
-                        </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
-                            ${units.map(unit => {
-                                const unitCount = gradeQs.filter(q => q.unit === unit).length;
-                                return `
-                                    <button onclick="startQuiz('${levelName}', '${grade}', '${unit}')" class="text-left bg-white hover:bg-emerald-600 hover:text-white p-3 rounded-xl border border-emerald-200 shadow-sm transition flex justify-between items-center group">
-                                        <span class="text-xs font-medium truncate pr-2 group-hover:text-white">${unit}</span>
-                                        <span class="text-[10px] bg-gray-100 text-gray-600 group-hover:bg-emerald-700 group-hover:text-white px-1.5 py-0.5 rounded flex-shrink-0">${unitCount}題</span>
-                                    </button>
-                                `;
-                            }).join('')}
-                        </div>
+        function renderUserInfo() {
+            const container = document.getElementById('userInfoArea');
+            if(currentUser) {
+                container.innerHTML = `
+                    <div class="flex items-center gap-2 text-xs sm:text-sm">
+                        <span class="bg-sky-700 text-sky-100 px-2.5 py-1 rounded-full font-medium">
+                            <i class="fa-solid fa-user text-xs"></i> ${currentUser.name} ${currentUser.isAdmin ? '(管理員)' : ''}
+                        </span>
+                        <button onclick="logout()" class="text-sky-200 hover:text-white underline text-xs">登出</button>
                     </div>
                 `;
-            }).join('');
-        }
-
-        function startQuiz(level, grade, unit) {
-            router.navigate('quiz', { level, grade, unit });
-        }
-
-        function getAdminHomeHTML() {
-            return getAdminDashboardHTML();
-        }
-
-        function getAdminDashboardHTML() {
-            const users = getUsers();
-            const questions = getQuestions();
-
-            return `
-                <div class="space-y-8">
-                    <!-- Admin Header -->
-                    <div class="bg-gradient-to-r from-teal-800 to-emerald-800 text-white rounded-3xl p-8 shadow-xl flex flex-col md:flex-row justify-between items-center">
-                        <div>
-                            <span class="bg-amber-400 text-emerald-950 font-bold text-xs px-3 py-1 rounded-full uppercase tracking-wider">管理員控制台</span>
-                            <h2 class="text-3xl font-bold mt-2">題庫與學生帳號管理</h2>
-                            <p class="text-emerald-200 text-sm mt-1">審核學生權限、匯入 Excel 題庫或檢視系統題庫數據。</p>
-                        </div>
-                        <div class="mt-4 md:mt-0 flex space-x-3">
-                            <button onclick="router.navigate('home')" class="bg-white/10 hover:bg-white/20 text-white px-4 py-2.5 rounded-xl text-sm font-medium transition">返回學生視圖</button>
-                        </div>
-                    </div>
-
-                    <!-- Tabs / Sections -->
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        <!-- Student Account Management -->
-                        <div class="bg-white rounded-3xl p-6 shadow-md border border-emerald-100 lg:col-span-1">
-                            <h3 class="text-lg font-bold text-emerald-900 mb-4 flex items-center space-x-2">
-                                <i class="fa-solid fa-users-gear text-emerald-600"></i>
-                                <span>學生帳號審核</span>
-                            </h3>
-                            <div class="space-y-3 max-h-[400px] overflow-y-auto pr-1">
-                                ${users.map((u, idx) => `
-                                    <div class="p-3 bg-emerald-50/50 rounded-2xl border border-emerald-100 flex flex-col space-y-2">
-                                        <div class="flex justify-between items-start">
-                                            <div>
-                                                <div class="text-xs font-semibold text-gray-800 break-all">${u.email}</div>
-                                                <div class="text-[10px] text-gray-500 mt-0.5">角色: ${u.role}</div>
-                                            </div>
-                                            <span class="px-2 py-0.5 text-[10px] rounded-full font-bold ${u.status === 'approved' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}">
-                                                ${u.status === 'approved' ? '已啟用' : '待審核'}
-                                            </span>
-                                        </div>
-                                        ${u.role !== 'admin' ? `
-                                            <div class="flex space-x-2 pt-1">
-                                                ${u.status === 'pending' ? 
-                                                    `<button onclick="toggleUserStatus('${u.email}', 'approved')" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs py-1.5 rounded-lg transition">通過審核</button>` : 
-                                                    `<button onclick="toggleUserStatus('${u.email}', 'pending')" class="flex-1 bg-amber-500 hover:bg-amber-600 text-white text-xs py-1.5 rounded-lg transition">停權</button>`
-                                                }
-                                                <button onclick="deleteUser('${u.email}')" class="bg-red-100 hover:bg-red-200 text-red-700 text-xs px-3 py-1.5 rounded-lg transition">刪除</button>
-                                            </div>
-                                        ` : ''}
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-
-                        <!-- Excel Import & Question Management -->
-                        <div class="bg-white rounded-3xl p-6 shadow-md border border-emerald-100 lg:col-span-2 space-y-6">
-                            <div class="flex justify-between items-center">
-                                <h3 class="text-lg font-bold text-emerald-900 flex items-center space-x-2">
-                                    <i class="fa-solid fa-file-excel text-emerald-600"></i>
-                                    <span>Excel 表格匯入與題庫維護</span>
-                                </h3>
-                                <button onclick="loadSampleData()" class="bg-teal-50 hover:bg-teal-100 text-teal-800 text-xs font-semibold px-3 py-2 rounded-xl transition border border-teal-200">
-                                    <i class="fa-solid fa-wand-magic-sparkles mr-1"></i>一鍵載入範例題庫
-                                </button>
-                            </div>
-
-                            <!-- Paste Excel Data Box -->
-                            <div class="space-y-3">
-                                <label class="block text-sm font-medium text-gray-700">貼上 Excel 表格資料 (支援 Tab 分隔格式 或 欄位：題號, 題目, A, B, C, D, 正確答案, 中文解析)</label>
-                                <textarea id="excel-import-text" rows="5" placeholder="例如：
-101	The ruined castle standing on top...	was standing	to stand	standing	stood	C	佇立在山頂上的廢棄城堡...
-102	The innocent suspect arrested...	was arrested	to arrest	arresting	arrested	D	昨晚被警方逮捕..."
-                                    class="w-full p-3 border border-gray-300 rounded-xl font-mono text-xs focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"></textarea>
-                                
-                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                    <div>
-                                        <label class="block text-xs font-medium text-gray-600 mb-1">預設分類</label>
-                                        <select id="import-level" class="w-full p-2.5 border border-gray-300 rounded-xl text-xs bg-white">
-                                            <option value="高中文法">高中文法</option>
-                                            <option value="國中文法">國中文法</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs font-medium text-gray-600 mb-1">預設年級</label>
-                                        <select id="import-grade" class="w-full p-2.5 border border-gray-300 rounded-xl text-xs bg-white">
-                                            <option value="高一">高一</option>
-                                            <option value="高二">高二</option>
-                                            <option value="高三">高三</option>
-                                            <option value="七年級">七年級</option>
-                                            <option value="八年級">八年級</option>
-                                            <option value="九年級">九年級</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs font-medium text-gray-600 mb-1">預設文法單元</label>
-                                        <input type="text" id="import-unit" value="進階綜合練習" class="w-full p-2.5 border border-gray-300 rounded-xl text-xs">
-                                    </div>
-                                </div>
-
-                                <button onclick="processExcelImport()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-xl shadow transition flex items-center justify-center space-x-2">
-                                    <i class="fa-solid fa-cloud-arrow-up"></i>
-                                    <span>解析並匯入題庫</span>
-                                </button>
-                            </div>
-
-                            <!-- Question Stats & Clear -->
-                            <div class="pt-4 border-t border-gray-100 flex justify-between items-center">
-                                <div class="text-xs text-gray-500">
-                                    目前系統共有 <span class="font-bold text-emerald-700">${questions.length}</span> 道題目
-                                </div>
-                                <button onclick="clearAllQuestions()" class="text-xs text-red-600 hover:text-red-700 font-medium">清空所有題庫</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        function toggleUserStatus(email, newStatus) {
-            let users = getUsers();
-            users = users.map(u => u.email === email ? { ...u, status: newStatus } : u);
-            setUsers(users);
-            renderView();
-            showModal("操作成功", `已成功將使用者 ${email} 狀態更新為 ${newStatus === 'approved' ? '已啟用' : '待審核'}。`);
-        }
-
-        function deleteUser(email) {
-            if (email === DEFAULT_ADMIN_EMAIL) {
-                showModal("操作拒絕", "無法刪除預設管理員帳號。", "fa-solid fa-triangle-exclamation text-amber-600");
-                return;
+            } else {
+                container.innerHTML = `<span class="text-xs text-sky-200">未登入</span>`;
             }
-            let users = getUsers();
-            users = users.filter(u => u.email !== email);
-            setUsers(users);
-            renderView();
-            showModal("刪除成功", `已刪除使用者 ${email}。`);
         }
 
-        function loadSampleData() {
-            setQuestions(SAMPLE_QUESTIONS);
-            renderView();
-            showModal("載入成功", "已成功載入高國中範例題庫與高質感單字文法試題！");
-        }
+        function showAppView() {
+            document.getElementById('loginView').classList.add('hidden');
+            document.getElementById('appView').classList.remove('hidden');
 
-        function clearAllQuestions() {
-            setQuestions([]);
-            renderView();
-            showModal("已清空", "已清空所有題庫資料。");
-        }
-
-        function processExcelImport() {
-            const rawText = document.getElementById('excel-import-text').value.trim();
-            if (!rawText) {
-                showModal("提示", "請先貼上 Excel 表格資料。", "fa-solid fa-triangle-exclamation text-amber-600");
-                return;
+            // 如果是管理員，顯示管理員分頁按鈕
+            if(currentUser && currentUser.isAdmin) {
+                document.getElementById('tabAdmin').classList.remove('hidden');
+            } else {
+                document.getElementById('tabAdmin').classList.add('hidden');
             }
+        }
 
-            const defLevel = document.getElementById('import-level').value;
-            const defGrade = document.getElementById('import-grade').value;
-            const defUnit = document.getElementById('import-unit').value.trim() || "綜合單元";
-
-            const lines = rawText.split('\n');
-            let questions = getQuestions();
-            let addedCount = 0;
-
-            lines.forEach((line, idx) => {
-                const cols = line.split('\t');
-                if (cols.length >= 7) {
-                    // Format: id, question, optA, optB, optC, optD, answer, explanation
-                    questions.push({
-                        id: cols[0].trim() || `imp_${Date.now()}_${idx}`,
-                        level: defLevel,
-                        grade: defGrade,
-                        unit: defUnit,
-                        question: cols[1].trim(),
-                        options: [cols[2].trim(), cols[3].trim(), cols[4].trim(), cols[5].trim()],
-                        answer: cols[6].trim().toUpperCase(),
-                        explanation: cols[7] ? cols[7].trim() : "無詳細解析"
-                    });
-                    addedCount++;
+        // 3. Tab 切換
+        function switchTab(tabName) {
+            const tabs = ['Quiz', 'Wrong', 'Admin'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`tab${t}`);
+                const view = document.getElementById(`view${t === 'Wrong' ? 'WrongBank' : t}`);
+                if(btn && view) {
+                    if(t.toLowerCase() === tabName.toLowerCase() || (t === 'Wrong' && tabName === 'wrongBank')) {
+                        btn.className = "px-5 py-2.5 rounded-lg text-sm font-semibold transition flex items-center gap-2 bg-sky-600 text-white shadow-sm";
+                        view.classList.remove('hidden');
+                    } else {
+                        btn.className = "px-5 py-2.5 rounded-lg text-sm font-semibold transition flex items-center gap-2 text-slate-600 hover:bg-sky-50";
+                        view.classList.add('hidden');
+                    }
                 }
             });
 
-            if (addedCount > 0) {
-                setQuestions(questions);
-                document.getElementById('excel-import-text').value = '';
-                renderView();
-                showModal("匯入成功", `成功匯入 ${addedCount} 筆題目至 [${defLevel} / ${defGrade} / ${defUnit}]！`);
-            } else {
-                showModal("格式錯誤", "未能成功解析資料，請確認每欄以 Tab (定位鍵) 分隔，且包含題目與四個選項及答案。", "fa-solid fa-triangle-exclamation text-red-600");
+            if(tabName === 'wrongBank') {
+                renderWrongBank();
             }
         }
 
-        // --- Quiz Runner State ---
-        let currentQuizState = {
-            questions: [],
-            currentIndex: 0,
-            score: 0,
-            answersRecord: [], // { question, userAnswer, isCorrect }
-            unitTitle: '',
-            isFinished: false
-        };
+        // 4. 動態關聯選單：選擇年級 -> 更新單元
+        function onQuizGradeChange() {
+            const grade = document.getElementById('quizGradeSelect').value;
+            const unitSelect = document.getElementById('quizUnitSelect');
+            unitSelect.innerHTML = '<option value="">-- 請選擇文法單元 --</option>';
 
-        function getQuizRunnerHTML(params) {
-            const { level, grade, unit } = params;
-            if (!currentQuizState.questions.length || currentQuizState.unitTitle !== unit) {
-                const allQs = getQuestions();
-                const filtered = allQs.filter(q => q.level === level && q.grade === grade && q.unit === unit);
-                if (filtered.length === 0) {
-                    return `
-                        <div class="max-w-md mx-auto mt-20 text-center bg-white p-8 rounded-3xl shadow">
-                            <h3 class="text-lg font-bold text-gray-800 mb-2">此單元尚無題目</h3>
-                            <p class="text-sm text-gray-500 mb-4">請選擇其他單元或通知管理員匯入題目。</p>
-                            <button onclick="router.navigate('home')" class="bg-emerald-600 text-white px-5 py-2 rounded-xl text-sm">返回首頁</button>
-                        </div>
-                    `;
-                }
-                currentQuizState = {
-                    questions: filtered,
-                    currentIndex: 0,
-                    score: 0,
-                    answersRecord: [],
-                    unitTitle: unit,
-                    isFinished: false,
-                    selectedOption: null,
-                    showExplanation: false
-                };
-            }
+            if(!grade) return;
 
-            const state = currentQuizState;
-            if (state.isFinished) {
-                const percentage = Math.round((state.score / state.questions.length) * 100);
-                return `
-                    <div class="max-w-2xl mx-auto bg-white rounded-3xl shadow-xl p-8 border border-emerald-100 text-center space-y-6">
-                        <div class="w-24 h-24 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-4xl shadow-inner">
-                            <i class="fa-solid fa-award"></i>
-                        </div>
-                        <div>
-                            <h2 class="text-2xl font-bold text-gray-800">測驗完成！</h2>
-                            <p class="text-gray-500 text-sm mt-1">${level} - ${grade} - ${unit}</p>
-                        </div>
-                        
-                        <div class="grid grid-cols-2 gap-4 max-w-sm mx-auto bg-emerald-50/60 p-4 rounded-2xl border border-emerald-100">
-                            <div>
-                                <div class="text-xs text-gray-500">正確題數 / 總題數</div>
-                                <div class="text-2xl font-bold text-emerald-700">${state.score} / ${state.questions.length}</div>
-                            </div>
-                            <div>
-                                <div class="text-xs text-gray-500">得分率</div>
-                                <div class="text-2xl font-bold text-teal-700">${percentage}%</div>
-                            </div>
-                        </div>
-
-                        <div class="flex flex-col sm:flex-row justify-center space-y-3 sm:space-y-0 sm:space-x-4 pt-4">
-                            <button onclick="router.navigate('wrong_book')" class="bg-red-50 hover:bg-red-100 text-red-700 font-medium px-6 py-3 rounded-xl transition flex items-center justify-center space-x-2 border border-red-200">
-                                <i class="fa-solid fa-book-bookmark"></i>
-                                <span>檢視錯題本</span>
-                            </button>
-                            <button onclick="router.navigate('home')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-6 py-3 rounded-xl transition shadow">
-                                返回首頁選擇其他單元
-                            </button>
-                        </div>
-                    </div>
-                `;
-            }
-
-            const q = state.questions[state.currentIndex];
-            const progressPct = ((state.currentIndex + 1) / state.questions.length) * 100;
-            const letters = ['A', 'B', 'C', 'D'];
-
-            return `
-                <div class="max-w-3xl mx-auto space-y-6">
-                    <!-- Quiz Header & Progress -->
-                    <div class="bg-white rounded-3xl p-6 shadow-md border border-emerald-100 flex flex-col space-y-4">
-                        <div class="flex justify-between items-center">
-                            <div class="text-xs font-semibold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
-                                ${level} &bull; ${grade} &bull; ${unit}
-                            </div>
-                            <div class="text-xs font-bold text-gray-500">
-                                題目 ${state.currentIndex + 1} / ${state.questions.length}
-                            </div>
-                        </div>
-                        <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
-                            <div class="bg-emerald-600 h-full transition-all duration-300" style="width: ${progressPct}%"></div>
-                        </div>
-                    </div>
-
-                    <!-- Question Card -->
-                    <div class="bg-white rounded-3xl p-8 shadow-lg border border-emerald-100 space-y-6">
-                        <h3 class="text-lg sm:text-xl font-bold text-gray-900 leading-relaxed">
-                            <span class="text-emerald-600 mr-2">Q${state.currentIndex + 1}.</span>${q.question}
-                        </h3>
-
-                        <!-- Options -->
-                        <div class="space-y-3">
-                            ${q.options.map((opt, idx) => {
-                                const letter = letters[idx];
-                                let btnStyle = "border-gray-200 hover:border-emerald-500 hover:bg-emerald-50/40 text-gray-700";
-                                if (state.showExplanation) {
-                                    if (letter === q.answer) {
-                                        btnStyle = "border-green-500 bg-green-50 text-green-800 font-bold shadow-sm";
-                                    } else if (state.selectedOption === letter) {
-                                        btnStyle = "border-red-500 bg-red-50 text-red-800 font-bold shadow-sm";
-                                    } else {
-                                        btnStyle = "border-gray-200 opacity-50 text-gray-500";
-                                    }
-                                }
-                                return `
-                                    <button onclick="submitAnswer('${letter}')" ${state.showExplanation ? 'disabled' : ''}
-                                        class="w-full text-left p-4 rounded-2xl border-2 ${btnStyle} transition flex items-center space-x-4 group">
-                                        <div class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-sm flex-shrink-0 group-hover:bg-emerald-600 group-hover:text-white transition">
-                                            ${letter}
-                                        </div>
-                                        <span class="text-sm sm:text-base">${opt}</span>
-                                    </button>
-                                `;
-                            }).join('')}
-                        </div>
-
-                        <!-- Explanation Box (Shown after answer) -->
-                        ${state.showExplanation ? `
-                            <div class="p-5 rounded-2xl bg-emerald-50/70 border border-emerald-200 space-y-3 animate-fadeIn">
-                                <div class="flex items-center space-x-2 font-bold ${state.selectedOption === q.answer ? 'text-green-700' : 'text-red-600'}">
-                                    <i class="fa-solid ${state.selectedOption === q.answer ? 'fa-circle-check' : 'fa-circle-xmark'} text-lg"></i>
-                                    <span>${state.selectedOption === q.answer ? '答對了！' : `答錯了！正確答案是 (${q.answer})`}</span>
-                                </div>
-                                <p class="text-sm text-gray-700 leading-relaxed"><strong class="text-emerald-900">中文解析：</strong>${q.explanation}</p>
-                                <div class="pt-2 flex justify-end">
-                                    <button onclick="nextQuestion()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-6 py-2.5 rounded-xl shadow transition flex items-center space-x-2 text-sm">
-                                        <span>${state.currentIndex < state.questions.length - 1 ? '下一題' : '查看測驗結果'}</span>
-                                        <i class="fa-solid fa-arrow-right"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        ` : ''}
-                    </div>
-                </div>
-            `;
+            // 從題庫中過濾出該年級有的單元
+            const units = [...new Set(questionsDB.filter(q => q.grade === grade).map(q => q.unit))];
+            
+            units.forEach(u => {
+                const opt = document.createElement('option');
+                opt.value = u;
+                opt.textContent = u;
+                unitSelect.appendChild(opt);
+            });
         }
 
-        function submitAnswer(letter) {
-            const state = currentQuizState;
-            const q = state.questions[state.currentIndex];
-            state.selectedOption = letter;
-            state.showExplanation = true;
+        // 5. 開始刷題
+        function startQuiz() {
+            const grade = document.getElementById('quizGradeSelect').value;
+            const unit = document.getElementById('quizUnitSelect').value;
 
-            const isCorrect = (letter === q.answer);
-            if (isCorrect) {
-                state.score++;
-                // If it was in wrong questions, remove it upon correct answer
-                removeWrongQuestion(getCurrentUser().email, q.id);
-            } else {
-                addWrongQuestion(getCurrentUser().email, q.id);
+            if(!grade || !unit) {
+                alert('請先選擇年級與文法單元！');
+                return;
             }
 
-            renderView();
+            currentQuizList = questionsDB.filter(q => q.grade === grade && q.unit === unit);
+
+            if(currentQuizList.length === 0) {
+                alert('該單元目前尚無題目！');
+                return;
+            }
+
+            currentQuizIndex = 0;
+            document.getElementById('quizEmptyState').classList.add('hidden');
+            document.getElementById('quizDisplayArea').classList.remove('hidden');
+            renderCurrentQuestion();
+        }
+
+        function renderCurrentQuestion() {
+            const q = currentQuizList[currentQuizIndex];
+            document.getElementById('quizTag').textContent = `${q.grade} | ${q.unit}`;
+            document.getElementById('quizProgress').textContent = `題目 ${currentQuizIndex + 1} / ${currentQuizList.length}`;
+            document.getElementById('quizQuestionText').textContent = q.question;
+
+            // 重設回饋區與按鈕
+            document.getElementById('quizFeedback').classList.add('hidden');
+            document.getElementById('btnNextQuestion').classList.add('hidden');
+
+            const optionsContainer = document.getElementById('quizOptionsContainer');
+            optionsContainer.innerHTML = '';
+
+            q.options.forEach((optText, idx) => {
+                const optKey = String.fromCharCode(65 + idx); // A, B, C, D
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left p-4 rounded-xl border border-sky-200 hover:border-sky-500 hover:bg-sky-50 font-medium text-slate-700 transition flex items-center justify-between group";
+                btn.onclick = () => checkAnswer(optKey);
+                btn.innerHTML = `<span>${optText}</span><i class="fa-regular fa-circle text-sky-300 group-hover:text-sky-500"></i>`;
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selectedOpt) {
+            const q = currentQuizList[currentQuizIndex];
+            const feedback = document.getElementById('quizFeedback');
+            const status = document.getElementById('feedbackStatus');
+            const exp = document.getElementById('feedbackExplanation');
+            const nextBtn = document.getElementById('btnNextQuestion');
+
+            // 停用所有選項按鈕
+            const buttons = document.getElementById('quizOptionsContainer').querySelectorAll('button');
+            buttons.forEach(btn => btn.disabled = true);
+
+            const isCorrect = selectedOpt === q.answer;
+
+            feedback.classList.remove('hidden');
+            if(isCorrect) {
+                feedback.className = "p-4 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-900";
+                status.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-600"></i> 回答正確！`;
+            } else {
+                feedback.className = "p-4 rounded-xl border border-rose-200 bg-rose-50 text-rose-900";
+                status.innerHTML = `<i class="fa-solid fa-circle-xmark text-rose-600"></i> 回答錯誤！正確答案為 (${q.answer})`;
+                
+                // 自動將錯題加入錯題區
+                addToWrongBank(q);
+            }
+
+            exp.innerHTML = `<span class="font-bold">【題目解析】</span> ${q.explanation || '無解析說明'}`;
+            nextBtn.classList.remove('hidden');
         }
 
         function nextQuestion() {
-            const state = currentQuizState;
-            if (state.currentIndex < state.questions.length - 1) {
-                state.currentIndex++;
-                state.selectedOption = null;
-                state.showExplanation = false;
-                renderView();
+            if(currentQuizIndex < currentQuizList.length - 1) {
+                currentQuizIndex++;
+                renderCurrentQuestion();
             } else {
-                state.isFinished = true;
-                renderView();
+                alert('恭喜您已完成本單元的所有題目！');
+                document.getElementById('quizDisplayArea').classList.add('hidden');
+                document.getElementById('quizEmptyState').classList.remove('hidden');
             }
         }
 
-        // --- Wrong Question Book View ---
-        function getWrongBookHTML() {
-            const user = getCurrentUser();
-            const wrongIds = getWrongQuestions(user.email);
-            const allQuestions = getQuestions();
-            const wrongQuestions = allQuestions.filter(q => wrongIds.includes(q.id));
+        // 6. 錯題區管理 (自動形成)
+        function addToWrongBank(question) {
+            // 避免重複加入
+            if(!wrongBank.some(item => item.id === question.id)) {
+                wrongBank.push(question);
+                localStorage.setItem('youhua_wrong_bank', JSON.stringify(wrongBank));
+                updateWrongCountBadge();
+            }
+        }
 
-            return `
-                <div class="max-w-4xl mx-auto space-y-6">
-                    <div class="bg-gradient-to-r from-red-600 to-amber-600 text-white rounded-3xl p-8 shadow-xl flex flex-col md:flex-row justify-between items-center">
-                        <div>
-                            <span class="bg-white/20 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider">個人錯題專區</span>
-                            <h2 class="text-3xl font-bold mt-2">智慧錯題複習本</h2>
-                            <p class="text-red-100 text-sm mt-1">系統自動記錄您曾答錯的題目，幫助您針對弱點重複練習直到完全掌握。</p>
-                        </div>
-                        <div class="mt-4 md:mt-0">
-                            <button onclick="router.navigate('home')" class="bg-white/10 hover:bg-white/20 text-white px-4 py-2.5 rounded-xl text-sm font-medium transition">返回首頁</button>
-                        </div>
+        function updateWrongCountBadge() {
+            document.getElementById('wrongCountBadge').textContent = wrongBank.length;
+        }
+
+        function renderWrongBank() {
+            const list = document.getElementById('wrongQuestionsList');
+            list.innerHTML = '';
+
+            if(wrongBank.length === 0) {
+                list.innerHTML = `<div class="text-center py-8 text-slate-400">目前沒有錯題紀錄，繼續保持！</div>`;
+                return;
+            }
+
+            wrongBank.forEach((q, index) => {
+                const card = document.createElement('div');
+                card.className = "p-4 bg-sky-50 rounded-xl border border-sky-200 space-y-2 relative";
+                card.innerHTML = `
+                    <div class="flex justify-between text-xs text-sky-800 font-bold">
+                        <span>[${q.grade}] ${q.unit}</span>
+                        <button onclick="removeWrongQuestion(${index})" class="text-rose-500 hover:underline">移除紀錄</button>
                     </div>
-
-                    ${wrongQuestions.length === 0 ? `
-                        <div class="bg-white rounded-3xl p-12 text-center shadow border border-emerald-100 space-y-3">
-                            <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto text-3xl">
-                                <i class="fa-solid fa-face-smile"></i>
-                            </div>
-                            <h3 class="text-lg font-bold text-gray-800">太棒了！目前沒有錯題紀錄</h3>
-                            <p class="text-sm text-gray-500">快去刷題單元挑戰自我吧！</p>
-                            <button onclick="router.navigate('home')" class="mt-4 bg-emerald-600 text-white px-6 py-2.5 rounded-xl text-sm font-medium shadow">開始刷題</button>
-                        </div>
-                    ` : `
-                        <div class="space-y-4">
-                            <div class="flex justify-between items-center px-2">
-                                <span class="text-sm font-semibold text-gray-700">共收錄 <span class="text-red-600">${wrongQuestions.length}</span> 道待複習錯題</span>
-                                <button onclick="clearWrongBook()" class="text-xs text-red-600 hover:text-red-700 font-medium">清空錯題本</button>
-                            </div>
-
-                            ${wrongQuestions.map((q, idx) => `
-                                <div class="bg-white rounded-2xl p-6 shadow-md border border-red-100 space-y-4">
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-xs bg-red-50 text-red-700 px-3 py-1 rounded-full font-semibold border border-red-200">
-                                            ${q.level} &bull; ${q.grade} &bull; ${q.unit}
-                                        </span>
-                                        <button onclick="removeWrongItem('${q.id}')" class="text-xs text-gray-400 hover:text-red-600 transition" title="從錯題本移除">
-                                            <i class="fa-solid fa-trash-can"></i> 移除
-                                        </button>
-                                    </div>
-                                    <h4 class="text-base font-bold text-gray-900">
-                                        <span class="text-red-500 mr-2">#${idx + 1}</span>${q.question}
-                                    </h4>
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                        ${q.options.map((opt, oIdx) => {
-                                            const letter = ['A', 'B', 'C', 'D'][oIdx];
-                                            const isAns = (letter === q.answer);
-                                            return `
-                                                <div class="p-3 rounded-xl border text-xs flex items-center space-x-3 ${isAns ? 'bg-green-50 border-green-300 text-green-900 font-bold' : 'bg-gray-50/50 border-gray-200 text-gray-700'}">
-                                                    <span class="w-6 h-6 rounded-lg ${isAns ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700'} flex items-center justify-center font-bold text-[10px] flex-shrink-0">${letter}</span>
-                                                    <span class="truncate">${opt}</span>
-                                                </div>
-                                            `;
-                                        }).join('')}
-                                    </div>
-                                    <div class="p-4 rounded-xl bg-emerald-50/80 border border-emerald-200 text-xs text-gray-700 leading-relaxed">
-                                        <strong class="text-emerald-900">解析：</strong>${q.explanation}
-                                    </div>
-                                </div>
-                            `).join('')}
-                        </div>
-                    `}
-                </div>
-            `;
+                    <div class="font-medium text-slate-800">${q.question}</div>
+                    <div class="text-xs text-slate-600 bg-white p-2 rounded border border-sky-100">
+                        <span class="font-bold text-emerald-700">正確答案：${q.answer}</span> | 解析：${q.explanation}
+                    </div>
+                `;
+                list.appendChild(card);
+            });
         }
 
-        function removeWrongItem(qId) {
-            removeWrongQuestion(getCurrentUser().email, qId);
-            renderView();
+        function removeWrongQuestion(index) {
+            wrongBank.splice(index, 1);
+            localStorage.setItem('youhua_wrong_bank', JSON.stringify(wrongBank));
+            updateWrongCountBadge();
+            renderWrongBank();
         }
 
-        function clearWrongBook() {
-            const user = getCurrentUser();
-            const wq = JSON.parse(localStorage.getItem('wrongQuestions')) || {};
-            wq[user.email] = [];
-            localStorage.setItem('wrongQuestions', JSON.stringify(wq));
-            renderView();
-            showModal("已清空", "錯題本已清空。");
-        }
-
-        // --- Initial Load ---
-        window.onload = function() {
-            renderNav();
-            const user = getCurrentUser();
-            if (!user) {
-                router.navigate('login');
-            } else if (user.status !== 'approved' && user.role !== 'admin') {
-                router.navigate('pending');
-            } else {
-                router.navigate('home');
+        function clearWrongBank() {
+            if(confirm('確定要清空所有錯題紀錄嗎？')) {
+                wrongBank = [];
+                localStorage.removeItem('youhua_wrong_bank');
+                updateWrongCountBadge();
+                renderWrongBank();
             }
-        };
+        }
+
+        // 7. 管理員新增題目
+        function handleAddQuestion(e) {
+            e.preventDefault();
+            const grade = document.getElementById('adminGradeInput').value;
+            const unit = document.getElementById('adminUnitInput').value.trim();
+            const question = document.getElementById('adminQuestionInput').value.trim();
+            const optA = document.getElementById('adminOptA').value.trim();
+            const optB = document.getElementById('adminOptB').value.trim();
+            const optC = document.getElementById('adminOptC').value.trim();
+            const optD = document.getElementById('adminOptD').value.trim();
+            const answer = document.getElementById('adminAnswerInput').value;
+            const explanation = document.getElementById('adminExplanationInput').value.trim();
+
+            const newQ = {
+                id: 'Q' + (questionsDB.length + 101),
+                grade,
+                unit,
+                question,
+                options: [`A. ${optA}`, `B. ${optB}`, `C. ${optC}`, `D. ${optD}`],
+                answer,
+                explanation
+            };
+
+            questionsDB.push(newQ);
+            localStorage.setItem('youhua_questions', JSON.stringify(questionsDB));
+            alert('成功新增題目至題庫！');
+            e.target.reset();
+        }
+
+        // 8. 導出成 Google Sheet 相容 CSV 格式
+        function exportToGoogleSheetFormat() {
+            let csvContent = "data:text/csv;charset=utf-8,ID,年級,文法單元,題目,選項A,選項B,選項C,選項D,正確答案,解析\n";
+            questionsDB.forEach(q => {
+                const optA = q.options[0].replace('A. ', '');
+                const optB = q.options[1].replace('B. ', '');
+                const optC = q.options[2].replace('C. ', '');
+                const optD = q.options[3].replace('D. ', '');
+                csvContent += `"${q.id}","${q.grade}","${q.unit}","${q.question}","${optA}","${optB}","${optC}","${optD}","${q.answer}","${q.explanation}"\n`;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "youhua_quiz_bank.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
     </script>
 </body>
 </html>
