@@ -351,7 +351,9 @@
         };
 
         async function autoSyncOnLoad() {
-            const url = document.getElementById('googleSheetUrlInput').value.trim();
+            const urlInput = document.getElementById('googleSheetUrlInput');
+            if(!urlInput) return;
+            const url = urlInput.value.trim();
             if(!url) return;
             try {
                 let response = await fetch(url);
@@ -364,11 +366,15 @@
             } catch(e) { console.log("使用本地快取的題庫資料"); }
         }
 
-        // 登入邏輯 (管理者與學生密碼驗證)
+        // 登入邏輯
         function handleLogin(e) {
             e.preventDefault();
-            const email = document.getElementById('gmailInput').value.trim().toLowerCase();
-            const pass = document.getElementById('passwordInput').value.trim();
+            const emailInput = document.getElementById('gmailInput');
+            const passInput = document.getElementById('passwordInput');
+            if(!emailInput || !passInput) return;
+
+            const email = emailInput.value.trim().toLowerCase();
+            const pass = passInput.value.trim();
 
             if(!email || !pass) return;
 
@@ -379,7 +385,6 @@
                 }
                 currentUser = { email: ADMIN_EMAIL, name: '系統管理者', isAdmin: true, status: 'approved' };
             } else {
-                // 檢查學生密碼是否為統一密碼 1155665
                 if(pass !== STUDENT_PASS) {
                     alert('學生密碼錯誤！學生統一密碼為 1155665');
                     return;
@@ -400,24 +405,29 @@
         }
 
         function checkUserStatusAndRoute() {
-            document.getElementById('loginView').classList.add('hidden');
+            const loginView = document.getElementById('loginView');
+            const pendingView = document.getElementById('pendingView');
+            const appView = document.getElementById('appView');
+            if(loginView) loginView.classList.add('hidden');
             
             if(!currentUser.isAdmin && currentUser.status !== 'approved') {
-                document.getElementById('pendingView').classList.remove('hidden');
-                document.getElementById('pendingUserEmail').textContent = currentUser.email;
-                document.getElementById('appView').classList.add('hidden');
+                if(pendingView) pendingView.classList.remove('hidden');
+                const pendingEmail = document.getElementById('pendingUserEmail');
+                if(pendingEmail) pendingEmail.textContent = currentUser.email;
+                if(appView) appView.classList.add('hidden');
                 return;
             }
 
-            document.getElementById('pendingView').classList.add('hidden');
-            document.getElementById('appView').classList.remove('hidden');
+            if(pendingView) pendingView.classList.add('hidden');
+            if(appView) appView.classList.remove('hidden');
 
+            const tabAdmin = document.getElementById('tabAdmin');
             if(currentUser.isAdmin) {
-                document.getElementById('tabAdmin').classList.remove('hidden');
+                if(tabAdmin) tabAdmin.classList.remove('hidden');
                 renderAdminStats();
                 renderStudentApprovalList();
             } else {
-                document.getElementById('tabAdmin').classList.add('hidden');
+                if(tabAdmin) tabAdmin.classList.add('hidden');
             }
 
             renderCalendar();
@@ -427,14 +437,18 @@
         function logout() {
             currentUser = null;
             localStorage.removeItem('youhua_user_v4');
-            document.getElementById('loginView').classList.remove('hidden');
-            document.getElementById('pendingView').classList.add('hidden');
-            document.getElementById('appView').classList.add('hidden');
+            const loginView = document.getElementById('loginView');
+            const pendingView = document.getElementById('pendingView');
+            const appView = document.getElementById('appView');
+            if(loginView) loginView.classList.remove('hidden');
+            if(pendingView) pendingView.classList.add('hidden');
+            if(appView) appView.classList.add('hidden');
             renderUserInfo();
         }
 
         function renderUserInfo() {
             const area = document.getElementById('userInfoArea');
+            if(!area) return;
             if(currentUser) {
                 area.innerHTML = `
                     <div class="flex items-center gap-2 text-xs sm:text-sm">
@@ -453,6 +467,7 @@
         function renderCalendar() {
             const grid = document.getElementById('calendarDaysGrid');
             const title = document.getElementById('calendarMonthTitle');
+            if(!grid || !title || !currentUser) return;
             grid.innerHTML = '';
 
             const now = new Date();
@@ -523,8 +538,10 @@
 
         // 測驗與單元選單
         function onQuizGradeChange() {
-            const grade = document.getElementById('quizGradeSelect').value;
+            const gradeSelect = document.getElementById('quizGradeSelect');
             const unitSelect = document.getElementById('quizUnitSelect');
+            if(!gradeSelect || !unitSelect) return;
+            const grade = gradeSelect.value;
             unitSelect.innerHTML = '<option value="">-- 所有文法單元 (全選) --</option>';
 
             if(!grade) return;
@@ -538,9 +555,14 @@
         }
 
         function startCustomQuiz() {
-            const grade = document.getElementById('quizGradeSelect').value;
-            const unit = document.getElementById('quizUnitSelect').value;
-            let count = parseInt(document.getElementById('quizCountInput').value) || 5;
+            const gradeSelect = document.getElementById('quizGradeSelect');
+            const unitSelect = document.getElementById('quizUnitSelect');
+            const countInput = document.getElementById('quizCountInput');
+            if(!gradeSelect || !unitSelect || !countInput) return;
+
+            const grade = gradeSelect.value;
+            const unit = unitSelect.value;
+            let count = parseInt(countInput.value) || 5;
 
             if(!grade) {
                 alert('請先選擇年級階段！');
@@ -560,21 +582,278 @@
             currentQuizIndex = 0;
             userAnswersRecord = [];
 
-            document.getElementById('quizEmptyState').classList.add('hidden');
-            document.getElementById('quizResultArea').classList.add('hidden');
-            document.getElementById('quizDisplayArea').classList.remove('hidden');
+            const emptyState = document.getElementById('quizEmptyState');
+            const resultArea = document.getElementById('quizResultArea');
+            const displayArea = document.getElementById('quizDisplayArea');
+            if(emptyState) emptyState.classList.add('hidden');
+            if(resultArea) resultArea.classList.add('hidden');
+            if(displayArea) displayArea.classList.remove('hidden');
             renderQuizStep();
         }
 
         function renderQuizStep() {
             const q = currentQuizQueue[currentQuizIndex];
-            document.getElementById('quizTag').textContent = `${q.grade} | ${q.unit}`;
-            document.getElementById('quizProgress').textContent = `題目 ${currentQuizIndex + 1} / ${currentQuizQueue.length}`;
-            document.getElementById('quizQuestionText').textContent = q.question;
-            document.getElementById('btnNextQuiz').classList.add('hidden');
+            const tag = document.getElementById('quizTag');
+            const progress = document.getElementById('quizProgress');
+            const qText = document.getElementById('quizQuestionText');
+            const nextBtn = document.getElementById('btnNextQuiz');
+            if(tag) tag.textContent = `${q.grade} | ${q.unit}`;
+            if(progress) progress.textContent = `題目 ${currentQuizIndex + 1} / ${currentQuizQueue.length}`;
+            if(qText) qText.textContent = q.question;
+            if(nextBtn) nextBtn.classList.add('hidden');
 
             const container = document.getElementById('quizOptionsContainer');
+            if(!container) return;
             container.innerHTML = '';
 
             q.options.forEach((optText, idx) => {
-                const optKey =
+                const optKey = String.fromCharCode(65 + idx);
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left p-4 rounded-xl border border-emerald-200 hover:border-emerald-500 hover:bg-emerald-50 font-medium text-slate-700 transition flex items-center justify-between";
+                btn.onclick = () => submitAnswer(optKey, q);
+                btn.innerHTML = `<span>${optText}</span><i class="fa-regular fa-circle text-emerald-300"></i>`;
+                container.appendChild(btn);
+            });
+        }
+
+        function submitAnswer(selectedOpt, question) {
+            const container = document.getElementById('quizOptionsContainer');
+            if(!container) return;
+            const buttons = container.querySelectorAll('button');
+            buttons.forEach(btn => btn.disabled = true);
+
+            const isCorrect = selectedOpt === question.answer;
+            userAnswersRecord.push({ question, selected: selectedOpt, isCorrect });
+
+            recordAnsweredCount(1);
+
+            if(!isCorrect) {
+                if(!wrongBank.some(item => item.id === question.id)) {
+                    wrongBank.push(question);
+                    localStorage.setItem('youhua_wrong_v4', JSON.stringify(wrongBank));
+                    updateWrongCountBadge();
+                }
+            }
+
+            buttons.forEach(btn => {
+                const txt = btn.textContent;
+                if(txt.startsWith(question.answer)) {
+                    btn.className = "w-full text-left p-4 rounded-xl border border-emerald-500 bg-emerald-100 font-bold text-emerald-900 flex items-center justify-between";
+                } else if(txt.startsWith(selectedOpt) && !isCorrect) {
+                    btn.className = "w-full text-left p-4 rounded-xl border border-rose-400 bg-rose-50 font-bold text-rose-900 flex items-center justify-between";
+                }
+            });
+
+            const nextBtn = document.getElementById('btnNextQuiz');
+            if(nextBtn) nextBtn.classList.remove('hidden');
+        }
+
+        function nextQuizStep() {
+            if(currentQuizIndex < currentQuizQueue.length - 1) {
+                currentQuizIndex++;
+                renderQuizStep();
+            } else {
+                showQuizResults();
+            }
+        }
+
+        function showQuizResults() {
+            const displayArea = document.getElementById('quizDisplayArea');
+            const resultArea = document.getElementById('quizResultArea');
+            if(displayArea) displayArea.classList.add('hidden');
+            if(resultArea) resultArea.classList.remove('hidden');
+
+            const correctCount = userAnswersRecord.filter(r => r.isCorrect).length;
+            const total = userAnswersRecord.length;
+            const rate = Math.round((correctCount / total) * 100);
+
+            const scoreSummary = document.getElementById('quizScoreSummary');
+            if(scoreSummary) scoreSummary.textContent = `共 ${total} 題，答對 ${correctCount} 題，正確率 ${rate}%`;
+
+            const listArea = document.getElementById('quizResultList');
+            if(!listArea) return;
+            listArea.innerHTML = '';
+
+            userAnswersRecord.forEach((rec, idx) => {
+                const div = document.createElement('div');
+                div.className = `p-3 rounded-xl border text-sm ${rec.isCorrect ? 'bg-emerald-50 border-emerald-200' : 'bg-rose-50 border-rose-200'}`;
+                div.innerHTML = `
+                    <div class="font-bold text-slate-800 mb-1">Q${idx+1}. ${rec.question.question}</div>
+                    <div class="text-xs text-slate-600 flex gap-4">
+                        <span>您的選擇：<b>${rec.selected}</b></span>
+                        <span class="text-emerald-700 font-bold">正確答案：${rec.question.answer}</span>
+                    </div>
+                    <div class="text-xs text-slate-500 mt-1">解析：${rec.question.explanation}</div>
+                `;
+                listArea.appendChild(div);
+            });
+        }
+
+        function resetQuizView() {
+            const resultArea = document.getElementById('quizResultArea');
+            const emptyState = document.getElementById('quizEmptyState');
+            if(resultArea) resultArea.classList.add('hidden');
+            if(emptyState) emptyState.classList.remove('hidden');
+        }
+
+        // 錯題集
+        function updateWrongCountBadge() {
+            const badge = document.getElementById('wrongCountBadge');
+            if(badge) badge.textContent = wrongBank.length;
+        }
+
+        function renderWrongBank() {
+            const list = document.getElementById('wrongQuestionsList');
+            const printEmail = document.getElementById('printUserEmail');
+            if(printEmail && currentUser) printEmail.textContent = currentUser.email;
+            if(!list) return;
+            list.innerHTML = '';
+
+            if(wrongBank.length === 0) {
+                list.innerHTML = `<div class="text-center py-8 text-slate-400">目前沒有錯題紀錄！</div>`;
+                return;
+            }
+
+            wrongBank.forEach((q, idx) => {
+                const card = document.createElement('div');
+                card.className = "p-4 bg-emerald-50 rounded-xl border border-emerald-200 space-y-2";
+                card.innerHTML = `
+                    <div class="flex justify-between text-xs text-emerald-800 font-bold">
+                        <span>[${q.grade}] ${q.unit}</span>
+                        <button onclick="removeWrong(${idx})" class="text-rose-500 hover:underline no-print">移除</button>
+                    </div>
+                    <div class="font-medium text-slate-800">${q.question}</div>
+                    <div class="grid grid-cols-2 gap-2 text-xs text-slate-600">
+                        ${q.options.map(o => `<div>${o}</div>`).join('')}
+                    </div>
+                    <div class="text-xs text-slate-700 bg-white p-2 rounded border border-emerald-100">
+                        <b class="text-emerald-700">正確答案：${q.answer}</b> | 解析：${q.explanation}
+                    </div>
+                `;
+                list.appendChild(card);
+            });
+        }
+
+        function removeWrong(idx) {
+            wrongBank.splice(idx, 1);
+            localStorage.setItem('youhua_wrong_v4', JSON.stringify(wrongBank));
+            updateWrongCountBadge();
+            renderWrongBank();
+        }
+
+        function clearWrongBank() {
+            if(confirm('確定清空所有錯題嗎？')) {
+                wrongBank = [];
+                localStorage.removeItem('youhua_wrong_v4');
+                updateWrongCountBadge();
+                renderWrongBank();
+            }
+        }
+
+        // 管理者後台 (學員審核 + Google Sheet 同步)
+        function renderStudentApprovalList() {
+            const container = document.getElementById('studentApprovalList');
+            if(!container) return;
+            if(usersDB.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-400 py-4">目前尚無學生註冊。</p>`;
+                return;
+            }
+
+            let html = `
+                <table class="w-full text-left text-sm border-collapse">
+                    <thead>
+                        <tr class="border-b bg-emerald-50 text-emerald-900">
+                            <th class="p-2">學生 Gmail 帳號</th>
+                            <th class="p-2">目前狀態</th>
+                            <th class="p-2 text-right">管理操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            usersDB.forEach((u, index) => {
+                const statusBadge = u.status === 'approved' 
+                    ? '<span class="bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded font-bold">已核可</span>'
+                    : '<span class="bg-amber-100 text-amber-800 text-xs px-2 py-0.5 rounded font-bold">等待審核</span>';
+
+                html += `
+                    <tr class="border-b">
+                        <td class="p-2 font-medium">${u.email}</td>
+                        <td class="p-2">${statusBadge}</td>
+                        <td class="p-2 text-right space-x-2">
+                            ${u.status !== 'approved' 
+                                ? `<button onclick="toggleUserStatus(${index}, 'approved')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1 rounded transition">核可使用</button>`
+                                : `<button onclick="toggleUserStatus(${index}, 'pending')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs px-3 py-1 rounded transition">取消權限</button>`
+                            }
+                            <button onclick="deleteUser(${index})" class="text-rose-500 hover:underline text-xs">刪除</button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += `</tbody></table>`;
+            container.innerHTML = html;
+        }
+
+        function toggleUserStatus(index, newStatus) {
+            usersDB[index].status = newStatus;
+            localStorage.setItem('youhua_users_db_v4', JSON.stringify(usersDB));
+            renderStudentApprovalList();
+            alert(`已變更 ${usersDB[index].email} 的帳號狀態！`);
+        }
+
+        function deleteUser(index) {
+            if(confirm(`確定刪除 ${usersDB[index].email} 嗎？`)) {
+                usersDB.splice(index, 1);
+                localStorage.setItem('youhua_users_db_v4', JSON.stringify(usersDB));
+                renderStudentApprovalList();
+            }
+        }
+
+        async function syncGoogleSheet() {
+            const urlInput = document.getElementById('googleSheetUrlInput');
+            const status = document.getElementById('syncStatus');
+            if(!urlInput || !status) return;
+            const url = urlInput.value.trim();
+            
+            if(!url) return;
+
+            status.textContent = "正在連線同步 Google Sheet 題庫...";
+
+            try {
+                let response = await fetch(url);
+                let data = await response.json();
+                
+                if(Array.isArray(data) && data.length > 0) {
+                    questionsDB = data;
+                    localStorage.setItem('youhua_questions_v4', JSON.stringify(questionsDB));
+                    status.textContent = `同步成功！共載入 ${questionsDB.length} 筆雲端題目。`;
+                    renderAdminStats();
+                } else {
+                    status.textContent = "同步失敗：資料格式不符。";
+                }
+            } catch(err) {
+                console.error(err);
+                status.textContent = "連線失敗，請確認 Google Sheet 已部署為 Web App 且任何人皆可存取。";
+            }
+        }
+
+        function renderAdminStats() {
+            const countSpan = document.getElementById('totalQuestionCount');
+            const tableArea = document.getElementById('questionStatsTable');
+            if(countSpan) countSpan.textContent = `總計 ${questionsDB.length} 題`;
+            if(!tableArea) return;
+            
+            const stats = {};
+            questionsDB.forEach(q => { stats[q.grade] = (stats[q.grade] || 0) + 1; });
+
+            let html = `<table class="w-full text-left text-sm border-collapse"><thead><tr class="border-b bg-emerald-50 text-emerald-900"><th class="p-2">年級階段</th><th class="p-2">題數統計</th></tr></thead><tbody>`;
+            for(let grade in stats) {
+                html += `<tr class="border-b"><td class="p-2 font-medium">${grade}</td><td class="p-2">${stats[grade]} 題</td></tr>`;
+            }
+            html += `</tbody></table>`;
+            tableArea.innerHTML = html;
+        }
+    </script>
+</body>
+</html>
