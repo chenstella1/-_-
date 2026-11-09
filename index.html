@@ -95,7 +95,7 @@
             <div class="mt-6 text-xs text-slate-400 bg-emerald-50 p-3 rounded-lg text-left space-y-1">
                 <span class="font-bold text-emerald-700">登入提示：</span><br>
                 • <b>管理者帳號</b>：<code>yhstella2@gmail.com</code> (密碼：<code>a18177300</code>)<br>
-                • <b>學生註冊/登入</b>：輸入自己的 Gmail，密碼統一為 <code>1155665</code>（需經管理者核可）
+                • <b>學生註冊/登入</b>：輸入自己的 Gmail，密碼統一洽老師（需經管理者核可）
             </div>
         </div>
 
@@ -386,7 +386,7 @@
                 currentUser = { email: ADMIN_EMAIL, name: '系統管理者', isAdmin: true, status: 'approved' };
             } else {
                 if(pass !== STUDENT_PASS) {
-                    alert('學生密碼錯誤！學生統一密碼為 1155665');
+                    alert('學生密碼錯誤！學生統一密碼請洽老師。');
                     return;
                 }
 
