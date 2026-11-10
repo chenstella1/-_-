@@ -449,7 +449,6 @@
 
             localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(currentUser));
             
-            // 同步至 Google 試算表雲端
             syncUserToCloud({
                 email: currentUser.email,
                 name: currentUser.name,
@@ -572,7 +571,6 @@
             studentStatsRecord[currentUser.email].lastTime = new Date().toLocaleString('zh-TW', { hour12: false });
             localStorage.setItem(STORAGE_KEY_STATS, JSON.stringify(studentStatsRecord));
 
-            // 同步至雲端試算表
             syncUserToCloud({
                 email: currentUser.email,
                 name: currentUser.name,
@@ -614,7 +612,7 @@
                 const label = document.createElement('label');
                 label.className = "flex items-center gap-2 cursor-pointer hover:bg-emerald-50 p-1 rounded";
                 label.innerHTML = `
-                    <input type="checkbox" value="${grade}" onchange="onGradeCheckboxChange()" class="grade-checkbox rounded text-emerald-600 focus:ring-emerald-500">
+                    <input type="checkbox" value="${grade}" onchange="onGradeCheckboxChange()" class="grade-checkbox rounded text-emerald-600 focus:ring-emerald-500" checked>
                     <span class="font-medium text-slate-700">${grade} (${count}題)</span>
                 `;
                 container.appendChild(label);
@@ -628,29 +626,28 @@
         }
 
         function onGradeCheckboxChange() {
-            const selectedGrades = Array.from(document.querySelectorAll('.grade-checkbox:checked')).map(cb => cb.value);
             const unitContainer = document.getElementById('unitCheckboxesContainer');
             if(!unitContainer) return;
             unitContainer.innerHTML = '';
 
-            if(selectedGrades.length === 0) {
-                unitContainer.innerHTML = '<span class="text-slate-400">請先勾選上方年級...</span>';
+            // 取得全網所有不重複的文法單元，確保即使目前分類下沒有題目，單元選項也全部保留列出
+            const allUnits = [...new Set(questionsDB.map(q => q.unit))].sort();
+
+            if(allUnits.length === 0) {
+                unitContainer.innerHTML = '<span class="text-slate-400">尚無文法單元...</span>';
                 return;
             }
 
-            const filteredQuestions = questionsDB.filter(q => selectedGrades.includes(q.grade));
-            const unitCounts = {};
-            filteredQuestions.forEach(q => { unitCounts[q.unit] = (unitCounts[q.unit] || 0) + 1; });
-
-            for(let unit in unitCounts) {
+            allUnits.forEach(unit => {
+                const count = questionsDB.filter(q => q.unit === unit).length;
                 const label = document.createElement('label');
                 label.className = "flex items-center gap-2 cursor-pointer hover:bg-emerald-50 p-1 rounded";
                 label.innerHTML = `
                     <input type="checkbox" value="${unit}" class="unit-checkbox rounded text-emerald-600 focus:ring-emerald-500" checked>
-                    <span class="font-medium text-slate-700">${unit} (${unitCounts[unit]}題)</span>
+                    <span class="font-medium text-slate-700">${unit} (${count}題)</span>
                 `;
                 unitContainer.appendChild(label);
-            }
+            });
         }
 
         function toggleAllUnits(select) {
@@ -699,7 +696,8 @@
                         <label class="block text-xs font-bold text-emerald-900">請在下方輸入您的答案：</label>
                         <div class="flex gap-2">
                             <input type="text" id="fillInAnswerInput" placeholder="請輸入答案（例如: Does / have）" 
-                                class="w-full px-4 py-3 rounded-xl border border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-base">
+                                class="w-full px-4 py-3 rounded-xl border border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-base"
+                                onkeypress="if(event.key === 'Enter') submitFillInAnswer()">
                             <button onclick="submitFillInAnswer()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-3 rounded-xl shadow transition">
                                 提交答案
                             </button>
@@ -721,7 +719,7 @@
 
         function submitFillInAnswer() {
             const inputEl = document.getElementById('fillInAnswerInput');
-            if(!inputEl) return;
+            if(!inputEl || inputEl.disabled) return;
             const userText = inputEl.value.trim();
             if(!userText) { alert('請先輸入答案！'); return; }
 
@@ -932,7 +930,6 @@
             usersDB[index].status = newStatus;
             localStorage.setItem(STORAGE_KEY_USERS_DB, JSON.stringify(usersDB));
             
-            // 同步變更至雲端
             syncUserToCloud({
                 email: usersDB[index].email,
                 name: usersDB[index].name,
