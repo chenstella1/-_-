@@ -73,8 +73,13 @@
                 <i class="fa-solid fa-user-lock text-3xl"></i>
             </div>
             <h2 class="text-2xl font-bold text-slate-800 mb-2">學員與管理員登入</h2>
-            <p class="text-slate-500 mb-6 text-sm">請使用您的 Google Gmail 帳號與密碼登入系統</p>
+            <p class="text-slate-500 mb-4 text-sm">請使用您的 Google Gmail 帳號與密碼登入系統</p>
             
+            <!-- 全網總題數即時顯示徽章 -->
+            <div class="mb-6 inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200 px-4 py-1.5 rounded-full text-xs font-bold text-emerald-800 shadow-sm">
+                <i class="fa-solid fa-database text-emerald-600"></i> 全網總題數：<span id="globalTotalCountBadge">0</span> 題
+            </div>
+
             <form onsubmit="handleLogin(event)" class="space-y-4">
                 <div class="text-left">
                     <label class="block text-xs font-semibold text-slate-600 mb-1">Gmail 帳號：</label>
@@ -297,7 +302,7 @@
 
     <!-- 頁尾 (青綠色) -->
     <footer class="bg-emerald-600 text-white border-t border-emerald-700 py-4 text-center text-xs font-bold tracking-wide no-print shadow-inner">
-        青綠色高國中題庫與錯題匯出系統 &copy; 2026 優華數位英文學習文法刷題網
+        高國中題庫與錯題匯出系統 &copy; 2026 優華數位英文學習文法刷題網
     </footer>
 
     <!-- JavaScript 邏輯程式碼 -->
@@ -314,12 +319,12 @@
         ];
 
         // 狀態與資料庫
-        let questionsDB = JSON.parse(localStorage.getItem('youhua_questions_v8')) || defaultQuestions;
-        let currentUser = JSON.parse(localStorage.getItem('youhua_user_v8')) || null;
-        let usersDB = JSON.parse(localStorage.getItem('youhua_users_db_v8')) || [];
-        let wrongBank = JSON.parse(localStorage.getItem('youhua_wrong_v8')) || [];
-        let dailyPracticeRecord = JSON.parse(localStorage.getItem('youhua_daily_practice_v8')) || {};
-        let studentStatsRecord = JSON.parse(localStorage.getItem('youhua_student_stats_v8')) || {}; // 記錄學生總題數與最後練習時間
+        let questionsDB = JSON.parse(localStorage.getItem('youhua_questions_v10')) || defaultQuestions;
+        let currentUser = JSON.parse(localStorage.getItem('youhua_user_v10')) || null;
+        let usersDB = JSON.parse(localStorage.getItem('youhua_users_db_v10')) || [];
+        let wrongBank = JSON.parse(localStorage.getItem('youhua_wrong_v10')) || [];
+        let dailyPracticeRecord = JSON.parse(localStorage.getItem('youhua_daily_practice_v10')) || {};
+        let studentStatsRecord = JSON.parse(localStorage.getItem('youhua_student_stats_v10')) || {};
 
         let currentQuizQueue = [];
         let currentQuizIndex = 0;
@@ -327,11 +332,19 @@
 
         window.onload = function() {
             renderUserInfo();
+            updateGlobalTotalCountBadge();
             autoSyncSheetInBackground();
             if(currentUser) {
                 checkUserStatusAndRoute();
             }
         };
+
+        function updateGlobalTotalCountBadge() {
+            const badge = document.getElementById('globalTotalCountBadge');
+            if(badge) {
+                badge.textContent = questionsDB.length;
+            }
+        }
 
         async function autoSyncSheetInBackground() {
             try {
@@ -339,7 +352,8 @@
                 let data = await response.json();
                 if(Array.isArray(data) && data.length > 0) {
                     questionsDB = data;
-                    localStorage.setItem('youhua_questions_v8', JSON.stringify(questionsDB));
+                    localStorage.setItem('youhua_questions_v10', JSON.stringify(questionsDB));
+                    updateGlobalTotalCountBadge();
                     if(currentUser && currentUser.isAdmin) {
                         renderAdminStats();
                     }
@@ -377,12 +391,12 @@
                 if(!existingUser) {
                     existingUser = { email: email, name: email.split('@')[0], isAdmin: false, status: 'pending' };
                     usersDB.push(existingUser);
-                    localStorage.setItem('youhua_users_db_v8', JSON.stringify(usersDB));
+                    localStorage.setItem('youhua_users_db_v10', JSON.stringify(usersDB));
                 }
                 currentUser = existingUser;
             }
 
-            localStorage.setItem('youhua_user_v8', JSON.stringify(currentUser));
+            localStorage.setItem('youhua_user_v10', JSON.stringify(currentUser));
             renderUserInfo();
             checkUserStatusAndRoute();
         }
@@ -408,12 +422,12 @@
             const tabAdmin = document.getElementById('tabAdmin');
             if(currentUser.isAdmin) {
                 if(tabAdmin) tabAdmin.classList.remove('hidden');
-                if(calendarCard) calendarCard.classList.add('hidden'); // 管理者介面不顯示月曆
+                if(calendarCard) calendarCard.classList.add('hidden');
                 renderAdminStats();
                 renderStudentApprovalList();
             } else {
                 if(tabAdmin) tabAdmin.classList.add('hidden');
-                if(calendarCard) calendarCard.classList.remove('hidden'); // 使用者介面顯示月曆
+                if(calendarCard) calendarCard.classList.remove('hidden');
                 renderCalendar();
             }
 
@@ -422,7 +436,7 @@
 
         function logout() {
             currentUser = null;
-            localStorage.removeItem('youhua_user_v8');
+            localStorage.removeItem('youhua_user_v10');
             const loginView = document.getElementById('loginView');
             const pendingView = document.getElementById('pendingView');
             const appView = document.getElementById('appView');
@@ -430,6 +444,7 @@
             if(pendingView) pendingView.classList.add('hidden');
             if(appView) appView.classList.add('hidden');
             renderUserInfo();
+            updateGlobalTotalCountBadge();
         }
 
         function renderUserInfo() {
@@ -499,15 +514,14 @@
                 dailyPracticeRecord[currentUser.email] = {};
             }
             dailyPracticeRecord[currentUser.email][todayStr] = (dailyPracticeRecord[currentUser.email][todayStr] || 0) + num;
-            localStorage.setItem('youhua_daily_practice_v8', JSON.stringify(dailyPracticeRecord));
+            localStorage.setItem('youhua_daily_practice_v10', JSON.stringify(dailyPracticeRecord));
 
-            // 更新學生總練習題數與最後練習時間
             if(!studentStatsRecord[currentUser.email]) {
                 studentStatsRecord[currentUser.email] = { totalCount: 0, lastTime: '' };
             }
             studentStatsRecord[currentUser.email].totalCount += num;
             studentStatsRecord[currentUser.email].lastTime = new Date().toLocaleString('zh-TW', { hour12: false });
-            localStorage.setItem('youhua_student_stats_v8', JSON.stringify(studentStatsRecord));
+            localStorage.setItem('youhua_student_stats_v10', JSON.stringify(studentStatsRecord));
 
             renderCalendar();
         }
@@ -631,7 +645,7 @@
             if(!isCorrect) {
                 if(!wrongBank.some(item => item.id === question.id)) {
                     wrongBank.push(question);
-                    localStorage.setItem('youhua_wrong_v8', JSON.stringify(wrongBank));
+                    localStorage.setItem('youhua_wrong_v10', JSON.stringify(wrongBank));
                     updateWrongCountBadge();
                 }
             }
@@ -737,7 +751,7 @@
 
         function removeWrong(idx) {
             wrongBank.splice(idx, 1);
-            localStorage.setItem('youhua_wrong_v8', JSON.stringify(wrongBank));
+            localStorage.setItem('youhua_wrong_v10', JSON.stringify(wrongBank));
             updateWrongCountBadge();
             renderWrongBank();
         }
@@ -745,7 +759,7 @@
         function clearWrongBank() {
             if(confirm('確定清空所有錯題嗎？')) {
                 wrongBank = [];
-                localStorage.removeItem('youhua_wrong_v8');
+                localStorage.removeItem('youhua_wrong_v10');
                 updateWrongCountBadge();
                 renderWrongBank();
             }
@@ -804,7 +818,7 @@
 
         function toggleUserStatus(index, newStatus) {
             usersDB[index].status = newStatus;
-            localStorage.setItem('youhua_users_db_v8', JSON.stringify(usersDB));
+            localStorage.setItem('youhua_users_db_v10', JSON.stringify(usersDB));
             renderStudentApprovalList();
             alert(`已變更 ${usersDB[index].email} 的帳號狀態！`);
         }
@@ -812,7 +826,7 @@
         function deleteUser(index) {
             if(confirm(`確定刪除 ${usersDB[index].email} 嗎？`)) {
                 usersDB.splice(index, 1);
-                localStorage.setItem('youhua_users_db_v8', JSON.stringify(usersDB));
+                localStorage.setItem('youhua_users_db_v10', JSON.stringify(usersDB));
                 renderStudentApprovalList();
             }
         }
