@@ -166,7 +166,6 @@
 
                 <!-- 出題設定面板（複選支援） -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 bg-emerald-50 p-4 rounded-xl border border-emerald-200">
-                    <!-- 1. 年級階段複選 -->
                     <div>
                         <div class="flex justify-between items-center mb-1">
                             <label class="block text-xs font-bold text-emerald-900">選擇年級階段 (可複選)：</label>
@@ -177,7 +176,6 @@
                         </div>
                     </div>
 
-                    <!-- 2. 文法單元複選 -->
                     <div>
                         <div class="flex justify-between items-center mb-1">
                             <label class="block text-xs font-bold text-emerald-900">選擇文法單元 (可複選)：</label>
@@ -188,7 +186,6 @@
                         </div>
                     </div>
 
-                    <!-- 3. 題數與開始按鈕 -->
                     <div class="flex flex-col justify-between">
                         <div>
                             <label class="block text-xs font-bold text-emerald-900 mb-1">練習題數 (1-100題)：</label>
@@ -213,9 +210,9 @@
                         題目內容...
                     </div>
 
-                    <!-- 選項 -->
-                    <div id="quizOptionsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <!-- 動態選項 -->
+                    <!-- 選項或填空輸入介面 -->
+                    <div id="quizOptionsContainer" class="space-y-3">
+                        <!-- 動態生成選項或填空輸入框 -->
                     </div>
 
                     <!-- 即時答對/答錯回饋與解析區塊 -->
@@ -276,7 +273,6 @@
                     </div>
                 </div>
 
-                <!-- 可供列印與轉 PDF 的專用包裝區 -->
                 <div id="printableWrongArea" class="space-y-4">
                     <div class="hidden print:block text-center mb-6">
                         <h1 class="text-xl font-bold">優華數位英文學習文法刷題網 - 個人錯題複習講義</h1>
@@ -288,10 +284,8 @@
                 </div>
             </div>
 
-            <!-- Tab 3: 管理員後台 (學員核可、練習紀錄與題庫統計) -->
+            <!-- Tab 3: 管理員後台 -->
             <div id="viewAdmin" class="hidden space-y-6">
-                
-                <!-- 管理者端題庫同步控制區塊 -->
                 <div class="bg-white rounded-xl shadow-md p-6 border border-emerald-100 space-y-4">
                     <h3 class="font-bold text-slate-800 border-b border-emerald-100 pb-3 flex items-center justify-between">
                         <span><i class="fa-solid fa-rotate text-emerald-600"></i> Google Sheet 雲端題庫強制更新控制</span>
@@ -305,25 +299,19 @@
                     </div>
                 </div>
 
-                <!-- 學員帳號審核與練習紀錄區塊 -->
                 <div class="bg-white rounded-xl shadow-md p-6 border border-emerald-100 space-y-4">
                     <h3 class="font-bold text-slate-800 border-b border-emerald-100 pb-3 flex items-center gap-2">
                         <i class="fa-solid fa-users-gear text-emerald-600"></i> 學員註冊核可與練習紀錄監控
                     </h3>
-                    <div id="studentApprovalList" class="overflow-x-auto">
-                        <!-- 動態生成學員列表與練習時間/題數 -->
-                    </div>
+                    <div id="studentApprovalList" class="overflow-x-auto"></div>
                 </div>
 
-                <!-- 目前題庫總覽統計 -->
                 <div class="bg-white rounded-xl shadow-md p-6 border border-emerald-100">
                     <h3 class="font-bold text-slate-800 border-b border-emerald-100 pb-3 mb-4 flex items-center justify-between">
                         <span><i class="fa-solid fa-database text-emerald-600"></i> 目前雲端題庫狀態統計</span>
                         <span id="totalQuestionCount" class="text-xs bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full font-bold">總計 0 題</span>
                     </h3>
-                    <div id="questionStatsTable" class="overflow-x-auto">
-                        <!-- 動態分類題數統計 -->
-                    </div>
+                    <div id="questionStatsTable" class="overflow-x-auto"></div>
                 </div>
             </div>
 
@@ -343,21 +331,18 @@
         const STUDENT_PASS = '1155665';
         const SHEET_DEV_URL = 'https://script.google.com/macros/s/AKfycbw5yZUcaX0hHwT8HFMHCScPs0mP5WXrblLVBcjezJk2d2AYVrk8a1VqRCfgSrKNErBr/exec';
 
-        // 預設示範題庫
         const defaultQuestions = [
             { id: '101', grade: '國七', unit: '關代簡化', question: 'The ruined castle ________ on top of the hill was built in the 17th century.', options: ['A. was standing', 'B. to stand', 'C. standing', 'D. stood'], answer: 'C', explanation: '佇立在（standing）山頂上的廢棄城堡建造於17世紀。' },
-            { id: '102', grade: '高一', unit: '動詞用法', question: 'Before entering the laboratory, all workers must wear safety goggles to ________ their eyes are protected.', options: ['A. ensure', 'B. enforce', 'C. unveil', 'D. complain'], answer: 'A', explanation: '進入實驗室前，所有工作人員必須佩戴護目鏡，以確保（ensure）眼睛得到保護。' }
+            { id: '102', grade: '國七', unit: '一般動詞句型', question: 'Jessie has a beautiful face. 疑問句: ______ Jessie ______ a beautiful face?', options: [], answer: 'Does / have', explanation: '主詞 Jessie 為第三人稱單數，一般動詞現在式疑問句需借助助動詞 Does，且動詞還原為原形 have。' }
         ];
 
-        // 使用固定且永久的 LocalStorage 鍵值，確保未來每次更新 index.html 時，學生資料絕不遺失！
-        const STORAGE_KEY_QUESTIONS = 'youhua_persistent_questions_v1';
-        const STORAGE_KEY_USER = 'youhua_persistent_current_user_v1';
-        const STORAGE_KEY_USERS_DB = 'youhua_persistent_users_db_v1';
-        const STORAGE_KEY_WRONG = 'youhua_persistent_wrong_v1';
-        const STORAGE_KEY_DAILY = 'youhua_persistent_daily_practice_v1';
-        const STORAGE_KEY_STATS = 'youhua_persistent_student_stats_v1';
+        const STORAGE_KEY_QUESTIONS = 'youhua_persistent_questions_v2';
+        const STORAGE_KEY_USER = 'youhua_persistent_current_user_v2';
+        const STORAGE_KEY_USERS_DB = 'youhua_persistent_users_db_v2';
+        const STORAGE_KEY_WRONG = 'youhua_persistent_wrong_v2';
+        const STORAGE_KEY_DAILY = 'youhua_persistent_daily_practice_v2';
+        const STORAGE_KEY_STATS = 'youhua_persistent_student_stats_v2';
 
-        // 狀態與資料庫
         let questionsDB = JSON.parse(localStorage.getItem(STORAGE_KEY_QUESTIONS)) || defaultQuestions;
         let currentUser = JSON.parse(localStorage.getItem(STORAGE_KEY_USER)) || null;
         let usersDB = JSON.parse(localStorage.getItem(STORAGE_KEY_USERS_DB)) || [];
@@ -380,9 +365,7 @@
 
         function updateGlobalTotalCountBadge() {
             const badge = document.getElementById('globalTotalCountBadge');
-            if(badge) {
-                badge.textContent = questionsDB.length;
-            }
+            if(badge) badge.textContent = questionsDB.length;
         }
 
         async function autoSyncSheetInBackground() {
@@ -394,9 +377,7 @@
                     localStorage.setItem(STORAGE_KEY_QUESTIONS, JSON.stringify(questionsDB));
                     updateGlobalTotalCountBadge();
                     initGradeCheckboxes();
-                    if(currentUser && currentUser.isAdmin) {
-                        renderAdminStats();
-                    }
+                    if(currentUser && currentUser.isAdmin) renderAdminStats();
                 }
             } catch(e) {
                 console.log("使用本地快取題庫");
@@ -404,7 +385,6 @@
             }
         }
 
-        // 手動更新按鈕邏輯
         async function manualSyncSheet(statusElementId) {
             const statusEl = document.getElementById(statusElementId);
             if(statusEl) statusEl.textContent = "連線更新中...";
@@ -417,9 +397,7 @@
                     localStorage.setItem(STORAGE_KEY_QUESTIONS, JSON.stringify(questionsDB));
                     updateGlobalTotalCountBadge();
                     initGradeCheckboxes();
-                    if(currentUser && currentUser.isAdmin) {
-                        renderAdminStats();
-                    }
+                    if(currentUser && currentUser.isAdmin) renderAdminStats();
                     if(statusEl) {
                         statusEl.textContent = `更新成功！共載入 ${questionsDB.length} 題`;
                         setTimeout(() => { statusEl.textContent = ''; }, 4000);
@@ -428,12 +406,10 @@
                     if(statusEl) statusEl.textContent = "更新失敗：資料格式不符";
                 }
             } catch(e) {
-                console.error(e);
                 if(statusEl) statusEl.textContent = "連線失敗，請檢查網路或 Google 權限設定";
             }
         }
 
-        // 登入邏輯
         function handleLogin(e) {
             e.preventDefault();
             const emailInput = document.getElementById('gmailInput');
@@ -443,20 +419,11 @@
             const email = emailInput.value.trim().toLowerCase();
             const pass = passInput.value.trim();
 
-            if(!email || !pass) return;
-
             if(email === ADMIN_EMAIL) {
-                if(pass !== ADMIN_PASS) {
-                    alert('管理者密碼錯誤！');
-                    return;
-                }
+                if(pass !== ADMIN_PASS) { alert('管理者密碼錯誤！'); return; }
                 currentUser = { email: ADMIN_EMAIL, name: '系統管理者', isAdmin: true, status: 'approved' };
             } else {
-                if(pass !== STUDENT_PASS) {
-                    alert('學生密碼錯誤！學生統一密碼請洽老師。');
-                    return;
-                }
-
+                if(pass !== STUDENT_PASS) { alert('學生密碼錯誤！學生統一密碼請洽老師。'); return; }
                 let existingUser = usersDB.find(u => u.email === email);
                 if(!existingUser) {
                     existingUser = { email: email, name: email.split('@')[0], isAdmin: false, status: 'pending' };
@@ -480,8 +447,7 @@
             
             if(!currentUser.isAdmin && currentUser.status !== 'approved') {
                 if(pendingView) pendingView.classList.remove('hidden');
-                const pendingEmail = document.getElementById('pendingUserEmail');
-                if(pendingEmail) pendingEmail.textContent = currentUser.email;
+                document.getElementById('pendingUserEmail').textContent = currentUser.email;
                 if(appView) appView.classList.add('hidden');
                 return;
             }
@@ -508,12 +474,9 @@
         function logout() {
             currentUser = null;
             localStorage.removeItem(STORAGE_KEY_USER);
-            const loginView = document.getElementById('loginView');
-            const pendingView = document.getElementById('pendingView');
-            const appView = document.getElementById('appView');
-            if(loginView) loginView.classList.remove('hidden');
-            if(pendingView) pendingView.classList.add('hidden');
-            if(appView) appView.classList.add('hidden');
+            document.getElementById('loginView').classList.remove('hidden');
+            document.getElementById('pendingView').classList.add('hidden');
+            document.getElementById('appView').classList.add('hidden');
             renderUserInfo();
             updateGlobalTotalCountBadge();
         }
@@ -535,7 +498,6 @@
             }
         }
 
-        // 使用者專屬打卡月曆功能
         function renderCalendar() {
             const grid = document.getElementById('calendarDaysGrid');
             const title = document.getElementById('calendarMonthTitle');
@@ -545,16 +507,13 @@
             const now = new Date();
             const year = now.getFullYear();
             const month = now.getMonth();
-
             title.textContent = `${year} 年 ${month + 1} 月`;
 
             const firstDay = new Date(year, month, 1).getDay();
             const daysInMonth = new Date(year, month + 1, 0).getDate();
             const todayStr = getTodayKey();
 
-            for(let i = 0; i < firstDay; i++) {
-                grid.innerHTML += `<div></div>`;
-            }
+            for(let i = 0; i < firstDay; i++) { grid.innerHTML += `<div></div>`; }
 
             for(let day = 1; day <= daysInMonth; day++) {
                 const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
@@ -564,7 +523,6 @@
 
                 const dayCard = document.createElement('div');
                 dayCard.className = `p-2 rounded-lg border text-xs flex flex-col items-center justify-between min-h-[52px] ${isToday ? 'border-emerald-500 bg-emerald-50 font-bold' : 'border-slate-100 bg-white'}`;
-                
                 dayCard.innerHTML = `
                     <span class="${isToday ? 'text-emerald-700' : 'text-slate-600'}">${day}</span>
                     ${isCheck ? '<i class="fa-solid fa-circle-check text-emerald-600 text-base mt-0.5"></i>' : `<span class="text-[10px] text-slate-300">${count}/10</span>`}
@@ -581,15 +539,11 @@
         function recordAnsweredCount(num = 1) {
             if(!currentUser || currentUser.isAdmin) return;
             const todayStr = getTodayKey();
-            if(!dailyPracticeRecord[currentUser.email]) {
-                dailyPracticeRecord[currentUser.email] = {};
-            }
+            if(!dailyPracticeRecord[currentUser.email]) dailyPracticeRecord[currentUser.email] = {};
             dailyPracticeRecord[currentUser.email][todayStr] = (dailyPracticeRecord[currentUser.email][todayStr] || 0) + num;
             localStorage.setItem(STORAGE_KEY_DAILY, JSON.stringify(dailyPracticeRecord));
 
-            if(!studentStatsRecord[currentUser.email]) {
-                studentStatsRecord[currentUser.email] = { totalCount: 0, lastTime: '' };
-            }
+            if(!studentStatsRecord[currentUser.email]) studentStatsRecord[currentUser.email] = { totalCount: 0, lastTime: '' };
             studentStatsRecord[currentUser.email].totalCount += num;
             studentStatsRecord[currentUser.email].lastTime = new Date().toLocaleString('zh-TW', { hour12: false });
             localStorage.setItem(STORAGE_KEY_STATS, JSON.stringify(studentStatsRecord));
@@ -597,10 +551,8 @@
             renderCalendar();
         }
 
-        // 分頁切換
         function switchTab(tabName) {
-            const tabs = ['Quiz', 'Wrong', 'Admin'];
-            tabs.forEach(t => {
+            ['Quiz', 'Wrong', 'Admin'].forEach(t => {
                 const btn = document.getElementById(`tab${t}`);
                 const view = document.getElementById(`view${t === 'Wrong' ? 'WrongBank' : t}`);
                 if(btn && view) {
@@ -616,17 +568,13 @@
             if(tabName === 'wrongBank') renderWrongBank();
         }
 
-        // 初始化年級複選框
         function initGradeCheckboxes() {
             const container = document.getElementById('gradeCheckboxesContainer');
             if(!container) return;
             container.innerHTML = '';
 
             const grades = [...new Set(questionsDB.map(q => q.grade))].sort();
-            if(grades.length === 0) {
-                container.innerHTML = '<span class="text-slate-400">無可用年級</span>';
-                return;
-            }
+            if(grades.length === 0) { container.innerHTML = '<span class="text-slate-400">無可用年級</span>'; return; }
 
             grades.forEach(grade => {
                 const count = questionsDB.filter(q => q.grade === grade).length;
@@ -642,8 +590,7 @@
         }
 
         function toggleAllGrades(select) {
-            const checkboxes = document.querySelectorAll('.grade-checkbox');
-            checkboxes.forEach(cb => cb.checked = select);
+            document.querySelectorAll('.grade-checkbox').forEach(cb => cb.checked = select);
             onGradeCheckboxChange();
         }
 
@@ -660,9 +607,7 @@
 
             const filteredQuestions = questionsDB.filter(q => selectedGrades.includes(q.grade));
             const unitCounts = {};
-            filteredQuestions.forEach(q => {
-                unitCounts[q.unit] = (unitCounts[q.unit] || 0) + 1;
-            });
+            filteredQuestions.forEach(q => { unitCounts[q.unit] = (unitCounts[q.unit] || 0) + 1; });
 
             for(let unit in unitCounts) {
                 const label = document.createElement('label');
@@ -676,8 +621,7 @@
         }
 
         function toggleAllUnits(select) {
-            const checkboxes = document.querySelectorAll('.unit-checkbox');
-            checkboxes.forEach(cb => cb.checked = select);
+            document.querySelectorAll('.unit-checkbox').forEach(cb => cb.checked = select);
         }
 
         function startCustomQuiz() {
@@ -686,62 +630,105 @@
             const countInput = document.getElementById('quizCountInput');
             let count = parseInt(countInput ? countInput.value : 5) || 5;
 
-            if(selectedGrades.length === 0) {
-                alert('請至少勾選一個年級階段！');
-                return;
-            }
-            if(selectedUnits.length === 0) {
-                alert('請至少勾選一個文法單元！');
-                return;
-            }
+            if(selectedGrades.length === 0) { alert('請至少勾選一個年級階段！'); return; }
+            if(selectedUnits.length === 0) { alert('請至少勾選一個文法單元！'); return; }
 
             let pool = questionsDB.filter(q => selectedGrades.includes(q.grade) && selectedUnits.includes(q.unit));
-
-            if(pool.length === 0) {
-                alert('找不到符合條件的題目！');
-                return;
-            }
+            if(pool.length === 0) { alert('找不到符合條件的題目！'); return; }
 
             pool.sort(() => Math.random() - 0.5);
             currentQuizQueue = pool.slice(0, Math.min(count, pool.length));
             currentQuizIndex = 0;
             userAnswersRecord = [];
 
-            const emptyState = document.getElementById('quizEmptyState');
-            const resultArea = document.getElementById('quizResultArea');
-            const displayArea = document.getElementById('quizDisplayArea');
-            if(emptyState) emptyState.classList.add('hidden');
-            if(resultArea) resultArea.classList.add('hidden');
-            if(displayArea) displayArea.classList.remove('hidden');
+            document.getElementById('quizEmptyState').classList.add('hidden');
+            document.getElementById('quizResultArea').classList.add('hidden');
+            document.getElementById('quizDisplayArea').classList.remove('hidden');
             renderQuizStep();
         }
 
         function renderQuizStep() {
             const q = currentQuizQueue[currentQuizIndex];
-            const tag = document.getElementById('quizTag');
-            const progress = document.getElementById('quizProgress');
-            const qText = document.getElementById('quizQuestionText');
-            const nextBtn = document.getElementById('btnNextQuiz');
-            const feedbackArea = document.getElementById('immediateFeedbackArea');
-
-            if(tag) tag.textContent = `${q.grade} | ${q.unit}`;
-            if(progress) progress.textContent = `題目 ${currentQuizIndex + 1} / ${currentQuizQueue.length}`;
-            if(qText) qText.textContent = q.question;
-            if(nextBtn) nextBtn.classList.add('hidden');
-            if(feedbackArea) feedbackArea.classList.add('hidden');
+            document.getElementById('quizTag').textContent = `${q.grade} | ${q.unit}`;
+            document.getElementById('quizProgress').textContent = `題目 ${currentQuizIndex + 1} / ${currentQuizQueue.length}`;
+            document.getElementById('quizQuestionText').textContent = q.question;
+            document.getElementById('btnNextQuiz').classList.add('hidden');
+            document.getElementById('immediateFeedbackArea').classList.add('hidden');
 
             const container = document.getElementById('quizOptionsContainer');
-            if(!container) return;
             container.innerHTML = '';
 
-            q.options.forEach((optText, idx) => {
-                const optKey = String.fromCharCode(65 + idx);
-                const btn = document.createElement('button');
-                btn.className = "w-full text-left p-4 rounded-xl border border-emerald-200 hover:border-emerald-500 hover:bg-emerald-50 font-medium text-slate-700 transition flex items-center justify-between";
-                btn.onclick = () => submitAnswer(optKey, q);
-                btn.innerHTML = `<span>${optText}</span><i class="fa-regular fa-circle text-emerald-300"></i>`;
-                container.appendChild(btn);
-            });
+            // 判斷是否為「填充題」（即 options 陣列為空或長度為 0）
+            const isFillInBlank = !q.options || q.options.length === 0;
+
+            if (isFillInBlank) {
+                // 渲染填空輸入框介面
+                container.innerHTML = `
+                    <div class="space-y-3">
+                        <label class="block text-xs font-bold text-emerald-900">請在下方輸入您的答案：</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="fillInAnswerInput" placeholder="請輸入答案（例如: Does / have）" 
+                                class="w-full px-4 py-3 rounded-xl border border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-base">
+                            <button onclick="submitFillInAnswer('${q.id.replace(/'/g, "\\'")}')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-3 rounded-xl shadow transition">
+                                提交答案
+                            </button>
+                        </div>
+                    </div>
+                `;
+                setTimeout(() => document.getElementById('fillInAnswerInput').focus(), 100);
+            } else {
+                // 渲染原有的選擇題選項
+                q.options.forEach((optText, idx) => {
+                    const optKey = String.fromCharCode(65 + idx);
+                    const btn = document.createElement('button');
+                    btn.className = "w-full text-left p-4 rounded-xl border border-emerald-200 hover:border-emerald-500 hover:bg-emerald-50 font-medium text-slate-700 transition flex items-center justify-between";
+                    btn.onclick = () => submitAnswer(optKey, q);
+                    btn.innerHTML = `<span>${optText}</span><i class="fa-regular fa-circle text-emerald-300"></i>`;
+                    container.appendChild(btn);
+                });
+            }
+        }
+
+        // 提交填空題答案
+        function submitFillInAnswer(questionId) {
+            const inputEl = document.getElementById('fillInAnswerInput');
+            if(!inputEl) return;
+            const userText = inputEl.value.trim();
+            if(!userText) { alert('請先輸入答案！'); return; }
+
+            inputEl.disabled = true;
+            const q = currentQuizQueue[currentQuizIndex];
+
+            // 比對答案（忽略前後空白與大小寫差異）
+            const isCorrect = userText.toLowerCase() === q.answer.trim().toLowerCase();
+            userAnswersRecord.push({ question: q, selected: userText, isCorrect });
+
+            recordAnsweredCount(1);
+
+            if(!isCorrect) {
+                if(!wrongBank.some(item => item.id === q.id)) {
+                    wrongBank.push(q);
+                    localStorage.setItem(STORAGE_KEY_WRONG, JSON.stringify(wrongBank));
+                    updateWrongCountBadge();
+                }
+            }
+
+            // 顯示即時回饋與解析
+            const feedbackArea = document.getElementById('immediateFeedbackArea');
+            const feedbackTitle = document.getElementById('feedbackTitle');
+            const feedbackExplanation = document.getElementById('feedbackExplanation');
+
+            if(isCorrect) {
+                feedbackArea.className = "p-4 rounded-xl border text-sm space-y-2 bg-emerald-50 border-emerald-200 text-emerald-900";
+                feedbackTitle.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-600 text-lg"></i> 答對了！`;
+            } else {
+                feedbackArea.className = "p-4 rounded-xl border text-sm space-y-2 bg-rose-50 border-rose-200 text-rose-900";
+                feedbackTitle.innerHTML = `<i class="fa-solid fa-circle-xmark text-rose-600 text-lg"></i> 答錯了！正確答案應為：<b>${q.answer}</b>`;
+            }
+            feedbackExplanation.innerHTML = `<b>解析：</b>${q.explanation}`;
+            feedbackArea.classList.remove('hidden');
+
+            document.getElementById('btnNextQuiz').classList.remove('hidden');
         }
 
         function submitAnswer(selectedOpt, question) {
@@ -752,7 +739,6 @@
 
             const isCorrect = selectedOpt === question.answer;
             userAnswersRecord.push({ question, selected: selectedOpt, isCorrect });
-
             recordAnsweredCount(1);
 
             if(!isCorrect) {
@@ -763,7 +749,6 @@
                 }
             }
 
-            // 選項按鈕標示顏色
             buttons.forEach(btn => {
                 const txt = btn.textContent;
                 if(txt.startsWith(question.answer)) {
@@ -773,25 +758,21 @@
                 }
             });
 
-            // 顯示即時回饋與解析區塊
             const feedbackArea = document.getElementById('immediateFeedbackArea');
             const feedbackTitle = document.getElementById('feedbackTitle');
             const feedbackExplanation = document.getElementById('feedbackExplanation');
 
-            if(feedbackArea && feedbackTitle && feedbackExplanation) {
-                if(isCorrect) {
-                    feedbackArea.className = "p-4 rounded-xl border text-sm space-y-2 bg-emerald-50 border-emerald-200 text-emerald-900";
-                    feedbackTitle.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-600 text-lg"></i> 答對了！`;
-                } else {
-                    feedbackArea.className = "p-4 rounded-xl border text-sm space-y-2 bg-rose-50 border-rose-200 text-rose-900";
-                    feedbackTitle.innerHTML = `<i class="fa-solid fa-circle-xmark text-rose-600 text-lg"></i> 答錯了！正確答案是：<b>${question.answer}</b>`;
-                }
-                feedbackExplanation.innerHTML = `<b>解析：</b>${question.explanation}`;
-                feedbackArea.classList.remove('hidden');
+            if(isCorrect) {
+                feedbackArea.className = "p-4 rounded-xl border text-sm space-y-2 bg-emerald-50 border-emerald-200 text-emerald-900";
+                feedbackTitle.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-600 text-lg"></i> 答對了！`;
+            } else {
+                feedbackArea.className = "p-4 rounded-xl border text-sm space-y-2 bg-rose-50 border-rose-200 text-rose-900";
+                feedbackTitle.innerHTML = `<i class="fa-solid fa-circle-xmark text-rose-600 text-lg"></i> 答錯了！正確答案是：<b>${question.answer}</b>`;
             }
+            feedbackExplanation.innerHTML = `<b>解析：</b>${question.explanation}`;
+            feedbackArea.classList.remove('hidden');
 
-            const nextBtn = document.getElementById('btnNextQuiz');
-            if(nextBtn) nextBtn.classList.remove('hidden');
+            document.getElementById('btnNextQuiz').classList.remove('hidden');
         }
 
         function nextQuizStep() {
@@ -804,20 +785,16 @@
         }
 
         function showQuizResults() {
-            const displayArea = document.getElementById('quizDisplayArea');
-            const resultArea = document.getElementById('quizResultArea');
-            if(displayArea) displayArea.classList.add('hidden');
-            if(resultArea) resultArea.classList.remove('hidden');
+            document.getElementById('quizDisplayArea').classList.add('hidden');
+            document.getElementById('quizResultArea').classList.remove('hidden');
 
             const correctCount = userAnswersRecord.filter(r => r.isCorrect).length;
             const total = userAnswersRecord.length;
             const rate = Math.round((correctCount / total) * 100);
 
-            const scoreSummary = document.getElementById('quizScoreSummary');
-            if(scoreSummary) scoreSummary.textContent = `共 ${total} 題，答對 ${correctCount} 題，正確率 ${rate}%`;
+            document.getElementById('quizScoreSummary').textContent = `共 ${total} 題，答對 ${correctCount} 題，正確率 ${rate}%`;
 
             const listArea = document.getElementById('quizResultList');
-            if(!listArea) return;
             listArea.innerHTML = '';
 
             userAnswersRecord.forEach((rec, idx) => {
@@ -826,7 +803,7 @@
                 div.innerHTML = `
                     <div class="font-bold text-slate-800 mb-1">Q${idx+1}. ${rec.question.question}</div>
                     <div class="text-xs text-slate-600 flex gap-4">
-                        <span>您的選擇：<b>${rec.selected}</b></span>
+                        <span>您的填寫：<b>${rec.selected}</b></span>
                         <span class="text-emerald-700 font-bold">正確答案：${rec.question.answer}</span>
                     </div>
                     <div class="text-xs text-slate-500 mt-1">解析：${rec.question.explanation}</div>
@@ -836,13 +813,10 @@
         }
 
         function resetQuizView() {
-            const resultArea = document.getElementById('quizResultArea');
-            const emptyState = document.getElementById('quizEmptyState');
-            if(resultArea) resultArea.classList.add('hidden');
-            if(emptyState) emptyState.classList.remove('hidden');
+            document.getElementById('quizResultArea').classList.add('hidden');
+            document.getElementById('quizEmptyState').classList.remove('hidden');
         }
 
-        // 錯題集
         function updateWrongCountBadge() {
             const badge = document.getElementById('wrongCountBadge');
             if(badge) badge.textContent = wrongBank.length;
@@ -850,8 +824,7 @@
 
         function renderWrongBank() {
             const list = document.getElementById('wrongQuestionsList');
-            const printEmail = document.getElementById('printUserEmail');
-            if(printEmail && currentUser) printEmail.textContent = currentUser.email;
+            document.getElementById('printUserEmail').textContent = currentUser ? currentUser.email : '';
             if(!list) return;
             list.innerHTML = '';
 
@@ -869,9 +842,6 @@
                         <button onclick="removeWrong(${idx})" class="text-rose-500 hover:underline no-print">移除</button>
                     </div>
                     <div class="font-medium text-slate-800">${q.question}</div>
-                    <div class="grid grid-cols-2 gap-2 text-xs text-slate-600">
-                        ${q.options.map(o => `<div>${o}</div>`).join('')}
-                    </div>
                     <div class="text-xs text-slate-700 bg-white p-2 rounded border border-emerald-100">
                         <b class="text-emerald-700">正確答案：${q.answer}</b> | 解析：${q.explanation}
                     </div>
@@ -896,7 +866,6 @@
             }
         }
 
-        // 管理者後台 (學員審核、練習紀錄與題庫統計)
         function renderStudentApprovalList() {
             const container = document.getElementById('studentApprovalList');
             if(!container) return;
@@ -905,25 +874,12 @@
                 return;
             }
 
-            let html = `
-                <table class="w-full text-left text-sm border-collapse">
-                    <thead>
-                        <tr class="border-b bg-emerald-50 text-emerald-900">
-                            <th class="p-2">學生 Gmail 帳號</th>
-                            <th class="p-2">審核狀態</th>
-                            <th class="p-2">累計練習題數</th>
-                            <th class="p-2">最近練習時間</th>
-                            <th class="p-2 text-right">管理操作</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-            `;
+            let html = `<table class="w-full text-left text-sm border-collapse"><thead><tr class="border-b bg-emerald-50 text-emerald-900"><th class="p-2">學生 Gmail 帳號</th><th class="p-2">審核狀態</th><th class="p-2">累計練習題數</th><th class="p-2">最近練習時間</th><th class="p-2 text-right">管理操作</th></tr></thead><tbody>`;
 
             usersDB.forEach((u, index) => {
                 const statusBadge = u.status === 'approved' 
                     ? '<span class="bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded font-bold">已核可</span>'
                     : '<span class="bg-amber-100 text-amber-800 text-xs px-2 py-0.5 rounded font-bold">等待審核</span>';
-
                 const stats = studentStatsRecord[u.email] || { totalCount: 0, lastTime: '尚無紀錄' };
 
                 html += `
@@ -942,7 +898,6 @@
                     </tr>
                 `;
             });
-
             html += `</tbody></table>`;
             container.innerHTML = html;
         }
