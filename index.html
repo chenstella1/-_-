@@ -73,7 +73,7 @@
                 <i class="fa-solid fa-user-lock text-3xl"></i>
             </div>
             <h2 class="text-2xl font-bold text-slate-800 mb-2">學員與管理員登入</h2>
-            <p class="text-slate-500 mb-6 text-sm">請輸入您的 Google Gmail 帳號與密碼開始刷題</p>
+            <p class="text-slate-500 mb-6 text-sm">請使用您的 Google Gmail 帳號與密碼登入系統</p>
             
             <form onsubmit="handleLogin(event)" class="space-y-4">
                 <div class="text-left">
@@ -92,10 +92,10 @@
                     <i class="fa-solid fa-right-to-bracket"></i> 登入系統
                 </button>
             </form>
-            <div class="mt-6 text-xs text-slate-400 bg-emerald-50 p-3 rounded-lg text-left space-y-1">
-                <span class="font-bold text-emerald-700">登入提示：</span><br>
-                • <b>管理者帳號</b>：<code>yhstella2@gmail.com</code> (密碼：<code>a18177300</code>)<br>
-                • <b>學生註冊/登入</b>：輸入自己的 Gmail，密碼統一洽老師（需經管理者核可）
+            <div class="mt-6 text-xs text-slate-500 bg-emerald-50 p-3 rounded-lg text-left space-y-1 border border-emerald-100">
+                <span class="font-bold text-emerald-700">登入說明：</span><br>
+                • 請直接輸入您的 Google Gmail 帳號進行登入與註冊。<br>
+                • 學生帳號首次登入需經管理者審核通過後方可使用刷題功能。
             </div>
         </div>
 
@@ -107,7 +107,7 @@
             <h3 class="text-xl font-bold text-slate-800">帳號等待管理者審核中</h3>
             <p class="text-sm text-slate-600 leading-relaxed">
                 您的帳號 (<span id="pendingUserEmail" class="font-semibold text-emerald-700"></span>) 已成功送出申請。<br>
-                請聯繫管理者 (<code class="text-xs bg-slate-100 px-1 py-0.5 rounded">yhstella2@gmail.com</code>) 核可權限後再進行刷題。
+                請等待管理者核可權限後即可開始刷題。
             </p>
             <button onclick="logout()" class="bg-slate-600 hover:bg-slate-700 text-white font-bold py-2 px-6 rounded-lg text-sm transition">
                 返回登入頁
@@ -117,7 +117,7 @@
         <!-- 登入後主要介面 -->
         <div id="appView" class="hidden space-y-6">
             
-            <!-- 學生學習打卡月曆面板 -->
+            <!-- 學生專屬：學習打卡月曆面板（管理者介面會自動隱藏） -->
             <div id="studentCalendarCard" class="bg-white rounded-xl shadow-md p-6 border border-emerald-100 no-print">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="font-bold text-slate-800 flex items-center gap-2">
@@ -266,7 +266,7 @@
                 </div>
             </div>
 
-            <!-- Tab 3: 管理員後台 (學員核可/Google Sheet 同步與統計) -->
+            <!-- Tab 3: 管理員後台 (學員核可與題庫統計) -->
             <div id="viewAdmin" class="hidden space-y-6">
                 
                 <!-- 學員帳號審核區塊 -->
@@ -279,29 +279,10 @@
                     </div>
                 </div>
 
-                <!-- Google Sheet 試算表連結區 -->
-                <div class="bg-white rounded-xl shadow-md p-6 border border-emerald-100 space-y-4">
-                    <h3 class="font-bold text-slate-800 border-b border-emerald-100 pb-3 flex items-center gap-2">
-                        <i class="fa-solid fa-link text-emerald-600"></i> Google Sheet 題庫同步控制
-                    </h3>
-                    <p class="text-xs text-slate-600 leading-relaxed">
-                        系統已內建連結您的雲端試算表 API。點擊下方「同步題庫」即可一鍵更新最新題目。
-                    </p>
-                    
-                    <div class="flex items-center gap-3">
-                        <input type="hidden" id="googleSheetUrlInput" value="https://script.google.com/macros/s/AKfycbw5yZUcaX0hHwT8HFMHCScPs0mP5WXrblLVBcjezJk2d2AYVrk8a1VqRCfgSrKNErBr/exec">
-                        
-                        <button onclick="syncGoogleSheet()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-2.5 rounded-lg text-sm transition flex items-center gap-2 shadow-sm">
-                            <i class="fa-solid fa-rotate"></i> 點擊同步最新題庫
-                        </button>
-                        <div id="syncStatus" class="text-xs font-semibold text-emerald-700"></div>
-                    </div>
-                </div>
-
                 <!-- 目前題庫總覽統計 -->
                 <div class="bg-white rounded-xl shadow-md p-6 border border-emerald-100">
                     <h3 class="font-bold text-slate-800 border-b border-emerald-100 pb-3 mb-4 flex items-center justify-between">
-                        <span><i class="fa-solid fa-database text-emerald-600"></i> 目前題庫狀態統計</span>
+                        <span><i class="fa-solid fa-database text-emerald-600"></i> 目前雲端題庫狀態統計</span>
                         <span id="totalQuestionCount" class="text-xs bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full font-bold">總計 0 題</span>
                     </h3>
                     <div id="questionStatsTable" class="overflow-x-auto">
@@ -314,9 +295,9 @@
 
     </main>
 
-    <!-- 頁尾 -->
-    <footer class="bg-white border-t border-emerald-100 py-4 text-center text-xs text-slate-400 no-print">
-        優華數位英文學習文法刷題網 &copy; 2026 - 青綠色高國中題庫與錯題匯出系統
+    <!-- 頁尾 (青綠色系) -->
+    <footer class="bg-emerald-600 text-white border-t border-emerald-700 py-4 text-center text-xs font-bold tracking-wide no-print shadow-inner">
+        青綠色高國中題庫與錯題匯出系統 &copy; 2026 優華數位英文學習文法刷題網
     </footer>
 
     <!-- JavaScript 邏輯程式碼 -->
@@ -324,6 +305,7 @@
         const ADMIN_EMAIL = 'yhstella2@gmail.com';
         const ADMIN_PASS = 'a18177300';
         const STUDENT_PASS = '1155665';
+        const SHEET_DEV_URL = 'https://script.google.com/macros/s/AKfycbwm5mAPT1SOJGgvGsnRO2BzB3yFdyq7_AR5OnQr5Jw/dev';
 
         // 預設示範題庫
         const defaultQuestions = [
@@ -332,11 +314,11 @@
         ];
 
         // 狀態與資料庫
-        let questionsDB = JSON.parse(localStorage.getItem('youhua_questions_v4')) || defaultQuestions;
-        let currentUser = JSON.parse(localStorage.getItem('youhua_user_v4')) || null;
-        let usersDB = JSON.parse(localStorage.getItem('youhua_users_db_v4')) || [];
-        let wrongBank = JSON.parse(localStorage.getItem('youhua_wrong_v4')) || [];
-        let dailyPracticeRecord = JSON.parse(localStorage.getItem('youhua_daily_practice_v4')) || {};
+        let questionsDB = JSON.parse(localStorage.getItem('youhua_questions_v6')) || defaultQuestions;
+        let currentUser = JSON.parse(localStorage.getItem('youhua_user_v6')) || null;
+        let usersDB = JSON.parse(localStorage.getItem('youhua_users_db_v6')) || [];
+        let wrongBank = JSON.parse(localStorage.getItem('youhua_wrong_v6')) || [];
+        let dailyPracticeRecord = JSON.parse(localStorage.getItem('youhua_daily_practice_v6')) || {};
 
         let currentQuizQueue = [];
         let currentQuizIndex = 0;
@@ -344,26 +326,27 @@
 
         window.onload = function() {
             renderUserInfo();
+            // 每次載入網頁時背景自動即時從 Google Sheet 同步最新題庫
+            autoSyncSheetInBackground();
             if(currentUser) {
                 checkUserStatusAndRoute();
             }
-            autoSyncOnLoad();
         };
 
-        async function autoSyncOnLoad() {
-            const urlInput = document.getElementById('googleSheetUrlInput');
-            if(!urlInput) return;
-            const url = urlInput.value.trim();
-            if(!url) return;
+        async function autoSyncSheetInBackground() {
             try {
-                let response = await fetch(url);
+                let response = await fetch(SHEET_DEV_URL);
                 let data = await response.json();
                 if(Array.isArray(data) && data.length > 0) {
                     questionsDB = data;
-                    localStorage.setItem('youhua_questions_v4', JSON.stringify(questionsDB));
-                    if(currentUser && currentUser.isAdmin) renderAdminStats();
+                    localStorage.setItem('youhua_questions_v6', JSON.stringify(questionsDB));
+                    if(currentUser && currentUser.isAdmin) {
+                        renderAdminStats();
+                    }
                 }
-            } catch(e) { console.log("使用本地快取的題庫資料"); }
+            } catch(e) {
+                console.log("使用本地快取題庫");
+            }
         }
 
         // 登入邏輯
@@ -394,12 +377,12 @@
                 if(!existingUser) {
                     existingUser = { email: email, name: email.split('@')[0], isAdmin: false, status: 'pending' };
                     usersDB.push(existingUser);
-                    localStorage.setItem('youhua_users_db_v4', JSON.stringify(usersDB));
+                    localStorage.setItem('youhua_users_db_v6', JSON.stringify(usersDB));
                 }
                 currentUser = existingUser;
             }
 
-            localStorage.setItem('youhua_user_v4', JSON.stringify(currentUser));
+            localStorage.setItem('youhua_user_v6', JSON.stringify(currentUser));
             renderUserInfo();
             checkUserStatusAndRoute();
         }
@@ -408,6 +391,7 @@
             const loginView = document.getElementById('loginView');
             const pendingView = document.getElementById('pendingView');
             const appView = document.getElementById('appView');
+            const calendarCard = document.getElementById('studentCalendarCard');
             if(loginView) loginView.classList.add('hidden');
             
             if(!currentUser.isAdmin && currentUser.status !== 'approved') {
@@ -424,19 +408,21 @@
             const tabAdmin = document.getElementById('tabAdmin');
             if(currentUser.isAdmin) {
                 if(tabAdmin) tabAdmin.classList.remove('hidden');
+                if(calendarCard) calendarCard.classList.add('hidden'); // 管理者介面隱藏月曆
                 renderAdminStats();
                 renderStudentApprovalList();
             } else {
                 if(tabAdmin) tabAdmin.classList.add('hidden');
+                if(calendarCard) calendarCard.classList.remove('hidden'); // 使用者介面顯示月曆
+                renderCalendar();
             }
 
-            renderCalendar();
             updateWrongCountBadge();
         }
 
         function logout() {
             currentUser = null;
-            localStorage.removeItem('youhua_user_v4');
+            localStorage.removeItem('youhua_user_v6');
             const loginView = document.getElementById('loginView');
             const pendingView = document.getElementById('pendingView');
             const appView = document.getElementById('appView');
@@ -463,11 +449,11 @@
             }
         }
 
-        // 打卡月曆功能 (做滿 10 題打勾)
+        // 使用者專屬打卡月曆功能 (做滿 10 題打勾)
         function renderCalendar() {
             const grid = document.getElementById('calendarDaysGrid');
             const title = document.getElementById('calendarMonthTitle');
-            if(!grid || !title || !currentUser) return;
+            if(!grid || !title || !currentUser || currentUser.isAdmin) return;
             grid.innerHTML = '';
 
             const now = new Date();
@@ -507,13 +493,13 @@
         }
 
         function recordAnsweredCount(num = 1) {
-            if(!currentUser) return;
+            if(!currentUser || currentUser.isAdmin) return;
             const todayStr = getTodayKey();
             if(!dailyPracticeRecord[currentUser.email]) {
                 dailyPracticeRecord[currentUser.email] = {};
             }
             dailyPracticeRecord[currentUser.email][todayStr] = (dailyPracticeRecord[currentUser.email][todayStr] || 0) + num;
-            localStorage.setItem('youhua_daily_practice_v4', JSON.stringify(dailyPracticeRecord));
+            localStorage.setItem('youhua_daily_practice_v6', JSON.stringify(dailyPracticeRecord));
             renderCalendar();
         }
 
@@ -630,7 +616,7 @@
             if(!isCorrect) {
                 if(!wrongBank.some(item => item.id === question.id)) {
                     wrongBank.push(question);
-                    localStorage.setItem('youhua_wrong_v4', JSON.stringify(wrongBank));
+                    localStorage.setItem('youhua_wrong_v6', JSON.stringify(wrongBank));
                     updateWrongCountBadge();
                 }
             }
@@ -736,7 +722,7 @@
 
         function removeWrong(idx) {
             wrongBank.splice(idx, 1);
-            localStorage.setItem('youhua_wrong_v4', JSON.stringify(wrongBank));
+            localStorage.setItem('youhua_wrong_v6', JSON.stringify(wrongBank));
             updateWrongCountBadge();
             renderWrongBank();
         }
@@ -744,13 +730,13 @@
         function clearWrongBank() {
             if(confirm('確定清空所有錯題嗎？')) {
                 wrongBank = [];
-                localStorage.removeItem('youhua_wrong_v4');
+                localStorage.removeItem('youhua_wrong_v6');
                 updateWrongCountBadge();
                 renderWrongBank();
             }
         }
 
-        // 管理者後台 (學員審核 + Google Sheet 同步)
+        // 管理者後台 (學員審核與題庫統計)
         function renderStudentApprovalList() {
             const container = document.getElementById('studentApprovalList');
             if(!container) return;
@@ -797,7 +783,7 @@
 
         function toggleUserStatus(index, newStatus) {
             usersDB[index].status = newStatus;
-            localStorage.setItem('youhua_users_db_v4', JSON.stringify(usersDB));
+            localStorage.setItem('youhua_users_db_v6', JSON.stringify(usersDB));
             renderStudentApprovalList();
             alert(`已變更 ${usersDB[index].email} 的帳號狀態！`);
         }
@@ -805,36 +791,8 @@
         function deleteUser(index) {
             if(confirm(`確定刪除 ${usersDB[index].email} 嗎？`)) {
                 usersDB.splice(index, 1);
-                localStorage.setItem('youhua_users_db_v4', JSON.stringify(usersDB));
+                localStorage.setItem('youhua_users_db_v6', JSON.stringify(usersDB));
                 renderStudentApprovalList();
-            }
-        }
-
-        async function syncGoogleSheet() {
-            const urlInput = document.getElementById('googleSheetUrlInput');
-            const status = document.getElementById('syncStatus');
-            if(!urlInput || !status) return;
-            const url = urlInput.value.trim();
-            
-            if(!url) return;
-
-            status.textContent = "正在連線同步 Google Sheet 題庫...";
-
-            try {
-                let response = await fetch(url);
-                let data = await response.json();
-                
-                if(Array.isArray(data) && data.length > 0) {
-                    questionsDB = data;
-                    localStorage.setItem('youhua_questions_v4', JSON.stringify(questionsDB));
-                    status.textContent = `同步成功！共載入 ${questionsDB.length} 筆雲端題目。`;
-                    renderAdminStats();
-                } else {
-                    status.textContent = "同步失敗：資料格式不符。";
-                }
-            } catch(err) {
-                console.error(err);
-                status.textContent = "連線失敗，請確認 Google Sheet 已部署為 Web App 且任何人皆可存取。";
             }
         }
 
