@@ -164,41 +164,41 @@
                     <span id="studentSyncStatus" class="text-xs font-bold text-emerald-700 ml-2"></span>
                 </div>
 
-                <!-- 出題設定面板 -->
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 bg-emerald-50 p-4 rounded-xl border border-emerald-200">
+                <!-- 出題設定面板（複選支援） -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 bg-emerald-50 p-4 rounded-xl border border-emerald-200">
+                    <!-- 1. 年級階段複選 -->
                     <div>
-                        <label class="block text-xs font-bold text-emerald-900 mb-1">選擇年級階段：</label>
-                        <select id="quizGradeSelect" onchange="onQuizGradeChange()" class="w-full px-3 py-2 rounded-lg border border-emerald-300 text-sm focus:ring-2 focus:ring-emerald-400 focus:outline-none">
-                            <option value="">-- 請選擇年級 --</option>
-                            <optgroup label="國中階段">
-                                <option value="國七">國七 (七年級)</option>
-                                <option value="國八">國八 (八年級)</option>
-                                <option value="國九">國九 (九年級)</option>
-                            </optgroup>
-                            <optgroup label="高中階段">
-                                <option value="高一">高一</option>
-                                <option value="高二">高二</option>
-                                <option value="高三">高三</option>
-                            </optgroup>
-                        </select>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="block text-xs font-bold text-emerald-900">選擇年級階段 (可複選)：</label>
+                            <button type="button" onclick="toggleAllGrades(true)" class="text-[10px] text-emerald-700 hover:underline">全選</button>
+                        </div>
+                        <div id="gradeCheckboxesContainer" class="bg-white p-2.5 rounded-lg border border-emerald-300 max-h-40 overflow-y-auto space-y-1.5 text-xs">
+                            <!-- 動態渲染年級複選框 -->
+                        </div>
                     </div>
 
+                    <!-- 2. 文法單元複選 -->
                     <div>
-                        <label class="block text-xs font-bold text-emerald-900 mb-1">選擇文法單元：</label>
-                        <select id="quizUnitSelect" class="w-full px-3 py-2 rounded-lg border border-emerald-300 text-sm focus:ring-2 focus:ring-emerald-400 focus:outline-none">
-                            <option value="">-- 請先選擇年級 --</option>
-                        </select>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="block text-xs font-bold text-emerald-900">選擇文法單元 (可複選)：</label>
+                            <button type="button" onclick="toggleAllUnits(true)" class="text-[10px] text-emerald-700 hover:underline">全選</button>
+                        </div>
+                        <div id="unitCheckboxesContainer" class="bg-white p-2.5 rounded-lg border border-emerald-300 max-h-40 overflow-y-auto space-y-1.5 text-xs">
+                            <span class="text-slate-400">請先勾選上方年級...</span>
+                        </div>
                     </div>
 
-                    <div>
-                        <label class="block text-xs font-bold text-emerald-900 mb-1">練習題數 (1-100題)：</label>
-                        <input type="number" id="quizCountInput" min="1" max="100" value="5" class="w-full px-3 py-2 rounded-lg border border-emerald-300 text-sm focus:ring-2 focus:ring-emerald-400 focus:outline-none">
-                    </div>
-
-                    <div class="flex items-end">
-                        <button onclick="startCustomQuiz()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-lg shadow transition flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-play"></i> 開始亂數出題
-                        </button>
+                    <!-- 3. 題數與開始按鈕 -->
+                    <div class="flex flex-col justify-between">
+                        <div>
+                            <label class="block text-xs font-bold text-emerald-900 mb-1">練習題數 (1-100題)：</label>
+                            <input type="number" id="quizCountInput" min="1" max="100" value="5" class="w-full px-3 py-2 rounded-lg border border-emerald-300 text-sm focus:ring-2 focus:ring-emerald-400 focus:outline-none">
+                        </div>
+                        <div class="mt-4">
+                            <button onclick="startCustomQuiz()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-4 rounded-lg shadow transition flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-play"></i> 開始綜合亂數出題
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -216,6 +216,12 @@
                     <!-- 選項 -->
                     <div id="quizOptionsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <!-- 動態選項 -->
+                    </div>
+
+                    <!-- 即時答對/答錯回饋與解析區塊 -->
+                    <div id="immediateFeedbackArea" class="hidden p-4 rounded-xl border text-sm space-y-2">
+                        <div id="feedbackTitle" class="font-bold flex items-center gap-2 text-base"></div>
+                        <div id="feedbackExplanation" class="text-slate-700 text-xs sm:text-sm bg-white p-3 rounded-lg border border-emerald-200"></div>
                     </div>
 
                     <div class="flex justify-end pt-4 border-t border-emerald-100">
@@ -249,7 +255,7 @@
                 <!-- 初始空狀態 -->
                 <div id="quizEmptyState" class="text-center py-12 text-slate-400">
                     <i class="fa-solid fa-file-lines text-4xl mb-2 text-emerald-200"></i>
-                    <p>請設定上方年級、文法單元與題數，點擊「開始亂數出題」</p>
+                    <p>請勾選上方年級與文法單元，設定題數後點擊「開始綜合亂數出題」</p>
                 </div>
             </div>
 
@@ -344,12 +350,12 @@
         ];
 
         // 狀態與資料庫
-        let questionsDB = JSON.parse(localStorage.getItem('youhua_questions_v13')) || defaultQuestions;
-        let currentUser = JSON.parse(localStorage.getItem('youhua_user_v13')) || null;
-        let usersDB = JSON.parse(localStorage.getItem('youhua_users_db_v13')) || [];
-        let wrongBank = JSON.parse(localStorage.getItem('youhua_wrong_v13')) || [];
-        let dailyPracticeRecord = JSON.parse(localStorage.getItem('youhua_daily_practice_v13')) || {};
-        let studentStatsRecord = JSON.parse(localStorage.getItem('youhua_student_stats_v13')) || {};
+        let questionsDB = JSON.parse(localStorage.getItem('youhua_questions_v15')) || defaultQuestions;
+        let currentUser = JSON.parse(localStorage.getItem('youhua_user_v15')) || null;
+        let usersDB = JSON.parse(localStorage.getItem('youhua_users_db_v15')) || [];
+        let wrongBank = JSON.parse(localStorage.getItem('youhua_wrong_v15')) || [];
+        let dailyPracticeRecord = JSON.parse(localStorage.getItem('youhua_daily_practice_v15')) || {};
+        let studentStatsRecord = JSON.parse(localStorage.getItem('youhua_student_stats_v15')) || {};
 
         let currentQuizQueue = [];
         let currentQuizIndex = 0;
@@ -377,14 +383,16 @@
                 let data = await response.json();
                 if(Array.isArray(data) && data.length > 0) {
                     questionsDB = data;
-                    localStorage.setItem('youhua_questions_v13', JSON.stringify(questionsDB));
+                    localStorage.setItem('youhua_questions_v15', JSON.stringify(questionsDB));
                     updateGlobalTotalCountBadge();
+                    initGradeCheckboxes();
                     if(currentUser && currentUser.isAdmin) {
                         renderAdminStats();
                     }
                 }
             } catch(e) {
                 console.log("使用本地快取題庫");
+                initGradeCheckboxes();
             }
         }
 
@@ -398,8 +406,9 @@
                 let data = await response.json();
                 if(Array.isArray(data) && data.length > 0) {
                     questionsDB = data;
-                    localStorage.setItem('youhua_questions_v13', JSON.stringify(questionsDB));
+                    localStorage.setItem('youhua_questions_v15', JSON.stringify(questionsDB));
                     updateGlobalTotalCountBadge();
+                    initGradeCheckboxes();
                     if(currentUser && currentUser.isAdmin) {
                         renderAdminStats();
                     }
@@ -444,12 +453,12 @@
                 if(!existingUser) {
                     existingUser = { email: email, name: email.split('@')[0], isAdmin: false, status: 'pending' };
                     usersDB.push(existingUser);
-                    localStorage.setItem('youhua_users_db_v13', JSON.stringify(usersDB));
+                    localStorage.setItem('youhua_users_db_v15', JSON.stringify(usersDB));
                 }
                 currentUser = existingUser;
             }
 
-            localStorage.setItem('youhua_user_v13', JSON.stringify(currentUser));
+            localStorage.setItem('youhua_user_v15', JSON.stringify(currentUser));
             renderUserInfo();
             checkUserStatusAndRoute();
         }
@@ -484,12 +493,13 @@
                 renderCalendar();
             }
 
+            initGradeCheckboxes();
             updateWrongCountBadge();
         }
 
         function logout() {
             currentUser = null;
-            localStorage.removeItem('youhua_user_v13');
+            localStorage.removeItem('youhua_user_v15');
             const loginView = document.getElementById('loginView');
             const pendingView = document.getElementById('pendingView');
             const appView = document.getElementById('appView');
@@ -567,14 +577,14 @@
                 dailyPracticeRecord[currentUser.email] = {};
             }
             dailyPracticeRecord[currentUser.email][todayStr] = (dailyPracticeRecord[currentUser.email][todayStr] || 0) + num;
-            localStorage.setItem('youhua_daily_practice_v13', JSON.stringify(dailyPracticeRecord));
+            localStorage.setItem('youhua_daily_practice_v15', JSON.stringify(dailyPracticeRecord));
 
             if(!studentStatsRecord[currentUser.email]) {
                 studentStatsRecord[currentUser.email] = { totalCount: 0, lastTime: '' };
             }
             studentStatsRecord[currentUser.email].totalCount += num;
             studentStatsRecord[currentUser.email].lastTime = new Date().toLocaleString('zh-TW', { hour12: false });
-            localStorage.setItem('youhua_student_stats_v13', JSON.stringify(studentStatsRecord));
+            localStorage.setItem('youhua_student_stats_v15', JSON.stringify(studentStatsRecord));
 
             renderCalendar();
         }
@@ -598,47 +608,86 @@
             if(tabName === 'wrongBank') renderWrongBank();
         }
 
-        // 測驗與單元選單（自動統計各單元總題數）
-        function onQuizGradeChange() {
-            const gradeSelect = document.getElementById('quizGradeSelect');
-            const unitSelect = document.getElementById('quizUnitSelect');
-            if(!gradeSelect || !unitSelect) return;
-            const grade = gradeSelect.value;
-            unitSelect.innerHTML = '<option value="">-- 所有文法單元 (全選) --</option>';
+        // 初始化年級複選框
+        function initGradeCheckboxes() {
+            const container = document.getElementById('gradeCheckboxesContainer');
+            if(!container) return;
+            container.innerHTML = '';
 
-            if(!grade) return;
-            
-            const gradeQuestions = questionsDB.filter(q => q.grade === grade);
-            const unitCounts = {};
-            gradeQuestions.forEach(q => {
-                unitCounts[q.unit] = (unitCounts[q.unit] || 0) + 1;
-            });
-
-            for(let u in unitCounts) {
-                const opt = document.createElement('option');
-                opt.value = u;
-                opt.textContent = `${u} (總題數: ${unitCounts[u]}題)`;
-                unitSelect.appendChild(opt);
-            }
-        }
-
-        function startCustomQuiz() {
-            const gradeSelect = document.getElementById('quizGradeSelect');
-            const unitSelect = document.getElementById('quizUnitSelect');
-            const countInput = document.getElementById('quizCountInput');
-            if(!gradeSelect || !unitSelect || !countInput) return;
-
-            const grade = gradeSelect.value;
-            const unit = unitSelect.value;
-            let count = parseInt(countInput.value) || 5;
-
-            if(!grade) {
-                alert('請先選擇年級階段！');
+            const grades = [...new Set(questionsDB.map(q => q.grade))].sort();
+            if(grades.length === 0) {
+                container.innerHTML = '<span class="text-slate-400">無可用年級</span>';
                 return;
             }
 
-            let pool = questionsDB.filter(q => q.grade === grade);
-            if(unit) pool = pool.filter(q => q.unit === unit);
+            grades.forEach(grade => {
+                const count = questionsDB.filter(q => q.grade === grade).length;
+                const label = document.createElement('label');
+                label.className = "flex items-center gap-2 cursor-pointer hover:bg-emerald-50 p-1 rounded";
+                label.innerHTML = `
+                    <input type="checkbox" value="${grade}" onchange="onGradeCheckboxChange()" class="grade-checkbox rounded text-emerald-600 focus:ring-emerald-500">
+                    <span class="font-medium text-slate-700">${grade} (${count}題)</span>
+                `;
+                container.appendChild(label);
+            });
+            onGradeCheckboxChange();
+        }
+
+        function toggleAllGrades(select) {
+            const checkboxes = document.querySelectorAll('.grade-checkbox');
+            checkboxes.forEach(cb => cb.checked = select);
+            onGradeCheckboxChange();
+        }
+
+        function onGradeCheckboxChange() {
+            const selectedGrades = Array.from(document.querySelectorAll('.grade-checkbox:checked')).map(cb => cb.value);
+            const unitContainer = document.getElementById('unitCheckboxesContainer');
+            if(!unitContainer) return;
+            unitContainer.innerHTML = '';
+
+            if(selectedGrades.length === 0) {
+                unitContainer.innerHTML = '<span class="text-slate-400">請先勾選上方年級...</span>';
+                return;
+            }
+
+            const filteredQuestions = questionsDB.filter(q => selectedGrades.includes(q.grade));
+            const unitCounts = {};
+            filteredQuestions.forEach(q => {
+                unitCounts[q.unit] = (unitCounts[q.unit] || 0) + 1;
+            });
+
+            for(let unit in unitCounts) {
+                const label = document.createElement('label');
+                label.className = "flex items-center gap-2 cursor-pointer hover:bg-emerald-50 p-1 rounded";
+                label.innerHTML = `
+                    <input type="checkbox" value="${unit}" class="unit-checkbox rounded text-emerald-600 focus:ring-emerald-500" checked>
+                    <span class="font-medium text-slate-700">${unit} (${unitCounts[unit]}題)</span>
+                `;
+                unitContainer.appendChild(label);
+            }
+        }
+
+        function toggleAllUnits(select) {
+            const checkboxes = document.querySelectorAll('.unit-checkbox');
+            checkboxes.forEach(cb => cb.checked = select);
+        }
+
+        function startCustomQuiz() {
+            const selectedGrades = Array.from(document.querySelectorAll('.grade-checkbox:checked')).map(cb => cb.value);
+            const selectedUnits = Array.from(document.querySelectorAll('.unit-checkbox:checked')).map(cb => cb.value);
+            const countInput = document.getElementById('quizCountInput');
+            let count = parseInt(countInput ? countInput.value : 5) || 5;
+
+            if(selectedGrades.length === 0) {
+                alert('請至少勾選一個年級階段！');
+                return;
+            }
+            if(selectedUnits.length === 0) {
+                alert('請至少勾選一個文法單元！');
+                return;
+            }
+
+            let pool = questionsDB.filter(q => selectedGrades.includes(q.grade) && selectedUnits.includes(q.unit));
 
             if(pool.length === 0) {
                 alert('找不到符合條件的題目！');
@@ -665,10 +714,13 @@
             const progress = document.getElementById('quizProgress');
             const qText = document.getElementById('quizQuestionText');
             const nextBtn = document.getElementById('btnNextQuiz');
+            const feedbackArea = document.getElementById('immediateFeedbackArea');
+
             if(tag) tag.textContent = `${q.grade} | ${q.unit}`;
             if(progress) progress.textContent = `題目 ${currentQuizIndex + 1} / ${currentQuizQueue.length}`;
             if(qText) qText.textContent = q.question;
             if(nextBtn) nextBtn.classList.add('hidden');
+            if(feedbackArea) feedbackArea.classList.add('hidden');
 
             const container = document.getElementById('quizOptionsContainer');
             if(!container) return;
@@ -698,11 +750,12 @@
             if(!isCorrect) {
                 if(!wrongBank.some(item => item.id === question.id)) {
                     wrongBank.push(question);
-                    localStorage.setItem('youhua_wrong_v13', JSON.stringify(wrongBank));
+                    localStorage.setItem('youhua_wrong_v15', JSON.stringify(wrongBank));
                     updateWrongCountBadge();
                 }
             }
 
+            // 選項按鈕標示顏色
             buttons.forEach(btn => {
                 const txt = btn.textContent;
                 if(txt.startsWith(question.answer)) {
@@ -711,6 +764,23 @@
                     btn.className = "w-full text-left p-4 rounded-xl border border-rose-400 bg-rose-50 font-bold text-rose-900 flex items-center justify-between";
                 }
             });
+
+            // 顯示即時回饋與解析區塊
+            const feedbackArea = document.getElementById('immediateFeedbackArea');
+            const feedbackTitle = document.getElementById('feedbackTitle');
+            const feedbackExplanation = document.getElementById('feedbackExplanation');
+
+            if(feedbackArea && feedbackTitle && feedbackExplanation) {
+                if(isCorrect) {
+                    feedbackArea.className = "p-4 rounded-xl border text-sm space-y-2 bg-emerald-50 border-emerald-200 text-emerald-900";
+                    feedbackTitle.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-600 text-lg"></i> 答對了！`;
+                } else {
+                    feedbackArea.className = "p-4 rounded-xl border text-sm space-y-2 bg-rose-50 border-rose-200 text-rose-900";
+                    feedbackTitle.innerHTML = `<i class="fa-solid fa-circle-xmark text-rose-600 text-lg"></i> 答錯了！正確答案是：<b>${question.answer}</b>`;
+                }
+                feedbackExplanation.innerHTML = `<b>解析：</b>${question.explanation}`;
+                feedbackArea.classList.remove('hidden');
+            }
 
             const nextBtn = document.getElementById('btnNextQuiz');
             if(nextBtn) nextBtn.classList.remove('hidden');
@@ -804,7 +874,7 @@
 
         function removeWrong(idx) {
             wrongBank.splice(idx, 1);
-            localStorage.setItem('youhua_wrong_v13', JSON.stringify(wrongBank));
+            localStorage.setItem('youhua_wrong_v15', JSON.stringify(wrongBank));
             updateWrongCountBadge();
             renderWrongBank();
         }
@@ -812,7 +882,7 @@
         function clearWrongBank() {
             if(confirm('確定清空所有錯題嗎？')) {
                 wrongBank = [];
-                localStorage.removeItem('youhua_wrong_v13');
+                localStorage.removeItem('youhua_wrong_v15');
                 updateWrongCountBadge();
                 renderWrongBank();
             }
@@ -871,7 +941,7 @@
 
         function toggleUserStatus(index, newStatus) {
             usersDB[index].status = newStatus;
-            localStorage.setItem('youhua_users_db_v13', JSON.stringify(usersDB));
+            localStorage.setItem('youhua_users_db_v15', JSON.stringify(usersDB));
             renderStudentApprovalList();
             alert(`已變更 ${usersDB[index].email} 的帳號狀態！`);
         }
@@ -879,7 +949,7 @@
         function deleteUser(index) {
             if(confirm(`確定刪除 ${usersDB[index].email} 嗎？`)) {
                 usersDB.splice(index, 1);
-                localStorage.setItem('youhua_users_db_v13', JSON.stringify(usersDB));
+                localStorage.setItem('youhua_users_db_v15', JSON.stringify(usersDB));
                 renderStudentApprovalList();
             }
         }
