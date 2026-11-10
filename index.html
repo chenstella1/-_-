@@ -329,7 +329,7 @@
         const ADMIN_EMAIL = 'yhstella2@gmail.com';
         const ADMIN_PASS = 'a18177300';
         const STUDENT_PASS = '1155665';
-        const SHEET_DEV_URL = 'https://script.google.com/macros/s/AKfycbw5yZUcaX0hHwT8HFMHCScPs0mP5WXrblLVBcjezJk2d2AYVrk8a1VqRCfgSrKNErBr/exec';
+        const SHEET_DEV_URL = 'https://script.google.com/macros/s/AKfycbwm5mAPT1SOJGgvGsnRO2BzB3yFdyq7_AR5OnQr5Jw/dev';
 
         const defaultQuestions = [
             { id: '101', grade: '國七', unit: '關代簡化', question: 'The ruined castle ________ on top of the hill was built in the 17th century.', options: ['A. was standing', 'B. to stand', 'C. standing', 'D. stood'], answer: 'C', explanation: '佇立在（standing）山頂上的廢棄城堡建造於17世紀。' },
@@ -362,6 +362,20 @@
                 checkUserStatusAndRoute();
             }
         };
+
+        async function syncUserToCloud(userData) {
+            try {
+                await fetch(SHEET_DEV_URL, {
+                    method: "POST",
+                    mode: "no-cors",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(userData)
+                });
+                console.log("學員資料已同步至 Google 試算表 (Users 分頁)");
+            } catch (error) {
+                console.error("雲端同步失敗", error);
+            }
+        }
 
         function updateGlobalTotalCountBadge() {
             const badge = document.getElementById('globalTotalCountBadge');
@@ -434,6 +448,16 @@
             }
 
             localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(currentUser));
+            
+            // 同步至 Google 試算表雲端
+            syncUserToCloud({
+                email: currentUser.email,
+                name: currentUser.name,
+                status: currentUser.status,
+                totalCount: (studentStatsRecord[currentUser.email] && studentStatsRecord[currentUser.email].totalCount) || 0,
+                lastTime: new Date().toLocaleString('zh-TW', { hour12: false })
+            });
+
             renderUserInfo();
             checkUserStatusAndRoute();
         }
@@ -548,6 +572,15 @@
             studentStatsRecord[currentUser.email].lastTime = new Date().toLocaleString('zh-TW', { hour12: false });
             localStorage.setItem(STORAGE_KEY_STATS, JSON.stringify(studentStatsRecord));
 
+            // 同步至雲端試算表
+            syncUserToCloud({
+                email: currentUser.email,
+                name: currentUser.name,
+                status: currentUser.status,
+                totalCount: studentStatsRecord[currentUser.email].totalCount,
+                lastTime: studentStatsRecord[currentUser.email].lastTime
+            });
+
             renderCalendar();
         }
 
@@ -658,18 +691,16 @@
             const container = document.getElementById('quizOptionsContainer');
             container.innerHTML = '';
 
-            // 判斷是否為「填充題」（即 options 陣列為空或長度為 0）
-            const isFillInBlank = !q.options || q.options.length === 0;
+            const isFillInBlank = !q.options || q.options.length === 0 || (q.options.length === 1 && q.options[0] === "");
 
             if (isFillInBlank) {
-                // 渲染填空輸入框介面
                 container.innerHTML = `
                     <div class="space-y-3">
                         <label class="block text-xs font-bold text-emerald-900">請在下方輸入您的答案：</label>
                         <div class="flex gap-2">
                             <input type="text" id="fillInAnswerInput" placeholder="請輸入答案（例如: Does / have）" 
                                 class="w-full px-4 py-3 rounded-xl border border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-base">
-                            <button onclick="submitFillInAnswer('${q.id.replace(/'/g, "\\'")}')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-3 rounded-xl shadow transition">
+                            <button onclick="submitFillInAnswer()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-3 rounded-xl shadow transition">
                                 提交答案
                             </button>
                         </div>
@@ -677,7 +708,6 @@
                 `;
                 setTimeout(() => document.getElementById('fillInAnswerInput').focus(), 100);
             } else {
-                // 渲染原有的選擇題選項
                 q.options.forEach((optText, idx) => {
                     const optKey = String.fromCharCode(65 + idx);
                     const btn = document.createElement('button');
@@ -689,8 +719,7 @@
             }
         }
 
-        // 提交填空題答案
-        function submitFillInAnswer(questionId) {
+        function submitFillInAnswer() {
             const inputEl = document.getElementById('fillInAnswerInput');
             if(!inputEl) return;
             const userText = inputEl.value.trim();
@@ -698,8 +727,6 @@
 
             inputEl.disabled = true;
             const q = currentQuizQueue[currentQuizIndex];
-
-            // 比對答案（忽略前後空白與大小寫差異）
             const isCorrect = userText.toLowerCase() === q.answer.trim().toLowerCase();
             userAnswersRecord.push({ question: q, selected: userText, isCorrect });
 
@@ -713,7 +740,6 @@
                 }
             }
 
-            // 顯示即時回饋與解析
             const feedbackArea = document.getElementById('immediateFeedbackArea');
             const feedbackTitle = document.getElementById('feedbackTitle');
             const feedbackExplanation = document.getElementById('feedbackExplanation');
@@ -803,7 +829,7 @@
                 div.innerHTML = `
                     <div class="font-bold text-slate-800 mb-1">Q${idx+1}. ${rec.question.question}</div>
                     <div class="text-xs text-slate-600 flex gap-4">
-                        <span>您的填寫：<b>${rec.selected}</b></span>
+                        <span>您的填寫/選擇：<b>${rec.selected}</b></span>
                         <span class="text-emerald-700 font-bold">正確答案：${rec.question.answer}</span>
                     </div>
                     <div class="text-xs text-slate-500 mt-1">解析：${rec.question.explanation}</div>
@@ -905,6 +931,14 @@
         function toggleUserStatus(index, newStatus) {
             usersDB[index].status = newStatus;
             localStorage.setItem(STORAGE_KEY_USERS_DB, JSON.stringify(usersDB));
+            
+            // 同步變更至雲端
+            syncUserToCloud({
+                email: usersDB[index].email,
+                name: usersDB[index].name,
+                status: newStatus
+            });
+
             renderStudentApprovalList();
             alert(`已變更 ${usersDB[index].email} 的帳號狀態！`);
         }
