@@ -117,7 +117,7 @@
         <!-- 登入後主要介面 -->
         <div id="appView" class="hidden space-y-6">
             
-            <!-- 學生專屬：學習打卡月曆面板（管理者介面會自動隱藏） -->
+            <!-- 學生專屬：學習打卡月曆面板（管理者登入時會自動隱藏） -->
             <div id="studentCalendarCard" class="bg-white rounded-xl shadow-md p-6 border border-emerald-100 no-print">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="font-bold text-slate-800 flex items-center gap-2">
@@ -266,16 +266,16 @@
                 </div>
             </div>
 
-            <!-- Tab 3: 管理員後台 (學員核可與題庫統計) -->
+            <!-- Tab 3: 管理員後台 (學員核可、練習紀錄與題庫統計) -->
             <div id="viewAdmin" class="hidden space-y-6">
                 
-                <!-- 學員帳號審核區塊 -->
+                <!-- 學員帳號審核與練習紀錄區塊 -->
                 <div class="bg-white rounded-xl shadow-md p-6 border border-emerald-100 space-y-4">
                     <h3 class="font-bold text-slate-800 border-b border-emerald-100 pb-3 flex items-center gap-2">
-                        <i class="fa-solid fa-users-gear text-emerald-600"></i> 學員註冊與權限核可管理
+                        <i class="fa-solid fa-users-gear text-emerald-600"></i> 學員註冊核可與練習紀錄監控
                     </h3>
                     <div id="studentApprovalList" class="overflow-x-auto">
-                        <!-- 動態生成學員列表 -->
+                        <!-- 動態生成學員列表與練習時間/題數 -->
                     </div>
                 </div>
 
@@ -295,7 +295,7 @@
 
     </main>
 
-    <!-- 頁尾 (青綠色系) -->
+    <!-- 頁尾 (青綠色) -->
     <footer class="bg-emerald-600 text-white border-t border-emerald-700 py-4 text-center text-xs font-bold tracking-wide no-print shadow-inner">
         青綠色高國中題庫與錯題匯出系統 &copy; 2026 優華數位英文學習文法刷題網
     </footer>
@@ -314,11 +314,12 @@
         ];
 
         // 狀態與資料庫
-        let questionsDB = JSON.parse(localStorage.getItem('youhua_questions_v6')) || defaultQuestions;
-        let currentUser = JSON.parse(localStorage.getItem('youhua_user_v6')) || null;
-        let usersDB = JSON.parse(localStorage.getItem('youhua_users_db_v6')) || [];
-        let wrongBank = JSON.parse(localStorage.getItem('youhua_wrong_v6')) || [];
-        let dailyPracticeRecord = JSON.parse(localStorage.getItem('youhua_daily_practice_v6')) || {};
+        let questionsDB = JSON.parse(localStorage.getItem('youhua_questions_v8')) || defaultQuestions;
+        let currentUser = JSON.parse(localStorage.getItem('youhua_user_v8')) || null;
+        let usersDB = JSON.parse(localStorage.getItem('youhua_users_db_v8')) || [];
+        let wrongBank = JSON.parse(localStorage.getItem('youhua_wrong_v8')) || [];
+        let dailyPracticeRecord = JSON.parse(localStorage.getItem('youhua_daily_practice_v8')) || {};
+        let studentStatsRecord = JSON.parse(localStorage.getItem('youhua_student_stats_v8')) || {}; // 記錄學生總題數與最後練習時間
 
         let currentQuizQueue = [];
         let currentQuizIndex = 0;
@@ -326,7 +327,6 @@
 
         window.onload = function() {
             renderUserInfo();
-            // 每次載入網頁時背景自動即時從 Google Sheet 同步最新題庫
             autoSyncSheetInBackground();
             if(currentUser) {
                 checkUserStatusAndRoute();
@@ -339,7 +339,7 @@
                 let data = await response.json();
                 if(Array.isArray(data) && data.length > 0) {
                     questionsDB = data;
-                    localStorage.setItem('youhua_questions_v6', JSON.stringify(questionsDB));
+                    localStorage.setItem('youhua_questions_v8', JSON.stringify(questionsDB));
                     if(currentUser && currentUser.isAdmin) {
                         renderAdminStats();
                     }
@@ -377,12 +377,12 @@
                 if(!existingUser) {
                     existingUser = { email: email, name: email.split('@')[0], isAdmin: false, status: 'pending' };
                     usersDB.push(existingUser);
-                    localStorage.setItem('youhua_users_db_v6', JSON.stringify(usersDB));
+                    localStorage.setItem('youhua_users_db_v8', JSON.stringify(usersDB));
                 }
                 currentUser = existingUser;
             }
 
-            localStorage.setItem('youhua_user_v6', JSON.stringify(currentUser));
+            localStorage.setItem('youhua_user_v8', JSON.stringify(currentUser));
             renderUserInfo();
             checkUserStatusAndRoute();
         }
@@ -408,7 +408,7 @@
             const tabAdmin = document.getElementById('tabAdmin');
             if(currentUser.isAdmin) {
                 if(tabAdmin) tabAdmin.classList.remove('hidden');
-                if(calendarCard) calendarCard.classList.add('hidden'); // 管理者介面隱藏月曆
+                if(calendarCard) calendarCard.classList.add('hidden'); // 管理者介面不顯示月曆
                 renderAdminStats();
                 renderStudentApprovalList();
             } else {
@@ -422,7 +422,7 @@
 
         function logout() {
             currentUser = null;
-            localStorage.removeItem('youhua_user_v6');
+            localStorage.removeItem('youhua_user_v8');
             const loginView = document.getElementById('loginView');
             const pendingView = document.getElementById('pendingView');
             const appView = document.getElementById('appView');
@@ -449,7 +449,7 @@
             }
         }
 
-        // 使用者專屬打卡月曆功能 (做滿 10 題打勾)
+        // 使用者專屬打卡月曆功能
         function renderCalendar() {
             const grid = document.getElementById('calendarDaysGrid');
             const title = document.getElementById('calendarMonthTitle');
@@ -499,7 +499,16 @@
                 dailyPracticeRecord[currentUser.email] = {};
             }
             dailyPracticeRecord[currentUser.email][todayStr] = (dailyPracticeRecord[currentUser.email][todayStr] || 0) + num;
-            localStorage.setItem('youhua_daily_practice_v6', JSON.stringify(dailyPracticeRecord));
+            localStorage.setItem('youhua_daily_practice_v8', JSON.stringify(dailyPracticeRecord));
+
+            // 更新學生總練習題數與最後練習時間
+            if(!studentStatsRecord[currentUser.email]) {
+                studentStatsRecord[currentUser.email] = { totalCount: 0, lastTime: '' };
+            }
+            studentStatsRecord[currentUser.email].totalCount += num;
+            studentStatsRecord[currentUser.email].lastTime = new Date().toLocaleString('zh-TW', { hour12: false });
+            localStorage.setItem('youhua_student_stats_v8', JSON.stringify(studentStatsRecord));
+
             renderCalendar();
         }
 
@@ -522,7 +531,7 @@
             if(tabName === 'wrongBank') renderWrongBank();
         }
 
-        // 測驗與單元選單
+        // 測驗與單元選單（自動統計各單元總題數）
         function onQuizGradeChange() {
             const gradeSelect = document.getElementById('quizGradeSelect');
             const unitSelect = document.getElementById('quizUnitSelect');
@@ -531,13 +540,19 @@
             unitSelect.innerHTML = '<option value="">-- 所有文法單元 (全選) --</option>';
 
             if(!grade) return;
-            const units = [...new Set(questionsDB.filter(q => q.grade === grade).map(q => q.unit))];
-            units.forEach(u => {
+            
+            const gradeQuestions = questionsDB.filter(q => q.grade === grade);
+            const unitCounts = {};
+            gradeQuestions.forEach(q => {
+                unitCounts[q.unit] = (unitCounts[q.unit] || 0) + 1;
+            });
+
+            for(let u in unitCounts) {
                 const opt = document.createElement('option');
                 opt.value = u;
-                opt.textContent = u;
+                opt.textContent = `${u} (總題數: ${unitCounts[u]}題)`;
                 unitSelect.appendChild(opt);
-            });
+            }
         }
 
         function startCustomQuiz() {
@@ -616,7 +631,7 @@
             if(!isCorrect) {
                 if(!wrongBank.some(item => item.id === question.id)) {
                     wrongBank.push(question);
-                    localStorage.setItem('youhua_wrong_v6', JSON.stringify(wrongBank));
+                    localStorage.setItem('youhua_wrong_v8', JSON.stringify(wrongBank));
                     updateWrongCountBadge();
                 }
             }
@@ -722,7 +737,7 @@
 
         function removeWrong(idx) {
             wrongBank.splice(idx, 1);
-            localStorage.setItem('youhua_wrong_v6', JSON.stringify(wrongBank));
+            localStorage.setItem('youhua_wrong_v8', JSON.stringify(wrongBank));
             updateWrongCountBadge();
             renderWrongBank();
         }
@@ -730,13 +745,13 @@
         function clearWrongBank() {
             if(confirm('確定清空所有錯題嗎？')) {
                 wrongBank = [];
-                localStorage.removeItem('youhua_wrong_v6');
+                localStorage.removeItem('youhua_wrong_v8');
                 updateWrongCountBadge();
                 renderWrongBank();
             }
         }
 
-        // 管理者後台 (學員審核與題庫統計)
+        // 管理者後台 (學員審核、練習紀錄與題庫統計)
         function renderStudentApprovalList() {
             const container = document.getElementById('studentApprovalList');
             if(!container) return;
@@ -750,7 +765,9 @@
                     <thead>
                         <tr class="border-b bg-emerald-50 text-emerald-900">
                             <th class="p-2">學生 Gmail 帳號</th>
-                            <th class="p-2">目前狀態</th>
+                            <th class="p-2">審核狀態</th>
+                            <th class="p-2">累計練習題數</th>
+                            <th class="p-2">最近練習時間</th>
                             <th class="p-2 text-right">管理操作</th>
                         </tr>
                     </thead>
@@ -762,10 +779,14 @@
                     ? '<span class="bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded font-bold">已核可</span>'
                     : '<span class="bg-amber-100 text-amber-800 text-xs px-2 py-0.5 rounded font-bold">等待審核</span>';
 
+                const stats = studentStatsRecord[u.email] || { totalCount: 0, lastTime: '尚無紀錄' };
+
                 html += `
                     <tr class="border-b">
                         <td class="p-2 font-medium">${u.email}</td>
                         <td class="p-2">${statusBadge}</td>
+                        <td class="p-2"><span class="bg-slate-100 px-2 py-0.5 rounded text-xs font-bold text-emerald-700">${stats.totalCount} 題</span></td>
+                        <td class="p-2 text-xs text-slate-500">${stats.lastTime}</td>
                         <td class="p-2 text-right space-x-2">
                             ${u.status !== 'approved' 
                                 ? `<button onclick="toggleUserStatus(${index}, 'approved')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1 rounded transition">核可使用</button>`
@@ -783,7 +804,7 @@
 
         function toggleUserStatus(index, newStatus) {
             usersDB[index].status = newStatus;
-            localStorage.setItem('youhua_users_db_v6', JSON.stringify(usersDB));
+            localStorage.setItem('youhua_users_db_v8', JSON.stringify(usersDB));
             renderStudentApprovalList();
             alert(`已變更 ${usersDB[index].email} 的帳號狀態！`);
         }
@@ -791,7 +812,7 @@
         function deleteUser(index) {
             if(confirm(`確定刪除 ${usersDB[index].email} 嗎？`)) {
                 usersDB.splice(index, 1);
-                localStorage.setItem('youhua_users_db_v6', JSON.stringify(usersDB));
+                localStorage.setItem('youhua_users_db_v8', JSON.stringify(usersDB));
                 renderStudentApprovalList();
             }
         }
