@@ -40,7 +40,8 @@
         body { font-family: 'Noto Sans TC', sans-serif; }
         @media print {
             body * { visibility: hidden; }
-            #printableWrongArea, #printableWrongArea * { visibility: visible; }
+            #printableQuizArea, #printableQuizArea *, #printableWrongArea, #printableWrongArea * { visibility: visible; }
+            #printableQuizArea { position: absolute; left: 0; top: 0; width: 100%; }
             #printableWrongArea { position: absolute; left: 0; top: 0; width: 100%; }
             .no-print { display: none !important; }
         }
@@ -67,13 +68,13 @@
     <!-- 主要內容區 Main Container -->
     <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
-        <!-- 登入畫面 -->
+        <!-- 登入畫面（無需審核，直接登入） -->
         <div id="loginView" class="max-w-md mx-auto bg-white rounded-2xl shadow-xl p-8 border border-emerald-100 text-center my-12">
             <div class="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6 text-emerald-600">
                 <i class="fa-solid fa-user-lock text-3xl"></i>
             </div>
             <h2 class="text-2xl font-bold text-slate-800 mb-2">學員與管理員登入</h2>
-            <p class="text-slate-500 mb-4 text-sm">請使用您的 Google Gmail 帳號與密碼登入系統</p>
+            <p class="text-slate-500 mb-4 text-sm">請輸入您的 Google Gmail 帳號與通行密碼</p>
             
             <!-- 全網總題數即時顯示徽章 -->
             <div class="mb-6 inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200 px-4 py-1.5 rounded-full text-xs font-bold text-emerald-800 shadow-sm">
@@ -94,29 +95,14 @@
                 </div>
                 
                 <button type="submit" class="w-full flex items-center justify-center gap-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 px-4 rounded-lg shadow-sm transition">
-                    <i class="fa-solid fa-right-to-bracket"></i> 登入系統
+                    <i class="fa-solid fa-right-to-bracket"></i> 登入系統開始練習
                 </button>
             </form>
             <div class="mt-6 text-xs text-slate-500 bg-emerald-50 p-3 rounded-lg text-left space-y-1 border border-emerald-100">
-                <span class="font-bold text-emerald-700">登入說明：</span><br>
-                • 請直接輸入您的 Google Gmail 帳號進行登入與註冊。<br>
-                • 學生帳號首次登入需經管理者審核通過後方可使用刷題功能。
+                <span class="font-bold text-emerald-700">提示說明：</span><br>
+                • 學生登入密碼請向老師洽詢。<br>
+                • 系統會自動保存您的練習成果與打卡紀錄，更新網頁也不會遺失！
             </div>
-        </div>
-
-        <!-- 學生待審核提示視窗 -->
-        <div id="pendingView" class="hidden max-w-lg mx-auto bg-white rounded-2xl shadow-xl p-8 border border-amber-200 text-center my-12 space-y-4">
-            <div class="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto text-amber-600 text-3xl">
-                <i class="fa-solid fa-clock"></i>
-            </div>
-            <h3 class="text-xl font-bold text-slate-800">帳號等待管理者審核中</h3>
-            <p class="text-sm text-slate-600 leading-relaxed">
-                您的帳號 (<span id="pendingUserEmail" class="font-semibold text-emerald-700"></span>) 已成功送出申請。<br>
-                請等待管理者核可權限後即可開始刷題。
-            </p>
-            <button onclick="logout()" class="bg-slate-600 hover:bg-slate-700 text-white font-bold py-2 px-6 rounded-lg text-sm transition">
-                返回登入頁
-            </button>
         </div>
 
         <!-- 登入後主要介面 -->
@@ -141,20 +127,20 @@
             <!-- 分頁切換 Tabs -->
             <div class="flex border-b border-emerald-200 gap-2 bg-white p-2 rounded-t-xl shadow-sm no-print">
                 <button onclick="switchTab('quiz')" id="tabQuiz" class="px-5 py-2.5 rounded-lg text-sm font-semibold transition flex items-center gap-2 bg-emerald-600 text-white">
-                    <i class="fa-solid fa-pen-to-square"></i> 線上刷題測驗
+                    <i class="fa-solid fa-pen-to-square"></i> 線上刷題與 PDF 列印
                 </button>
                 <button onclick="switchTab('wrongBank')" id="tabWrong" class="px-5 py-2.5 rounded-lg text-sm font-semibold transition flex items-center gap-2 text-slate-600 hover:bg-emerald-50">
                     <i class="fa-solid fa-triangle-exclamation text-amber-500"></i> 個人錯題集 (<span id="wrongCountBadge">0</span>)
                 </button>
                 <button onclick="switchTab('admin')" id="tabAdmin" class="px-5 py-2.5 rounded-lg text-sm font-semibold transition flex items-center gap-2 text-slate-600 hover:bg-emerald-50 hidden">
-                    <i class="fa-solid fa-user-gear text-emerald-600"></i> 管理員後台 (學員審核/題庫)
+                    <i class="fa-solid fa-user-gear text-emerald-600"></i> 管理員後台 (題庫與學生紀錄)
                 </button>
             </div>
 
-            <!-- Tab 1: 線上刷題測驗區 -->
+            <!-- Tab 1: 線上刷題與 PDF 列印區 -->
             <div id="viewQuiz" class="bg-white rounded-b-xl shadow-md p-6 border border-emerald-100">
-                <!-- 學生端題庫同步快捷列 -->
-                <div class="flex justify-between items-center mb-4 pb-3 border-b border-emerald-100 bg-emerald-50/50 p-3 rounded-lg">
+                <!-- 雲端題庫同步快捷列 -->
+                <div class="flex justify-between items-center mb-4 pb-3 border-b border-emerald-100 bg-emerald-50/50 p-3 rounded-lg no-print">
                     <span class="text-xs text-emerald-900 font-medium">
                         <i class="fa-solid fa-cloud-arrow-down text-emerald-600 mr-1"></i> 雲端題庫即時同步狀態：已連線
                     </span>
@@ -164,8 +150,8 @@
                     <span id="studentSyncStatus" class="text-xs font-bold text-emerald-700 ml-2"></span>
                 </div>
 
-                <!-- 出題設定面板（複選支援） -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 bg-emerald-50 p-4 rounded-xl border border-emerald-200">
+                <!-- 出題設定面板（複選支援：所有選項皆完整出現，使用者打 v 勾選） -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 bg-emerald-50 p-4 rounded-xl border border-emerald-200 no-print">
                     <div>
                         <div class="flex justify-between items-center mb-1">
                             <label class="block text-xs font-bold text-emerald-900">選擇年級階段 (可複選)：</label>
@@ -182,7 +168,7 @@
                             <button type="button" onclick="toggleAllUnits(true)" class="text-[10px] text-emerald-700 hover:underline">全選</button>
                         </div>
                         <div id="unitCheckboxesContainer" class="bg-white p-2.5 rounded-lg border border-emerald-300 max-h-40 overflow-y-auto space-y-1.5 text-xs">
-                            <span class="text-slate-400">請先勾選上方年級...</span>
+                            <!-- 動態渲染單元複選框 -->
                         </div>
                     </div>
 
@@ -191,12 +177,24 @@
                             <label class="block text-xs font-bold text-emerald-900 mb-1">練習題數 (1-100題)：</label>
                             <input type="number" id="quizCountInput" min="1" max="100" value="5" class="w-full px-3 py-2 rounded-lg border border-emerald-300 text-sm focus:ring-2 focus:ring-emerald-400 focus:outline-none">
                         </div>
-                        <div class="mt-4">
-                            <button onclick="startCustomQuiz()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-4 rounded-lg shadow transition flex items-center justify-center gap-2">
-                                <i class="fa-solid fa-play"></i> 開始綜合亂數出題
+                        <div class="mt-4 flex gap-2">
+                            <button onclick="startCustomQuiz()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-3 rounded-lg shadow transition flex items-center justify-center gap-1.5 text-xs">
+                                <i class="fa-solid fa-play"></i> 線上練習
+                            </button>
+                            <button onclick="printCustomQuizPDF()" class="flex-1 bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 px-3 rounded-lg shadow transition flex items-center justify-center gap-1.5 text-xs">
+                                <i class="fa-solid fa-file-pdf"></i> PDF 列印
                             </button>
                         </div>
                     </div>
+                </div>
+
+                <!-- 隱藏的 PDF 列印專用區塊 -->
+                <div id="printableQuizArea" class="hidden print:block">
+                    <div class="text-center mb-6 border-b pb-4">
+                        <h1 class="text-2xl font-bold">優華數位英文學習文法刷題網 - 練習講義</h1>
+                        <p class="text-xs text-slate-500 mt-1">學生帳號：<span id="printQuizUserEmail"></span> | 列印日期：<span id="printDate"></span></p>
+                    </div>
+                    <div id="printQuizListContainer" class="space-y-6"></div>
                 </div>
 
                 <!-- 答題進行中畫面 -->
@@ -212,7 +210,7 @@
 
                     <!-- 選項或填空輸入介面 -->
                     <div id="quizOptionsContainer" class="space-y-3">
-                        <!-- 動態生成選項或填空輸入框 -->
+                        <!-- 動態生成選項 -->
                     </div>
 
                     <!-- 即時答對/答錯回饋與解析區塊 -->
@@ -236,12 +234,9 @@
                     <h3 class="text-2xl font-bold text-slate-800">測驗已完成！</h3>
                     <p class="text-sm text-slate-600" id="quizScoreSummary">正確率計算中...</p>
 
-                    <!-- 詳細解答列表 -->
                     <div class="text-left space-y-3 mt-6">
                         <h4 class="font-bold text-slate-700 border-b pb-2">本輪練習題目與正確解答</h4>
-                        <div id="quizResultList" class="space-y-3 max-h-96 overflow-y-auto pr-2">
-                            <!-- 動態列出答案 -->
-                        </div>
+                        <div id="quizResultList" class="space-y-3 max-h-96 overflow-y-auto pr-2"></div>
                     </div>
 
                     <button onclick="resetQuizView()" class="bg-emerald-600 text-white px-6 py-2.5 rounded-lg font-bold text-sm hover:bg-emerald-700 transition">
@@ -250,9 +245,9 @@
                 </div>
 
                 <!-- 初始空狀態 -->
-                <div id="quizEmptyState" class="text-center py-12 text-slate-400">
+                <div id="quizEmptyState" class="text-center py-12 text-slate-400 no-print">
                     <i class="fa-solid fa-file-lines text-4xl mb-2 text-emerald-200"></i>
-                    <p>請勾選上方年級與文法單元，設定題數後點擊「開始綜合亂數出題」</p>
+                    <p>請勾選上方年級與文法單元，設定題數後選擇「線上練習」或「PDF 列印」</p>
                 </div>
             </div>
 
@@ -278,9 +273,7 @@
                         <h1 class="text-xl font-bold">優華數位英文學習文法刷題網 - 個人錯題複習講義</h1>
                         <p class="text-xs text-slate-500">學生帳號：<span id="printUserEmail"></span></p>
                     </div>
-                    <div id="wrongQuestionsList" class="space-y-4">
-                        <!-- 錯題動態載入 -->
-                    </div>
+                    <div id="wrongQuestionsList" class="space-y-4"></div>
                 </div>
             </div>
 
@@ -301,7 +294,7 @@
 
                 <div class="bg-white rounded-xl shadow-md p-6 border border-emerald-100 space-y-4">
                     <h3 class="font-bold text-slate-800 border-b border-emerald-100 pb-3 flex items-center gap-2">
-                        <i class="fa-solid fa-users-gear text-emerald-600"></i> 學員註冊核可與練習紀錄監控
+                        <i class="fa-solid fa-users-gear text-emerald-600"></i> 學員練習紀錄與數據監控
                     </h3>
                     <div id="studentApprovalList" class="overflow-x-auto"></div>
                 </div>
@@ -371,7 +364,6 @@
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(userData)
                 });
-                console.log("學員資料已同步至 Google 試算表 (Users 分頁)");
             } catch (error) {
                 console.error("雲端同步失敗", error);
             }
@@ -390,12 +382,12 @@
                     questionsDB = data;
                     localStorage.setItem(STORAGE_KEY_QUESTIONS, JSON.stringify(questionsDB));
                     updateGlobalTotalCountBadge();
-                    initGradeCheckboxes();
+                    initCheckboxes();
                     if(currentUser && currentUser.isAdmin) renderAdminStats();
                 }
             } catch(e) {
                 console.log("使用本地快取題庫");
-                initGradeCheckboxes();
+                initCheckboxes();
             }
         }
 
@@ -410,7 +402,7 @@
                     questionsDB = data;
                     localStorage.setItem(STORAGE_KEY_QUESTIONS, JSON.stringify(questionsDB));
                     updateGlobalTotalCountBadge();
-                    initGradeCheckboxes();
+                    initCheckboxes();
                     if(currentUser && currentUser.isAdmin) renderAdminStats();
                     if(statusEl) {
                         statusEl.textContent = `更新成功！共載入 ${questionsDB.length} 題`;
@@ -420,7 +412,7 @@
                     if(statusEl) statusEl.textContent = "更新失敗：資料格式不符";
                 }
             } catch(e) {
-                if(statusEl) statusEl.textContent = "連線失敗，請檢查網路或 Google 權限設定";
+                if(statusEl) statusEl.textContent = "連線失敗，請檢查網路設定";
             }
         }
 
@@ -435,12 +427,12 @@
 
             if(email === ADMIN_EMAIL) {
                 if(pass !== ADMIN_PASS) { alert('管理者密碼錯誤！'); return; }
-                currentUser = { email: ADMIN_EMAIL, name: '系統管理者', isAdmin: true, status: 'approved' };
+                currentUser = { email: ADMIN_EMAIL, name: '系統管理者', isAdmin: true };
             } else {
                 if(pass !== STUDENT_PASS) { alert('學生密碼錯誤！學生統一密碼請洽老師。'); return; }
                 let existingUser = usersDB.find(u => u.email === email);
                 if(!existingUser) {
-                    existingUser = { email: email, name: email.split('@')[0], isAdmin: false, status: 'pending' };
+                    existingUser = { email: email, name: email.split('@')[0], isAdmin: false };
                     usersDB.push(existingUser);
                     localStorage.setItem(STORAGE_KEY_USERS_DB, JSON.stringify(usersDB));
                 }
@@ -452,7 +444,6 @@
             syncUserToCloud({
                 email: currentUser.email,
                 name: currentUser.name,
-                status: currentUser.status,
                 totalCount: (studentStatsRecord[currentUser.email] && studentStatsRecord[currentUser.email].totalCount) || 0,
                 lastTime: new Date().toLocaleString('zh-TW', { hour12: false })
             });
@@ -463,19 +454,9 @@
 
         function checkUserStatusAndRoute() {
             const loginView = document.getElementById('loginView');
-            const pendingView = document.getElementById('pendingView');
             const appView = document.getElementById('appView');
             const calendarCard = document.getElementById('studentCalendarCard');
             if(loginView) loginView.classList.add('hidden');
-            
-            if(!currentUser.isAdmin && currentUser.status !== 'approved') {
-                if(pendingView) pendingView.classList.remove('hidden');
-                document.getElementById('pendingUserEmail').textContent = currentUser.email;
-                if(appView) appView.classList.add('hidden');
-                return;
-            }
-
-            if(pendingView) pendingView.classList.add('hidden');
             if(appView) appView.classList.remove('hidden');
 
             const tabAdmin = document.getElementById('tabAdmin');
@@ -490,7 +471,7 @@
                 renderCalendar();
             }
 
-            initGradeCheckboxes();
+            initCheckboxes();
             updateWrongCountBadge();
         }
 
@@ -498,7 +479,6 @@
             currentUser = null;
             localStorage.removeItem(STORAGE_KEY_USER);
             document.getElementById('loginView').classList.remove('hidden');
-            document.getElementById('pendingView').classList.add('hidden');
             document.getElementById('appView').classList.add('hidden');
             renderUserInfo();
             updateGlobalTotalCountBadge();
@@ -574,7 +554,6 @@
             syncUserToCloud({
                 email: currentUser.email,
                 name: currentUser.name,
-                status: currentUser.status,
                 totalCount: studentStatsRecord[currentUser.email].totalCount,
                 lastTime: studentStatsRecord[currentUser.email].lastTime
             });
@@ -599,44 +578,27 @@
             if(tabName === 'wrongBank') renderWrongBank();
         }
 
-        function initGradeCheckboxes() {
-            const container = document.getElementById('gradeCheckboxesContainer');
-            if(!container) return;
-            container.innerHTML = '';
+        function initCheckboxes() {
+            const gradeContainer = document.getElementById('gradeCheckboxesContainer');
+            const unitContainer = document.getElementById('unitCheckboxesContainer');
+            if(!gradeContainer || !unitContainer) return;
 
-            const grades = [...new Set(questionsDB.map(q => q.grade))].sort();
-            if(grades.length === 0) { container.innerHTML = '<span class="text-slate-400">無可用年級</span>'; return; }
+            gradeContainer.innerHTML = '';
+            unitContainer.innerHTML = '';
 
-            grades.forEach(grade => {
+            const allGrades = [...new Set(questionsDB.map(q => q.grade))].sort();
+            const allUnits = [...new Set(questionsDB.map(q => q.unit))].sort();
+
+            allGrades.forEach(grade => {
                 const count = questionsDB.filter(q => q.grade === grade).length;
                 const label = document.createElement('label');
                 label.className = "flex items-center gap-2 cursor-pointer hover:bg-emerald-50 p-1 rounded";
                 label.innerHTML = `
-                    <input type="checkbox" value="${grade}" onchange="onGradeCheckboxChange()" class="grade-checkbox rounded text-emerald-600 focus:ring-emerald-500" checked>
+                    <input type="checkbox" value="${grade}" class="grade-checkbox rounded text-emerald-600 focus:ring-emerald-500" checked>
                     <span class="font-medium text-slate-700">${grade} (${count}題)</span>
                 `;
-                container.appendChild(label);
+                gradeContainer.appendChild(label);
             });
-            onGradeCheckboxChange();
-        }
-
-        function toggleAllGrades(select) {
-            document.querySelectorAll('.grade-checkbox').forEach(cb => cb.checked = select);
-            onGradeCheckboxChange();
-        }
-
-        function onGradeCheckboxChange() {
-            const unitContainer = document.getElementById('unitCheckboxesContainer');
-            if(!unitContainer) return;
-            unitContainer.innerHTML = '';
-
-            // 取得全網所有不重複的文法單元，確保即使目前分類下沒有題目，單元選項也全部保留列出
-            const allUnits = [...new Set(questionsDB.map(q => q.unit))].sort();
-
-            if(allUnits.length === 0) {
-                unitContainer.innerHTML = '<span class="text-slate-400">尚無文法單元...</span>';
-                return;
-            }
 
             allUnits.forEach(unit => {
                 const count = questionsDB.filter(q => q.unit === unit).length;
@@ -650,24 +612,35 @@
             });
         }
 
+        function toggleAllGrades(select) {
+            document.querySelectorAll('.grade-checkbox').forEach(cb => cb.checked = select);
+        }
+
         function toggleAllUnits(select) {
             document.querySelectorAll('.unit-checkbox').forEach(cb => cb.checked = select);
         }
 
-        function startCustomQuiz() {
+        function getSelectedPool() {
             const selectedGrades = Array.from(document.querySelectorAll('.grade-checkbox:checked')).map(cb => cb.value);
             const selectedUnits = Array.from(document.querySelectorAll('.unit-checkbox:checked')).map(cb => cb.value);
             const countInput = document.getElementById('quizCountInput');
             let count = parseInt(countInput ? countInput.value : 5) || 5;
 
-            if(selectedGrades.length === 0) { alert('請至少勾選一個年級階段！'); return; }
-            if(selectedUnits.length === 0) { alert('請至少勾選一個文法單元！'); return; }
+            if(selectedGrades.length === 0) { alert('請至少勾選一個年級階段！'); return null; }
+            if(selectedUnits.length === 0) { alert('請至少勾選一個文法單元！'); return null; }
 
             let pool = questionsDB.filter(q => selectedGrades.includes(q.grade) && selectedUnits.includes(q.unit));
-            if(pool.length === 0) { alert('找不到符合條件的題目！'); return; }
+            if(pool.length === 0) { alert('找不到符合條件的題目！'); return null; }
 
             pool.sort(() => Math.random() - 0.5);
-            currentQuizQueue = pool.slice(0, Math.min(count, pool.length));
+            return pool.slice(0, Math.min(count, pool.length));
+        }
+
+        function startCustomQuiz() {
+            let pool = getSelectedPool();
+            if(!pool) return;
+
+            currentQuizQueue = pool;
             currentQuizIndex = 0;
             userAnswersRecord = [];
 
@@ -675,6 +648,38 @@
             document.getElementById('quizResultArea').classList.add('hidden');
             document.getElementById('quizDisplayArea').classList.remove('hidden');
             renderQuizStep();
+        }
+
+        function printCustomQuizPDF() {
+            let pool = getSelectedPool();
+            if(!pool) return;
+
+            document.getElementById('printQuizUserEmail').textContent = currentUser ? currentUser.email : '訪客';
+            document.getElementById('printDate').textContent = new Date().toLocaleDateString('zh-TW');
+
+            const container = document.getElementById('printQuizListContainer');
+            container.innerHTML = '';
+
+            pool.forEach((q, idx) => {
+                const div = document.createElement('div');
+                div.className = "mb-6 p-4 border rounded-xl page-break";
+                let optionsHtml = '';
+                if(q.options && q.options.length > 0 && q.options[0] !== "") {
+                    optionsHtml = `<div class="grid grid-cols-2 gap-2 my-2 text-xs">` + 
+                        q.options.map((opt, i) => `<div>${String.fromCharCode(65+i)}. ${opt.replace(/^[A-D]\.\s*/, '')}</div>`).join('') + 
+                        `</div>`;
+                }
+                div.innerHTML = `
+                    <div class="font-bold text-sm mb-1">Q${idx+1}. [${q.grade} - ${q.unit}] ${q.question}</div>
+                    ${optionsHtml}
+                    <div class="mt-3 pt-2 border-t text-xs text-slate-600">
+                        <b>正確答案：${q.answer}</b> | 解析：${q.explanation}
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+
+            window.print();
         }
 
         function renderQuizStep() {
@@ -695,7 +700,7 @@
                     <div class="space-y-3">
                         <label class="block text-xs font-bold text-emerald-900">請在下方輸入您的答案：</label>
                         <div class="flex gap-2">
-                            <input type="text" id="fillInAnswerInput" placeholder="請輸入答案（例如: Does / have）" 
+                            <input type="text" id="fillInAnswerInput" placeholder="請輸入答案" 
                                 class="w-full px-4 py-3 rounded-xl border border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-base"
                                 onkeypress="if(event.key === 'Enter') submitFillInAnswer()">
                             <button onclick="submitFillInAnswer()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-3 rounded-xl shadow transition">
@@ -894,30 +899,22 @@
             const container = document.getElementById('studentApprovalList');
             if(!container) return;
             if(usersDB.length === 0) {
-                container.innerHTML = `<p class="text-xs text-slate-400 py-4">目前尚無學生註冊。</p>`;
+                container.innerHTML = `<p class="text-xs text-slate-400 py-4">目前尚無學生登入紀錄。</p>`;
                 return;
             }
 
-            let html = `<table class="w-full text-left text-sm border-collapse"><thead><tr class="border-b bg-emerald-50 text-emerald-900"><th class="p-2">學生 Gmail 帳號</th><th class="p-2">審核狀態</th><th class="p-2">累計練習題數</th><th class="p-2">最近練習時間</th><th class="p-2 text-right">管理操作</th></tr></thead><tbody>`;
+            let html = `<table class="w-full text-left text-sm border-collapse"><thead><tr class="border-b bg-emerald-50 text-emerald-900"><th class="p-2">學生 Gmail 帳號</th><th class="p-2">累計練習題數</th><th class="p-2">最近練習時間</th><th class="p-2 text-right">管理操作</th></tr></thead><tbody>`;
 
             usersDB.forEach((u, index) => {
-                const statusBadge = u.status === 'approved' 
-                    ? '<span class="bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded font-bold">已核可</span>'
-                    : '<span class="bg-amber-100 text-amber-800 text-xs px-2 py-0.5 rounded font-bold">等待審核</span>';
                 const stats = studentStatsRecord[u.email] || { totalCount: 0, lastTime: '尚無紀錄' };
 
                 html += `
                     <tr class="border-b">
                         <td class="p-2 font-medium">${u.email}</td>
-                        <td class="p-2">${statusBadge}</td>
                         <td class="p-2"><span class="bg-slate-100 px-2 py-0.5 rounded text-xs font-bold text-emerald-700">${stats.totalCount} 題</span></td>
                         <td class="p-2 text-xs text-slate-500">${stats.lastTime}</td>
-                        <td class="p-2 text-right space-x-2">
-                            ${u.status !== 'approved' 
-                                ? `<button onclick="toggleUserStatus(${index}, 'approved')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1 rounded transition">核可使用</button>`
-                                : `<button onclick="toggleUserStatus(${index}, 'pending')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs px-3 py-1 rounded transition">取消權限</button>`
-                            }
-                            <button onclick="deleteUser(${index})" class="text-rose-500 hover:underline text-xs">刪除</button>
+                        <td class="p-2 text-right">
+                            <button onclick="deleteUser(${index})" class="text-rose-500 hover:underline text-xs">刪除紀錄</button>
                         </td>
                     </tr>
                 `;
@@ -926,22 +923,8 @@
             container.innerHTML = html;
         }
 
-        function toggleUserStatus(index, newStatus) {
-            usersDB[index].status = newStatus;
-            localStorage.setItem(STORAGE_KEY_USERS_DB, JSON.stringify(usersDB));
-            
-            syncUserToCloud({
-                email: usersDB[index].email,
-                name: usersDB[index].name,
-                status: newStatus
-            });
-
-            renderStudentApprovalList();
-            alert(`已變更 ${usersDB[index].email} 的帳號狀態！`);
-        }
-
         function deleteUser(index) {
-            if(confirm(`確定刪除 ${usersDB[index].email} 嗎？`)) {
+            if(confirm(`確定刪除此學員紀錄嗎？`)) {
                 usersDB.splice(index, 1);
                 localStorage.setItem(STORAGE_KEY_USERS_DB, JSON.stringify(usersDB));
                 renderStudentApprovalList();
