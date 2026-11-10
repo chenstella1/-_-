@@ -68,7 +68,7 @@
     <!-- 主要內容區 Main Container -->
     <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
-        <!-- 登入畫面（無需審核，直接登入） -->
+        <!-- 登入畫面 -->
         <div id="loginView" class="max-w-md mx-auto bg-white rounded-2xl shadow-xl p-8 border border-emerald-100 text-center my-12">
             <div class="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6 text-emerald-600">
                 <i class="fa-solid fa-user-lock text-3xl"></i>
@@ -101,7 +101,7 @@
             <div class="mt-6 text-xs text-slate-500 bg-emerald-50 p-3 rounded-lg text-left space-y-1 border border-emerald-100">
                 <span class="font-bold text-emerald-700">提示說明：</span><br>
                 • 學生登入密碼請向老師洽詢。<br>
-                • 系統會自動保存您的練習成果與打卡紀錄，更新網頁也不會遺失！
+                • 系統會自動將練習成果同步至雲端試算表與本地端！
             </div>
         </div>
 
@@ -150,7 +150,7 @@
                     <span id="studentSyncStatus" class="text-xs font-bold text-emerald-700 ml-2"></span>
                 </div>
 
-                <!-- 出題設定面板（複選支援：所有選項皆完整出現，使用者打 v 勾選） -->
+                <!-- 出題設定面板（複選支援：所有選項皆完整出現） -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 bg-emerald-50 p-4 rounded-xl border border-emerald-200 no-print">
                     <div>
                         <div class="flex justify-between items-center mb-1">
