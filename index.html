@@ -325,7 +325,7 @@
 
     </main>
 
-    <!-- 頁尾 (青綠色背景，文字已移除「青綠色」) -->
+    <!-- 頁尾 -->
     <footer class="bg-emerald-600 text-white border-t border-emerald-700 py-4 text-center text-xs font-bold tracking-wide no-print shadow-inner">
         高國中題庫與錯題匯出系統 &copy; 2026 優華數位英文學習文法刷題網
     </footer>
@@ -335,7 +335,7 @@
         const ADMIN_EMAIL = 'yhstella2@gmail.com';
         const ADMIN_PASS = 'a18177300';
         const STUDENT_PASS = '1155665';
-        const SHEET_DEV_URL = 'https://script.google.com/macros/s/AKfycbwm5mAPT1SOJGgvGsnRO2BzB3yFdyq7_AR5OnQr5Jw/dev';
+        const SHEET_DEV_URL = 'https://script.google.com/macros/s/AKfycbw5yZUcaX0hHwT8HFMHCScPs0mP5WXrblLVBcjezJk2d2AYVrk8a1VqRCfgSrKNErBr/exec';
 
         // 預設示範題庫
         const defaultQuestions = [
@@ -344,12 +344,12 @@
         ];
 
         // 狀態與資料庫
-        let questionsDB = JSON.parse(localStorage.getItem('youhua_questions_v12')) || defaultQuestions;
-        let currentUser = JSON.parse(localStorage.getItem('youhua_user_v12')) || null;
-        let usersDB = JSON.parse(localStorage.getItem('youhua_users_db_v12')) || [];
-        let wrongBank = JSON.parse(localStorage.getItem('youhua_wrong_v12')) || [];
-        let dailyPracticeRecord = JSON.parse(localStorage.getItem('youhua_daily_practice_v12')) || {};
-        let studentStatsRecord = JSON.parse(localStorage.getItem('youhua_student_stats_v12')) || {};
+        let questionsDB = JSON.parse(localStorage.getItem('youhua_questions_v13')) || defaultQuestions;
+        let currentUser = JSON.parse(localStorage.getItem('youhua_user_v13')) || null;
+        let usersDB = JSON.parse(localStorage.getItem('youhua_users_db_v13')) || [];
+        let wrongBank = JSON.parse(localStorage.getItem('youhua_wrong_v13')) || [];
+        let dailyPracticeRecord = JSON.parse(localStorage.getItem('youhua_daily_practice_v13')) || {};
+        let studentStatsRecord = JSON.parse(localStorage.getItem('youhua_student_stats_v13')) || {};
 
         let currentQuizQueue = [];
         let currentQuizIndex = 0;
@@ -377,7 +377,7 @@
                 let data = await response.json();
                 if(Array.isArray(data) && data.length > 0) {
                     questionsDB = data;
-                    localStorage.setItem('youhua_questions_v12', JSON.stringify(questionsDB));
+                    localStorage.setItem('youhua_questions_v13', JSON.stringify(questionsDB));
                     updateGlobalTotalCountBadge();
                     if(currentUser && currentUser.isAdmin) {
                         renderAdminStats();
@@ -398,7 +398,7 @@
                 let data = await response.json();
                 if(Array.isArray(data) && data.length > 0) {
                     questionsDB = data;
-                    localStorage.setItem('youhua_questions_v12', JSON.stringify(questionsDB));
+                    localStorage.setItem('youhua_questions_v13', JSON.stringify(questionsDB));
                     updateGlobalTotalCountBadge();
                     if(currentUser && currentUser.isAdmin) {
                         renderAdminStats();
@@ -444,12 +444,12 @@
                 if(!existingUser) {
                     existingUser = { email: email, name: email.split('@')[0], isAdmin: false, status: 'pending' };
                     usersDB.push(existingUser);
-                    localStorage.setItem('youhua_users_db_v12', JSON.stringify(usersDB));
+                    localStorage.setItem('youhua_users_db_v13', JSON.stringify(usersDB));
                 }
                 currentUser = existingUser;
             }
 
-            localStorage.setItem('youhua_user_v12', JSON.stringify(currentUser));
+            localStorage.setItem('youhua_user_v13', JSON.stringify(currentUser));
             renderUserInfo();
             checkUserStatusAndRoute();
         }
@@ -489,7 +489,7 @@
 
         function logout() {
             currentUser = null;
-            localStorage.removeItem('youhua_user_v12');
+            localStorage.removeItem('youhua_user_v13');
             const loginView = document.getElementById('loginView');
             const pendingView = document.getElementById('pendingView');
             const appView = document.getElementById('appView');
@@ -567,14 +567,14 @@
                 dailyPracticeRecord[currentUser.email] = {};
             }
             dailyPracticeRecord[currentUser.email][todayStr] = (dailyPracticeRecord[currentUser.email][todayStr] || 0) + num;
-            localStorage.setItem('youhua_daily_practice_v12', JSON.stringify(dailyPracticeRecord));
+            localStorage.setItem('youhua_daily_practice_v13', JSON.stringify(dailyPracticeRecord));
 
             if(!studentStatsRecord[currentUser.email]) {
                 studentStatsRecord[currentUser.email] = { totalCount: 0, lastTime: '' };
             }
             studentStatsRecord[currentUser.email].totalCount += num;
             studentStatsRecord[currentUser.email].lastTime = new Date().toLocaleString('zh-TW', { hour12: false });
-            localStorage.setItem('youhua_student_stats_v12', JSON.stringify(studentStatsRecord));
+            localStorage.setItem('youhua_student_stats_v13', JSON.stringify(studentStatsRecord));
 
             renderCalendar();
         }
@@ -698,7 +698,7 @@
             if(!isCorrect) {
                 if(!wrongBank.some(item => item.id === question.id)) {
                     wrongBank.push(question);
-                    localStorage.setItem('youhua_wrong_v12', JSON.stringify(wrongBank));
+                    localStorage.setItem('youhua_wrong_v13', JSON.stringify(wrongBank));
                     updateWrongCountBadge();
                 }
             }
@@ -804,7 +804,7 @@
 
         function removeWrong(idx) {
             wrongBank.splice(idx, 1);
-            localStorage.setItem('youhua_wrong_v12', JSON.stringify(wrongBank));
+            localStorage.setItem('youhua_wrong_v13', JSON.stringify(wrongBank));
             updateWrongCountBadge();
             renderWrongBank();
         }
@@ -812,7 +812,7 @@
         function clearWrongBank() {
             if(confirm('確定清空所有錯題嗎？')) {
                 wrongBank = [];
-                localStorage.removeItem('youhua_wrong_v12');
+                localStorage.removeItem('youhua_wrong_v13');
                 updateWrongCountBadge();
                 renderWrongBank();
             }
@@ -871,7 +871,7 @@
 
         function toggleUserStatus(index, newStatus) {
             usersDB[index].status = newStatus;
-            localStorage.setItem('youhua_users_db_v12', JSON.stringify(usersDB));
+            localStorage.setItem('youhua_users_db_v13', JSON.stringify(usersDB));
             renderStudentApprovalList();
             alert(`已變更 ${usersDB[index].email} 的帳號狀態！`);
         }
@@ -879,7 +879,7 @@
         function deleteUser(index) {
             if(confirm(`確定刪除 ${usersDB[index].email} 嗎？`)) {
                 usersDB.splice(index, 1);
-                localStorage.setItem('youhua_users_db_v12', JSON.stringify(usersDB));
+                localStorage.setItem('youhua_users_db_v13', JSON.stringify(usersDB));
                 renderStudentApprovalList();
             }
         }
