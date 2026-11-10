@@ -1,952 +1,222 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>優華數位英文學習文法刷題網</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        emerald: {
-                            50: '#ecfdf5',
-                            100: '#d1fae5',
-                            200: '#a7f3d0',
-                            300: '#6ee7b7',
-                            400: '#34d399',
-                            500: '#10b981',
-                            600: '#059669',
-                            700: '#047857',
-                            800: '#065f46',
-                            900: '#064e3b',
-                        },
-                        teal: {
-                            600: '#0d9488',
-                            700: '#0f766e',
-                        }
-                    }
-                }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>優華數位英文學習文法刷題網</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0fdf4',
+              100: '#dcfce7',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
             }
+          }
         }
-    </script>
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Noto Sans TC', sans-serif; }
-        @media print {
-            body * { visibility: hidden; }
-            #printableQuizArea, #printableQuizArea *, #printableWrongArea, #printableWrongArea * { visibility: visible; }
-            #printableQuizArea { position: absolute; left: 0; top: 0; width: 100%; }
-            #printableWrongArea { position: absolute; left: 0; top: 0; width: 100%; }
-            .no-print { display: none !important; }
-        }
-    </style>
+      }
+    }
+  </script>
 </head>
-<body class="bg-emerald-50 text-slate-800 min-h-screen flex flex-col">
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
 
-    <!-- 導覽列 Navigation -->
-    <nav class="bg-emerald-600 text-white shadow-md sticky top-0 z-50 no-print">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
-                <div class="flex items-center gap-3">
-                    <i class="fa-solid fa-graduation-cap text-2xl text-emerald-200"></i>
-                    <span class="font-bold text-xl tracking-wide">優華數位英文學習文法刷題網</span>
-                </div>
-                <!-- 登入資訊顯示 -->
-                <div id="userInfoArea" class="flex items-center gap-4">
-                    <!-- JS 動態渲染 -->
-                </div>
-            </div>
+  <!-- 頂部導覽列 -->
+  <header class="bg-brand-600 text-white shadow-md">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+      <h1 class="text-xl font-bold tracking-wide">優華數位英文學習文法刷題網</h1>
+      <div id="user-status" class="text-sm bg-brand-700 px-3 py-1.5 rounded-full">
+        未登入 (預設模式)
+      </div>
+    </div>
+  </header>
+
+  <!-- 主要內容區 -->
+  <main class="max-w-4xl mx-auto px-4 py-8 flex-grow w-full">
+    
+    <!-- 選擇區塊 -->
+    <section class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-8">
+      <h2 class="text-lg font-semibold text-slate-700 mb-4 border-l-4 border-brand-500 pl-3">請選擇練習條件</h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div>
+          <label class="block text-sm font-medium text-slate-600 mb-1">年級</label>
+          <select id="grade-select" class="w-full border-slate-300 rounded-lg shadow-sm focus:border-brand-500 focus:ring-brand-500 p-2.5 border">
+            <option value="all">全選 / 載入全部</option>
+            <option value="國七">國七</option>
+            <option value="國八">國八</option>
+            <option value="國九">國九</option>
+            <option value="高一">高一</option>
+            <option value="高二">高二</option>
+            <option value="高三">高三</option>
+          </select>
         </div>
-    </nav>
 
-    <!-- 主要內容區 Main Container -->
-    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div>
+          <label class="block text-sm font-medium text-slate-600 mb-1">文法單元</label>
+          <input type="text" id="unit-input" placeholder="可輸入關鍵字或留空" class="w-full border-slate-300 rounded-lg shadow-sm focus:border-brand-500 focus:ring-brand-500 p-2 border">
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-slate-600 mb-1">測驗題數 (1-100)</label>
+          <input type="number" id="question-count" value="10" min="1" max="100" class="w-full border-slate-300 rounded-lg shadow-sm focus:border-brand-500 focus:ring-brand-500 p-2 border">
+        </div>
+      </div>
+
+      <div class="flex gap-3">
+        <button id="btn-fetch" onclick="loadQuestions()" class="bg-brand-600 hover:bg-brand-700 text-white font-medium px-6 py-2.5 rounded-lg transition-colors shadow-sm">
+          載入最新題庫
+        </button>
+        <button id="btn-start" onclick="startQuiz()" class="bg-slate-700 hover:bg-slate-800 text-white font-medium px-6 py-2.5 rounded-lg transition-colors shadow-sm hidden">
+          開始測驗
+        </button>
+      </div>
+    </section>
+
+    <!-- 狀態與提示 -->
+    <div id="status-msg" class="hidden p-4 mb-6 rounded-lg text-sm"></div>
+
+    <!-- 測驗區域 -->
+    <section id="quiz-container" class="hidden space-y-6"></section>
+
+  </main>
+
+  <!-- 腳步版權 -->
+  <footer class="bg-slate-100 border-t border-slate-200 py-4 text-center text-xs text-slate-500">
+    &copy; 優華數位英文學習文法刷題網 - 自動同步雲端題庫
+  </footer>
+
+  <!-- 腳本邏輯 -->
+  <script>
+    // 直接寫死最新的 Google Sheet ID[cite: 1]
+    const SPREADSHEET_ID = '11rFyQ1FLFflBAUzBoJGI2p8EChYSJWuje16DkZZdSWc';
+    
+    // 使用 gviz/tq 取得公開 JSON 資料
+    const GOOGLE_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json`;
+
+    let allQuestions = [];
+    let currentQuiz = [];
+
+    // 顯示訊息
+    function showStatus(msg, type = 'info') {
+      const el = document.getElementById('status-msg');
+      el.classList.remove('hidden', 'bg-blue-50', 'text-blue-700', 'bg-red-50', 'text-red-700', 'bg-green-50', 'text-green-700');
+      
+      if (type === 'error') {
+        el.classList.add('bg-red-50', 'text-red-700');
+      } else if (type === 'success') {
+        el.classList.add('bg-green-50', 'text-green-700');
+      } else {
+        el.classList.add('bg-blue-50', 'text-blue-700');
+      }
+      
+      el.innerText = msg;
+    }
+
+    // 從 Google Sheet 讀取題目[cite: 1]
+    async function loadQuestions() {
+      showStatus('連線至 Google Sheet 載入資料中...', 'info');
+      try {
+        const response = await fetch(GOOGLE_SHEET_URL);
+        const text = await response.text();
         
-        <!-- 登入畫面 -->
-        <div id="loginView" class="max-w-md mx-auto bg-white rounded-2xl shadow-xl p-8 border border-emerald-100 text-center my-12">
-            <div class="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6 text-emerald-600">
-                <i class="fa-solid fa-user-lock text-3xl"></i>
-            </div>
-            <h2 class="text-2xl font-bold text-slate-800 mb-2">學員與管理員登入</h2>
-            <p class="text-slate-500 mb-4 text-sm">請輸入您的 Google Gmail 帳號與通行密碼</p>
-            
-            <!-- 全網總題數即時顯示徽章 -->
-            <div class="mb-6 inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200 px-4 py-1.5 rounded-full text-xs font-bold text-emerald-800 shadow-sm">
-                <i class="fa-solid fa-database text-emerald-600"></i> 全網總題數：<span id="globalTotalCountBadge">0</span> 題
-            </div>
-
-            <form onsubmit="handleLogin(event)" class="space-y-4">
-                <div class="text-left">
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Gmail 帳號：</label>
-                    <input type="email" id="gmailInput" placeholder="example@gmail.com" required 
-                        class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-sm">
-                </div>
-                
-                <div class="text-left">
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">密碼：</label>
-                    <input type="password" id="passwordInput" placeholder="請輸入密碼" required
-                        class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-sm">
-                </div>
-                
-                <button type="submit" class="w-full flex items-center justify-center gap-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 px-4 rounded-lg shadow-sm transition">
-                    <i class="fa-solid fa-right-to-bracket"></i> 登入系統開始練習
-                </button>
-            </form>
-            <div class="mt-6 text-xs text-slate-500 bg-emerald-50 p-3 rounded-lg text-left space-y-1 border border-emerald-100">
-                <span class="font-bold text-emerald-700">提示說明：</span><br>
-                • 學生登入密碼請向老師洽詢。<br>
-                • 系統會自動將練習成果同步至雲端試算表與本地端！
-            </div>
-        </div>
-
-        <!-- 登入後主要介面 -->
-        <div id="appView" class="hidden space-y-6">
-            
-            <!-- 學生專屬：學習打卡月曆面板（管理者登入時會自動隱藏） -->
-            <div id="studentCalendarCard" class="bg-white rounded-xl shadow-md p-6 border border-emerald-100 no-print">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="font-bold text-slate-800 flex items-center gap-2">
-                        <i class="fa-solid fa-calendar-days text-emerald-600"></i> 本月刷題學習月曆 (當天達 10 題打勾 <i class="fa-solid fa-circle-check text-emerald-600 text-sm"></i>)
-                    </h3>
-                    <span id="calendarMonthTitle" class="text-xs font-bold text-emerald-800 bg-emerald-100 px-3 py-1 rounded-full"></span>
-                </div>
-                <div class="grid grid-cols-7 gap-2 text-center text-xs font-bold text-slate-400 mb-2">
-                    <div>日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div>
-                </div>
-                <div id="calendarDaysGrid" class="grid grid-cols-7 gap-2 text-center">
-                    <!-- 動態生成月曆卡片 -->
-                </div>
-            </div>
-
-            <!-- 分頁切換 Tabs -->
-            <div class="flex border-b border-emerald-200 gap-2 bg-white p-2 rounded-t-xl shadow-sm no-print">
-                <button onclick="switchTab('quiz')" id="tabQuiz" class="px-5 py-2.5 rounded-lg text-sm font-semibold transition flex items-center gap-2 bg-emerald-600 text-white">
-                    <i class="fa-solid fa-pen-to-square"></i> 線上刷題與 PDF 列印
-                </button>
-                <button onclick="switchTab('wrongBank')" id="tabWrong" class="px-5 py-2.5 rounded-lg text-sm font-semibold transition flex items-center gap-2 text-slate-600 hover:bg-emerald-50">
-                    <i class="fa-solid fa-triangle-exclamation text-amber-500"></i> 個人錯題集 (<span id="wrongCountBadge">0</span>)
-                </button>
-                <button onclick="switchTab('admin')" id="tabAdmin" class="px-5 py-2.5 rounded-lg text-sm font-semibold transition flex items-center gap-2 text-slate-600 hover:bg-emerald-50 hidden">
-                    <i class="fa-solid fa-user-gear text-emerald-600"></i> 管理員後台 (題庫與學生紀錄)
-                </button>
-            </div>
-
-            <!-- Tab 1: 線上刷題與 PDF 列印區 -->
-            <div id="viewQuiz" class="bg-white rounded-b-xl shadow-md p-6 border border-emerald-100">
-                <!-- 雲端題庫同步快捷列 -->
-                <div class="flex justify-between items-center mb-4 pb-3 border-b border-emerald-100 bg-emerald-50/50 p-3 rounded-lg no-print">
-                    <span class="text-xs text-emerald-900 font-medium">
-                        <i class="fa-solid fa-cloud-arrow-down text-emerald-600 mr-1"></i> 雲端題庫即時同步狀態：已連線
-                    </span>
-                    <button onclick="manualSyncSheet('studentSyncStatus')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 shadow-sm">
-                        <i class="fa-solid fa-rotate"></i> 同步最新題庫
-                    </button>
-                    <span id="studentSyncStatus" class="text-xs font-bold text-emerald-700 ml-2"></span>
-                </div>
-
-                <!-- 出題設定面板（複選支援：所有選項皆完整出現） -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 bg-emerald-50 p-4 rounded-xl border border-emerald-200 no-print">
-                    <div>
-                        <div class="flex justify-between items-center mb-1">
-                            <label class="block text-xs font-bold text-emerald-900">選擇年級階段 (可複選)：</label>
-                            <button type="button" onclick="toggleAllGrades(true)" class="text-[10px] text-emerald-700 hover:underline">全選</button>
-                        </div>
-                        <div id="gradeCheckboxesContainer" class="bg-white p-2.5 rounded-lg border border-emerald-300 max-h-40 overflow-y-auto space-y-1.5 text-xs">
-                            <!-- 動態渲染年級複選框 -->
-                        </div>
-                    </div>
-
-                    <div>
-                        <div class="flex justify-between items-center mb-1">
-                            <label class="block text-xs font-bold text-emerald-900">選擇文法單元 (可複選)：</label>
-                            <button type="button" onclick="toggleAllUnits(true)" class="text-[10px] text-emerald-700 hover:underline">全選</button>
-                        </div>
-                        <div id="unitCheckboxesContainer" class="bg-white p-2.5 rounded-lg border border-emerald-300 max-h-40 overflow-y-auto space-y-1.5 text-xs">
-                            <!-- 動態渲染單元複選框 -->
-                        </div>
-                    </div>
-
-                    <div class="flex flex-col justify-between">
-                        <div>
-                            <label class="block text-xs font-bold text-emerald-900 mb-1">練習題數 (1-100題)：</label>
-                            <input type="number" id="quizCountInput" min="1" max="100" value="5" class="w-full px-3 py-2 rounded-lg border border-emerald-300 text-sm focus:ring-2 focus:ring-emerald-400 focus:outline-none">
-                        </div>
-                        <div class="mt-4 flex gap-2">
-                            <button onclick="startCustomQuiz()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-3 rounded-lg shadow transition flex items-center justify-center gap-1.5 text-xs">
-                                <i class="fa-solid fa-play"></i> 線上練習
-                            </button>
-                            <button onclick="printCustomQuizPDF()" class="flex-1 bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 px-3 rounded-lg shadow transition flex items-center justify-center gap-1.5 text-xs">
-                                <i class="fa-solid fa-file-pdf"></i> PDF 列印
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 隱藏的 PDF 列印專用區塊 -->
-                <div id="printableQuizArea" class="hidden print:block">
-                    <div class="text-center mb-6 border-b pb-4">
-                        <h1 class="text-2xl font-bold">優華數位英文學習文法刷題網 - 練習講義</h1>
-                        <p class="text-xs text-slate-500 mt-1">學生帳號：<span id="printQuizUserEmail"></span> | 列印日期：<span id="printDate"></span></p>
-                    </div>
-                    <div id="printQuizListContainer" class="space-y-6"></div>
-                </div>
-
-                <!-- 答題進行中畫面 -->
-                <div id="quizDisplayArea" class="hidden space-y-6">
-                    <div class="flex justify-between items-center border-b border-emerald-100 pb-3">
-                        <span class="text-xs font-bold bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full" id="quizTag">標籤</span>
-                        <span class="text-xs text-slate-400" id="quizProgress">題目 1 / 5</span>
-                    </div>
-
-                    <div class="text-lg font-medium text-slate-800 leading-relaxed" id="quizQuestionText">
-                        題目內容...
-                    </div>
-
-                    <!-- 選項或填空輸入介面 -->
-                    <div id="quizOptionsContainer" class="space-y-3">
-                        <!-- 動態生成選項 -->
-                    </div>
-
-                    <!-- 即時答對/答錯回饋與解析區塊 -->
-                    <div id="immediateFeedbackArea" class="hidden p-4 rounded-xl border text-sm space-y-2">
-                        <div id="feedbackTitle" class="font-bold flex items-center gap-2 text-base"></div>
-                        <div id="feedbackExplanation" class="text-slate-700 text-xs sm:text-sm bg-white p-3 rounded-lg border border-emerald-200"></div>
-                    </div>
-
-                    <div class="flex justify-end pt-4 border-t border-emerald-100">
-                        <button id="btnNextQuiz" onclick="nextQuizStep()" class="hidden bg-emerald-600 text-white px-6 py-2.5 rounded-lg text-sm font-bold hover:bg-emerald-700 transition">
-                            下一題 <i class="fa-solid fa-arrow-right"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- 測驗結算畫面 -->
-                <div id="quizResultArea" class="hidden space-y-6 text-center py-6">
-                    <div class="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto text-emerald-600 text-2xl">
-                        <i class="fa-solid fa-clipboard-check"></i>
-                    </div>
-                    <h3 class="text-2xl font-bold text-slate-800">測驗已完成！</h3>
-                    <p class="text-sm text-slate-600" id="quizScoreSummary">正確率計算中...</p>
-
-                    <div class="text-left space-y-3 mt-6">
-                        <h4 class="font-bold text-slate-700 border-b pb-2">本輪練習題目與正確解答</h4>
-                        <div id="quizResultList" class="space-y-3 max-h-96 overflow-y-auto pr-2"></div>
-                    </div>
-
-                    <button onclick="resetQuizView()" class="bg-emerald-600 text-white px-6 py-2.5 rounded-lg font-bold text-sm hover:bg-emerald-700 transition">
-                        返回重新出題
-                    </button>
-                </div>
-
-                <!-- 初始空狀態 -->
-                <div id="quizEmptyState" class="text-center py-12 text-slate-400 no-print">
-                    <i class="fa-solid fa-file-lines text-4xl mb-2 text-emerald-200"></i>
-                    <p>請勾選上方年級與文法單元，設定題數後選擇「線上練習」或「PDF 列印」</p>
-                </div>
-            </div>
-
-            <!-- Tab 2: 個人錯題集 -->
-            <div id="viewWrongBank" class="hidden bg-white rounded-b-xl shadow-md p-6 border border-emerald-100">
-                <div class="flex justify-between items-center mb-6 no-print">
-                    <div>
-                        <h3 class="text-lg font-bold text-slate-800">專屬錯題複習區</h3>
-                        <p class="text-xs text-slate-500">自動收錄您在練習時答錯的題目，支援 PDF 匯入與列印複習</p>
-                    </div>
-                    <div class="flex gap-2">
-                        <button onclick="window.print()" class="bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold px-4 py-2 rounded-lg transition flex items-center gap-1.5">
-                            <i class="fa-solid fa-file-pdf"></i> 轉成 PDF / 列印錯題
-                        </button>
-                        <button onclick="clearWrongBank()" class="text-xs text-rose-600 border border-rose-200 hover:bg-rose-50 px-3 py-2 rounded-lg transition">
-                            清空錯題
-                        </button>
-                    </div>
-                </div>
-
-                <div id="printableWrongArea" class="space-y-4">
-                    <div class="hidden print:block text-center mb-6">
-                        <h1 class="text-xl font-bold">優華數位英文學習文法刷題網 - 個人錯題複習講義</h1>
-                        <p class="text-xs text-slate-500">學生帳號：<span id="printUserEmail"></span></p>
-                    </div>
-                    <div id="wrongQuestionsList" class="space-y-4"></div>
-                </div>
-            </div>
-
-            <!-- Tab 3: 管理員後台 -->
-            <div id="viewAdmin" class="hidden space-y-6">
-                <div class="bg-white rounded-xl shadow-md p-6 border border-emerald-100 space-y-4">
-                    <h3 class="font-bold text-slate-800 border-b border-emerald-100 pb-3 flex items-center justify-between">
-                        <span><i class="fa-solid fa-rotate text-emerald-600"></i> Google Sheet 雲端題庫強制更新控制</span>
-                        <button onclick="manualSyncSheet('adminSyncStatus')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2 rounded-lg transition flex items-center gap-2 shadow-sm">
-                            <i class="fa-solid fa-cloud-arrow-down"></i> 立即從雲端同步最新題庫
-                        </button>
-                    </h3>
-                    <div class="flex items-center justify-between">
-                        <p class="text-xs text-slate-600">點擊右側按鈕可繞過快取，立即將 Google 試算表上的最新題目抓取至系統中。</p>
-                        <span id="adminSyncStatus" class="text-xs font-bold text-emerald-700"></span>
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-xl shadow-md p-6 border border-emerald-100 space-y-4">
-                    <h3 class="font-bold text-slate-800 border-b border-emerald-100 pb-3 flex items-center gap-2">
-                        <i class="fa-solid fa-users-gear text-emerald-600"></i> 學員練習紀錄與數據監控
-                    </h3>
-                    <div id="studentApprovalList" class="overflow-x-auto"></div>
-                </div>
-
-                <div class="bg-white rounded-xl shadow-md p-6 border border-emerald-100">
-                    <h3 class="font-bold text-slate-800 border-b border-emerald-100 pb-3 mb-4 flex items-center justify-between">
-                        <span><i class="fa-solid fa-database text-emerald-600"></i> 目前雲端題庫狀態統計</span>
-                        <span id="totalQuestionCount" class="text-xs bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full font-bold">總計 0 題</span>
-                    </h3>
-                    <div id="questionStatsTable" class="overflow-x-auto"></div>
-                </div>
-            </div>
-
-        </div>
-
-    </main>
-
-    <!-- 頁尾 -->
-    <footer class="bg-emerald-600 text-white border-t border-emerald-700 py-4 text-center text-xs font-bold tracking-wide no-print shadow-inner">
-        高國中題庫與錯題匯出系統 &copy; 2026 優華數位英文學習文法刷題網
-    </footer>
-
-    <!-- JavaScript 邏輯程式碼 -->
-    <script>
-        const ADMIN_EMAIL = 'yhstella2@gmail.com';
-        const ADMIN_PASS = 'a18177300';
-        const STUDENT_PASS = '1155665';
-        const SHEET_DEV_URL = 'https://script.google.com/macros/s/AKfycbwm5mAPT1SOJGgvGsnRO2BzB3yFdyq7_AR5OnQr5Jw/dev';
-
-        const defaultQuestions = [
-            { id: '101', grade: '國七', unit: '關代簡化', question: 'The ruined castle ________ on top of the hill was built in the 17th century.', options: ['A. was standing', 'B. to stand', 'C. standing', 'D. stood'], answer: 'C', explanation: '佇立在（standing）山頂上的廢棄城堡建造於17世紀。' },
-            { id: '102', grade: '國七', unit: '一般動詞句型', question: 'Jessie has a beautiful face. 疑問句: ______ Jessie ______ a beautiful face?', options: [], answer: 'Does / have', explanation: '主詞 Jessie 為第三人稱單數，一般動詞現在式疑問句需借助助動詞 Does，且動詞還原為原形 have。' }
-        ];
-
-        const STORAGE_KEY_QUESTIONS = 'youhua_persistent_questions_v2';
-        const STORAGE_KEY_USER = 'youhua_persistent_current_user_v2';
-        const STORAGE_KEY_USERS_DB = 'youhua_persistent_users_db_v2';
-        const STORAGE_KEY_WRONG = 'youhua_persistent_wrong_v2';
-        const STORAGE_KEY_DAILY = 'youhua_persistent_daily_practice_v2';
-        const STORAGE_KEY_STATS = 'youhua_persistent_student_stats_v2';
-
-        let questionsDB = JSON.parse(localStorage.getItem(STORAGE_KEY_QUESTIONS)) || defaultQuestions;
-        let currentUser = JSON.parse(localStorage.getItem(STORAGE_KEY_USER)) || null;
-        let usersDB = JSON.parse(localStorage.getItem(STORAGE_KEY_USERS_DB)) || [];
-        let wrongBank = JSON.parse(localStorage.getItem(STORAGE_KEY_WRONG)) || [];
-        let dailyPracticeRecord = JSON.parse(localStorage.getItem(STORAGE_KEY_DAILY)) || {};
-        let studentStatsRecord = JSON.parse(localStorage.getItem(STORAGE_KEY_STATS)) || {};
-
-        let currentQuizQueue = [];
-        let currentQuizIndex = 0;
-        let userAnswersRecord = [];
-
-        window.onload = function() {
-            renderUserInfo();
-            updateGlobalTotalCountBadge();
-            autoSyncSheetInBackground();
-            if(currentUser) {
-                checkUserStatusAndRoute();
-            }
-        };
-
-        async function syncUserToCloud(userData) {
-            try {
-                await fetch(SHEET_DEV_URL, {
-                    method: "POST",
-                    mode: "no-cors",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(userData)
-                });
-            } catch (error) {
-                console.error("雲端同步失敗", error);
-            }
+        // 解析 gviz 返回的 JSON 格式
+        const jsonText = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
+        const data = JSON.parse(jsonText);
+        
+        const rows = data.table.rows;
+        if (!rows || rows.length === 0) {
+          showStatus(' Google Sheet 讀取成功，但裡面沒有任何題目資料。', 'error');
+          return;
         }
 
-        function updateGlobalTotalCountBadge() {
-            const badge = document.getElementById('globalTotalCountBadge');
-            if(badge) badge.textContent = questionsDB.length;
-        }
-
-        async function autoSyncSheetInBackground() {
-            try {
-                let response = await fetch(SHEET_DEV_URL);
-                let data = await response.json();
-                if(Array.isArray(data) && data.length > 0) {
-                    questionsDB = data;
-                    localStorage.setItem(STORAGE_KEY_QUESTIONS, JSON.stringify(questionsDB));
-                    updateGlobalTotalCountBadge();
-                    initCheckboxes();
-                    if(currentUser && currentUser.isAdmin) renderAdminStats();
-                }
-            } catch(e) {
-                console.log("使用本地快取題庫");
-                initCheckboxes();
-            }
-        }
-
-        async function manualSyncSheet(statusElementId) {
-            const statusEl = document.getElementById(statusElementId);
-            if(statusEl) statusEl.textContent = "連線更新中...";
-
-            try {
-                let response = await fetch(SHEET_DEV_URL);
-                let data = await response.json();
-                if(Array.isArray(data) && data.length > 0) {
-                    questionsDB = data;
-                    localStorage.setItem(STORAGE_KEY_QUESTIONS, JSON.stringify(questionsDB));
-                    updateGlobalTotalCountBadge();
-                    initCheckboxes();
-                    if(currentUser && currentUser.isAdmin) renderAdminStats();
-                    if(statusEl) {
-                        statusEl.textContent = `更新成功！共載入 ${questionsDB.length} 題`;
-                        setTimeout(() => { statusEl.textContent = ''; }, 4000);
-                    }
-                } else {
-                    if(statusEl) statusEl.textContent = "更新失敗：資料格式不符";
-                }
-            } catch(e) {
-                if(statusEl) statusEl.textContent = "連線失敗，請檢查網路設定";
-            }
-        }
-
-        function handleLogin(e) {
-            e.preventDefault();
-            const emailInput = document.getElementById('gmailInput');
-            const passInput = document.getElementById('passwordInput');
-            if(!emailInput || !passInput) return;
-
-            const email = emailInput.value.trim().toLowerCase();
-            const pass = passInput.value.trim();
-
-            if(email === ADMIN_EMAIL) {
-                if(pass !== ADMIN_PASS) { alert('管理者密碼錯誤！'); return; }
-                currentUser = { email: ADMIN_EMAIL, name: '系統管理者', isAdmin: true };
-            } else {
-                if(pass !== STUDENT_PASS) { alert('學生密碼錯誤！學生統一密碼請洽老師。'); return; }
-                let existingUser = usersDB.find(u => u.email === email);
-                if(!existingUser) {
-                    existingUser = { email: email, name: email.split('@')[0], isAdmin: false };
-                    usersDB.push(existingUser);
-                    localStorage.setItem(STORAGE_KEY_USERS_DB, JSON.stringify(usersDB));
-                }
-                currentUser = existingUser;
-            }
-
-            localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(currentUser));
-            
-            syncUserToCloud({
-                email: currentUser.email,
-                name: currentUser.name,
-                totalCount: (studentStatsRecord[currentUser.email] && studentStatsRecord[currentUser.email].totalCount) || 0,
-                lastTime: new Date().toLocaleString('zh-TW', { hour12: false })
-            });
-
-            renderUserInfo();
-            checkUserStatusAndRoute();
-        }
-
-        function checkUserStatusAndRoute() {
-            const loginView = document.getElementById('loginView');
-            const appView = document.getElementById('appView');
-            const calendarCard = document.getElementById('studentCalendarCard');
-            if(loginView) loginView.classList.add('hidden');
-            if(appView) appView.classList.remove('hidden');
-
-            const tabAdmin = document.getElementById('tabAdmin');
-            if(currentUser.isAdmin) {
-                if(tabAdmin) tabAdmin.classList.remove('hidden');
-                if(calendarCard) calendarCard.classList.add('hidden');
-                renderAdminStats();
-                renderStudentApprovalList();
-            } else {
-                if(tabAdmin) tabAdmin.classList.add('hidden');
-                if(calendarCard) calendarCard.classList.remove('hidden');
-                renderCalendar();
-            }
-
-            initCheckboxes();
-            updateWrongCountBadge();
-        }
-
-        function logout() {
-            currentUser = null;
-            localStorage.removeItem(STORAGE_KEY_USER);
-            document.getElementById('loginView').classList.remove('hidden');
-            document.getElementById('appView').classList.add('hidden');
-            renderUserInfo();
-            updateGlobalTotalCountBadge();
-        }
-
-        function renderUserInfo() {
-            const area = document.getElementById('userInfoArea');
-            if(!area) return;
-            if(currentUser) {
-                area.innerHTML = `
-                    <div class="flex items-center gap-2 text-xs sm:text-sm">
-                        <span class="bg-emerald-700 text-emerald-100 px-3 py-1 rounded-full font-medium">
-                            <i class="fa-solid fa-user text-xs"></i> ${currentUser.name} ${currentUser.isAdmin ? '(管理者)' : ''}
-                        </span>
-                        <button onclick="logout()" class="text-emerald-200 hover:text-white underline text-xs">登出</button>
-                    </div>
-                `;
-            } else {
-                area.innerHTML = `<span class="text-xs text-emerald-200">未登入</span>`;
-            }
-        }
-
-        function renderCalendar() {
-            const grid = document.getElementById('calendarDaysGrid');
-            const title = document.getElementById('calendarMonthTitle');
-            if(!grid || !title || !currentUser || currentUser.isAdmin) return;
-            grid.innerHTML = '';
-
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = now.getMonth();
-            title.textContent = `${year} 年 ${month + 1} 月`;
-
-            const firstDay = new Date(year, month, 1).getDay();
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
-            const todayStr = getTodayKey();
-
-            for(let i = 0; i < firstDay; i++) { grid.innerHTML += `<div></div>`; }
-
-            for(let day = 1; day <= daysInMonth; day++) {
-                const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                const count = (dailyPracticeRecord[currentUser.email] && dailyPracticeRecord[currentUser.email][dateKey]) || 0;
-                const isCheck = count >= 10;
-                const isToday = dateKey === todayStr;
-
-                const dayCard = document.createElement('div');
-                dayCard.className = `p-2 rounded-lg border text-xs flex flex-col items-center justify-between min-h-[52px] ${isToday ? 'border-emerald-500 bg-emerald-50 font-bold' : 'border-slate-100 bg-white'}`;
-                dayCard.innerHTML = `
-                    <span class="${isToday ? 'text-emerald-700' : 'text-slate-600'}">${day}</span>
-                    ${isCheck ? '<i class="fa-solid fa-circle-check text-emerald-600 text-base mt-0.5"></i>' : `<span class="text-[10px] text-slate-300">${count}/10</span>`}
-                `;
-                grid.appendChild(dayCard);
-            }
-        }
-
-        function getTodayKey() {
-            const d = new Date();
-            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-        }
-
-        function recordAnsweredCount(num = 1) {
-            if(!currentUser || currentUser.isAdmin) return;
-            const todayStr = getTodayKey();
-            if(!dailyPracticeRecord[currentUser.email]) dailyPracticeRecord[currentUser.email] = {};
-            dailyPracticeRecord[currentUser.email][todayStr] = (dailyPracticeRecord[currentUser.email][todayStr] || 0) + num;
-            localStorage.setItem(STORAGE_KEY_DAILY, JSON.stringify(dailyPracticeRecord));
-
-            if(!studentStatsRecord[currentUser.email]) studentStatsRecord[currentUser.email] = { totalCount: 0, lastTime: '' };
-            studentStatsRecord[currentUser.email].totalCount += num;
-            studentStatsRecord[currentUser.email].lastTime = new Date().toLocaleString('zh-TW', { hour12: false });
-            localStorage.setItem(STORAGE_KEY_STATS, JSON.stringify(studentStatsRecord));
-
-            syncUserToCloud({
-                email: currentUser.email,
-                name: currentUser.name,
-                totalCount: studentStatsRecord[currentUser.email].totalCount,
-                lastTime: studentStatsRecord[currentUser.email].lastTime
-            });
-
-            renderCalendar();
-        }
-
-        function switchTab(tabName) {
-            ['Quiz', 'Wrong', 'Admin'].forEach(t => {
-                const btn = document.getElementById(`tab${t}`);
-                const view = document.getElementById(`view${t === 'Wrong' ? 'WrongBank' : t}`);
-                if(btn && view) {
-                    if(t.toLowerCase() === tabName.toLowerCase() || (t === 'Wrong' && tabName === 'wrongBank')) {
-                        btn.className = "px-5 py-2.5 rounded-lg text-sm font-semibold transition flex items-center gap-2 bg-emerald-600 text-white shadow-sm";
-                        view.classList.remove('hidden');
-                    } else {
-                        btn.className = "px-5 py-2.5 rounded-lg text-sm font-semibold transition flex items-center gap-2 text-slate-600 hover:bg-emerald-50";
-                        view.classList.add('hidden');
-                    }
-                }
-            });
-            if(tabName === 'wrongBank') renderWrongBank();
-        }
-
-        function initCheckboxes() {
-            const gradeContainer = document.getElementById('gradeCheckboxesContainer');
-            const unitContainer = document.getElementById('unitCheckboxesContainer');
-            if(!gradeContainer || !unitContainer) return;
-
-            gradeContainer.innerHTML = '';
-            unitContainer.innerHTML = '';
-
-            const allGrades = [...new Set(questionsDB.map(q => q.grade))].sort();
-            const allUnits = [...new Set(questionsDB.map(q => q.unit))].sort();
-
-            allGrades.forEach(grade => {
-                const count = questionsDB.filter(q => q.grade === grade).length;
-                const label = document.createElement('label');
-                label.className = "flex items-center gap-2 cursor-pointer hover:bg-emerald-50 p-1 rounded";
-                label.innerHTML = `
-                    <input type="checkbox" value="${grade}" class="grade-checkbox rounded text-emerald-600 focus:ring-emerald-500" checked>
-                    <span class="font-medium text-slate-700">${grade} (${count}題)</span>
-                `;
-                gradeContainer.appendChild(label);
-            });
-
-            allUnits.forEach(unit => {
-                const count = questionsDB.filter(q => q.unit === unit).length;
-                const label = document.createElement('label');
-                label.className = "flex items-center gap-2 cursor-pointer hover:bg-emerald-50 p-1 rounded";
-                label.innerHTML = `
-                    <input type="checkbox" value="${unit}" class="unit-checkbox rounded text-emerald-600 focus:ring-emerald-500" checked>
-                    <span class="font-medium text-slate-700">${unit} (${count}題)</span>
-                `;
-                unitContainer.appendChild(label);
-            });
-        }
-
-        function toggleAllGrades(select) {
-            document.querySelectorAll('.grade-checkbox').forEach(cb => cb.checked = select);
-        }
-
-        function toggleAllUnits(select) {
-            document.querySelectorAll('.unit-checkbox').forEach(cb => cb.checked = select);
-        }
-
-        function getSelectedPool() {
-            const selectedGrades = Array.from(document.querySelectorAll('.grade-checkbox:checked')).map(cb => cb.value);
-            const selectedUnits = Array.from(document.querySelectorAll('.unit-checkbox:checked')).map(cb => cb.value);
-            const countInput = document.getElementById('quizCountInput');
-            let count = parseInt(countInput ? countInput.value : 5) || 5;
-
-            if(selectedGrades.length === 0) { alert('請至少勾選一個年級階段！'); return null; }
-            if(selectedUnits.length === 0) { alert('請至少勾選一個文法單元！'); return null; }
-
-            let pool = questionsDB.filter(q => selectedGrades.includes(q.grade) && selectedUnits.includes(q.unit));
-            if(pool.length === 0) { alert('找不到符合條件的題目！'); return null; }
-
-            pool.sort(() => Math.random() - 0.5);
-            return pool.slice(0, Math.min(count, pool.length));
-        }
-
-        function startCustomQuiz() {
-            let pool = getSelectedPool();
-            if(!pool) return;
-
-            currentQuizQueue = pool;
-            currentQuizIndex = 0;
-            userAnswersRecord = [];
-
-            document.getElementById('quizEmptyState').classList.add('hidden');
-            document.getElementById('quizResultArea').classList.add('hidden');
-            document.getElementById('quizDisplayArea').classList.remove('hidden');
-            renderQuizStep();
-        }
-
-        function printCustomQuizPDF() {
-            let pool = getSelectedPool();
-            if(!pool) return;
-
-            document.getElementById('printQuizUserEmail').textContent = currentUser ? currentUser.email : '訪客';
-            document.getElementById('printDate').textContent = new Date().toLocaleDateString('zh-TW');
-
-            const container = document.getElementById('printQuizListContainer');
-            container.innerHTML = '';
-
-            pool.forEach((q, idx) => {
-                const div = document.createElement('div');
-                div.className = "mb-6 p-4 border rounded-xl page-break";
-                let optionsHtml = '';
-                if(q.options && q.options.length > 0 && q.options[0] !== "") {
-                    optionsHtml = `<div class="grid grid-cols-2 gap-2 my-2 text-xs">` + 
-                        q.options.map((opt, i) => `<div>${String.fromCharCode(65+i)}. ${opt.replace(/^[A-D]\.\s*/, '')}</div>`).join('') + 
-                        `</div>`;
-                }
-                div.innerHTML = `
-                    <div class="font-bold text-sm mb-1">Q${idx+1}. [${q.grade} - ${q.unit}] ${q.question}</div>
-                    ${optionsHtml}
-                    <div class="mt-3 pt-2 border-t text-xs text-slate-600">
-                        <b>正確答案：${q.answer}</b> | 解析：${q.explanation}
-                    </div>
-                `;
-                container.appendChild(div);
-            });
-
-            window.print();
-        }
-
-        function renderQuizStep() {
-            const q = currentQuizQueue[currentQuizIndex];
-            document.getElementById('quizTag').textContent = `${q.grade} | ${q.unit}`;
-            document.getElementById('quizProgress').textContent = `題目 ${currentQuizIndex + 1} / ${currentQuizQueue.length}`;
-            document.getElementById('quizQuestionText').textContent = q.question;
-            document.getElementById('btnNextQuiz').classList.add('hidden');
-            document.getElementById('immediateFeedbackArea').classList.add('hidden');
-
-            const container = document.getElementById('quizOptionsContainer');
-            container.innerHTML = '';
-
-            const isFillInBlank = !q.options || q.options.length === 0 || (q.options.length === 1 && q.options[0] === "");
-
-            if (isFillInBlank) {
-                container.innerHTML = `
-                    <div class="space-y-3">
-                        <label class="block text-xs font-bold text-emerald-900">請在下方輸入您的答案：</label>
-                        <div class="flex gap-2">
-                            <input type="text" id="fillInAnswerInput" placeholder="請輸入答案" 
-                                class="w-full px-4 py-3 rounded-xl border border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-base"
-                                onkeypress="if(event.key === 'Enter') submitFillInAnswer()">
-                            <button onclick="submitFillInAnswer()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-3 rounded-xl shadow transition">
-                                提交答案
-                            </button>
-                        </div>
-                    </div>
-                `;
-                setTimeout(() => document.getElementById('fillInAnswerInput').focus(), 100);
-            } else {
-                q.options.forEach((optText, idx) => {
-                    const optKey = String.fromCharCode(65 + idx);
-                    const btn = document.createElement('button');
-                    btn.className = "w-full text-left p-4 rounded-xl border border-emerald-200 hover:border-emerald-500 hover:bg-emerald-50 font-medium text-slate-700 transition flex items-center justify-between";
-                    btn.onclick = () => submitAnswer(optKey, q);
-                    btn.innerHTML = `<span>${optText}</span><i class="fa-regular fa-circle text-emerald-300"></i>`;
-                    container.appendChild(btn);
-                });
-            }
-        }
-
-        function submitFillInAnswer() {
-            const inputEl = document.getElementById('fillInAnswerInput');
-            if(!inputEl || inputEl.disabled) return;
-            const userText = inputEl.value.trim();
-            if(!userText) { alert('請先輸入答案！'); return; }
-
-            inputEl.disabled = true;
-            const q = currentQuizQueue[currentQuizIndex];
-            const isCorrect = userText.toLowerCase() === q.answer.trim().toLowerCase();
-            userAnswersRecord.push({ question: q, selected: userText, isCorrect });
-
-            recordAnsweredCount(1);
-
-            if(!isCorrect) {
-                if(!wrongBank.some(item => item.id === q.id)) {
-                    wrongBank.push(q);
-                    localStorage.setItem(STORAGE_KEY_WRONG, JSON.stringify(wrongBank));
-                    updateWrongCountBadge();
-                }
-            }
-
-            const feedbackArea = document.getElementById('immediateFeedbackArea');
-            const feedbackTitle = document.getElementById('feedbackTitle');
-            const feedbackExplanation = document.getElementById('feedbackExplanation');
-
-            if(isCorrect) {
-                feedbackArea.className = "p-4 rounded-xl border text-sm space-y-2 bg-emerald-50 border-emerald-200 text-emerald-900";
-                feedbackTitle.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-600 text-lg"></i> 答對了！`;
-            } else {
-                feedbackArea.className = "p-4 rounded-xl border text-sm space-y-2 bg-rose-50 border-rose-200 text-rose-900";
-                feedbackTitle.innerHTML = `<i class="fa-solid fa-circle-xmark text-rose-600 text-lg"></i> 答錯了！正確答案應為：<b>${q.answer}</b>`;
-            }
-            feedbackExplanation.innerHTML = `<b>解析：</b>${q.explanation}`;
-            feedbackArea.classList.remove('hidden');
-
-            document.getElementById('btnNextQuiz').classList.remove('hidden');
-        }
-
-        function submitAnswer(selectedOpt, question) {
-            const container = document.getElementById('quizOptionsContainer');
-            if(!container) return;
-            const buttons = container.querySelectorAll('button');
-            buttons.forEach(btn => btn.disabled = true);
-
-            const isCorrect = selectedOpt === question.answer;
-            userAnswersRecord.push({ question, selected: selectedOpt, isCorrect });
-            recordAnsweredCount(1);
-
-            if(!isCorrect) {
-                if(!wrongBank.some(item => item.id === question.id)) {
-                    wrongBank.push(question);
-                    localStorage.setItem(STORAGE_KEY_WRONG, JSON.stringify(wrongBank));
-                    updateWrongCountBadge();
-                }
-            }
-
-            buttons.forEach(btn => {
-                const txt = btn.textContent;
-                if(txt.startsWith(question.answer)) {
-                    btn.className = "w-full text-left p-4 rounded-xl border border-emerald-500 bg-emerald-100 font-bold text-emerald-900 flex items-center justify-between";
-                } else if(txt.startsWith(selectedOpt) && !isCorrect) {
-                    btn.className = "w-full text-left p-4 rounded-xl border border-rose-400 bg-rose-50 font-bold text-rose-900 flex items-center justify-between";
-                }
-            });
-
-            const feedbackArea = document.getElementById('immediateFeedbackArea');
-            const feedbackTitle = document.getElementById('feedbackTitle');
-            const feedbackExplanation = document.getElementById('feedbackExplanation');
-
-            if(isCorrect) {
-                feedbackArea.className = "p-4 rounded-xl border text-sm space-y-2 bg-emerald-50 border-emerald-200 text-emerald-900";
-                feedbackTitle.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-600 text-lg"></i> 答對了！`;
-            } else {
-                feedbackArea.className = "p-4 rounded-xl border text-sm space-y-2 bg-rose-50 border-rose-200 text-rose-900";
-                feedbackTitle.innerHTML = `<i class="fa-solid fa-circle-xmark text-rose-600 text-lg"></i> 答錯了！正確答案是：<b>${question.answer}</b>`;
-            }
-            feedbackExplanation.innerHTML = `<b>解析：</b>${question.explanation}`;
-            feedbackArea.classList.remove('hidden');
-
-            document.getElementById('btnNextQuiz').classList.remove('hidden');
-        }
-
-        function nextQuizStep() {
-            if(currentQuizIndex < currentQuizQueue.length - 1) {
-                currentQuizIndex++;
-                renderQuizStep();
-            } else {
-                showQuizResults();
-            }
-        }
-
-        function showQuizResults() {
-            document.getElementById('quizDisplayArea').classList.add('hidden');
-            document.getElementById('quizResultArea').classList.remove('hidden');
-
-            const correctCount = userAnswersRecord.filter(r => r.isCorrect).length;
-            const total = userAnswersRecord.length;
-            const rate = Math.round((correctCount / total) * 100);
-
-            document.getElementById('quizScoreSummary').textContent = `共 ${total} 題，答對 ${correctCount} 題，正確率 ${rate}%`;
-
-            const listArea = document.getElementById('quizResultList');
-            listArea.innerHTML = '';
-
-            userAnswersRecord.forEach((rec, idx) => {
-                const div = document.createElement('div');
-                div.className = `p-3 rounded-xl border text-sm ${rec.isCorrect ? 'bg-emerald-50 border-emerald-200' : 'bg-rose-50 border-rose-200'}`;
-                div.innerHTML = `
-                    <div class="font-bold text-slate-800 mb-1">Q${idx+1}. ${rec.question.question}</div>
-                    <div class="text-xs text-slate-600 flex gap-4">
-                        <span>您的填寫/選擇：<b>${rec.selected}</b></span>
-                        <span class="text-emerald-700 font-bold">正確答案：${rec.question.answer}</span>
-                    </div>
-                    <div class="text-xs text-slate-500 mt-1">解析：${rec.question.explanation}</div>
-                `;
-                listArea.appendChild(div);
-            });
-        }
-
-        function resetQuizView() {
-            document.getElementById('quizResultArea').classList.add('hidden');
-            document.getElementById('quizEmptyState').classList.remove('hidden');
-        }
-
-        function updateWrongCountBadge() {
-            const badge = document.getElementById('wrongCountBadge');
-            if(badge) badge.textContent = wrongBank.length;
-        }
-
-        function renderWrongBank() {
-            const list = document.getElementById('wrongQuestionsList');
-            document.getElementById('printUserEmail').textContent = currentUser ? currentUser.email : '';
-            if(!list) return;
-            list.innerHTML = '';
-
-            if(wrongBank.length === 0) {
-                list.innerHTML = `<div class="text-center py-8 text-slate-400">目前沒有錯題紀錄！</div>`;
-                return;
-            }
-
-            wrongBank.forEach((q, idx) => {
-                const card = document.createElement('div');
-                card.className = "p-4 bg-emerald-50 rounded-xl border border-emerald-200 space-y-2";
-                card.innerHTML = `
-                    <div class="flex justify-between text-xs text-emerald-800 font-bold">
-                        <span>[${q.grade}] ${q.unit}</span>
-                        <button onclick="removeWrong(${idx})" class="text-rose-500 hover:underline no-print">移除</button>
-                    </div>
-                    <div class="font-medium text-slate-800">${q.question}</div>
-                    <div class="text-xs text-slate-700 bg-white p-2 rounded border border-emerald-100">
-                        <b class="text-emerald-700">正確答案：${q.answer}</b> | 解析：${q.explanation}
-                    </div>
-                `;
-                list.appendChild(card);
-            });
-        }
-
-        function removeWrong(idx) {
-            wrongBank.splice(idx, 1);
-            localStorage.setItem(STORAGE_KEY_WRONG, JSON.stringify(wrongBank));
-            updateWrongCountBadge();
-            renderWrongBank();
-        }
-
-        function clearWrongBank() {
-            if(confirm('確定清空所有錯題嗎？')) {
-                wrongBank = [];
-                localStorage.removeItem(STORAGE_KEY_WRONG);
-                updateWrongCountBadge();
-                renderWrongBank();
-            }
-        }
-
-        function renderStudentApprovalList() {
-            const container = document.getElementById('studentApprovalList');
-            if(!container) return;
-            if(usersDB.length === 0) {
-                container.innerHTML = `<p class="text-xs text-slate-400 py-4">目前尚無學生登入紀錄。</p>`;
-                return;
-            }
-
-            let html = `<table class="w-full text-left text-sm border-collapse"><thead><tr class="border-b bg-emerald-50 text-emerald-900"><th class="p-2">學生 Gmail 帳號</th><th class="p-2">累計練習題數</th><th class="p-2">最近練習時間</th><th class="p-2 text-right">管理操作</th></tr></thead><tbody>`;
-
-            usersDB.forEach((u, index) => {
-                const stats = studentStatsRecord[u.email] || { totalCount: 0, lastTime: '尚無紀錄' };
-
-                html += `
-                    <tr class="border-b">
-                        <td class="p-2 font-medium">${u.email}</td>
-                        <td class="p-2"><span class="bg-slate-100 px-2 py-0.5 rounded text-xs font-bold text-emerald-700">${stats.totalCount} 題</span></td>
-                        <td class="p-2 text-xs text-slate-500">${stats.lastTime}</td>
-                        <td class="p-2 text-right">
-                            <button onclick="deleteUser(${index})" class="text-rose-500 hover:underline text-xs">刪除紀錄</button>
-                        </td>
-                    </tr>
-                `;
-            });
-            html += `</tbody></table>`;
-            container.innerHTML = html;
-        }
-
-        function deleteUser(index) {
-            if(confirm(`確定刪除此學員紀錄嗎？`)) {
-                usersDB.splice(index, 1);
-                localStorage.setItem(STORAGE_KEY_USERS_DB, JSON.stringify(usersDB));
-                renderStudentApprovalList();
-            }
-        }
-
-        function renderAdminStats() {
-            const countSpan = document.getElementById('totalQuestionCount');
-            const tableArea = document.getElementById('questionStatsTable');
-            if(countSpan) countSpan.textContent = `總計 ${questionsDB.length} 題`;
-            if(!tableArea) return;
-            
-            const stats = {};
-            questionsDB.forEach(q => { stats[q.grade] = (stats[q.grade] || 0) + 1; });
-
-            let html = `<table class="w-full text-left text-sm border-collapse"><thead><tr class="border-b bg-emerald-50 text-emerald-900"><th class="p-2">年級階段</th><th class="p-2">題數統計</th></tr></thead><tbody>`;
-            for(let grade in stats) {
-                html += `<tr class="border-b"><td class="p-2 font-medium">${grade}</td><td class="p-2">${stats[grade]} 題</td></tr>`;
-            }
-            html += `</tbody></table>`;
-            tableArea.innerHTML = html;
-        }
-    </script>
+        // 解析每列資料 (預設欄位順序: 0:年級, 1:單元, 2:題目, 3:選項A, 4:選項B, 5:選項C, 6:選項D, 7:答案, 8:解析)
+        allQuestions = rows.map((r, index) => {
+          const c = r.c;
+          return {
+            id: index + 1,
+            grade: c[0] ? c[0].v : '',
+            unit: c[1] ? c[1].v : '',
+            title: c[2] ? c[2].v : '',
+            optionA: c[3] ? c[3].v : '',
+            optionB: c[4] ? c[4].v : '',
+            optionC: c[5] ? c[5].v : '',
+            optionD: c[6] ? c[6].v : '',
+            answer: c[7] ? String(c[7].v).trim().toUpperCase() : '',
+            analysis: c[8] ? c[8].v : ''
+          };
+        }).filter(q => q.title); // 過濾掉空行
+
+        showStatus(`成功載入 ${allQuestions.length} 題題庫！請點擊「開始測驗」。`, 'success');
+        document.getElementById('btn-start').classList.remove('hidden');
+
+      } catch (err) {
+        console.error(err);
+        showStatus(' 載入失敗！請確認該 Google Sheet 是否已開啟「知道連結的任何人皆可檢視」權限。', 'error');
+      }
+    }
+
+    // 開始出題測驗
+    function startQuiz() {
+      const selectedGrade = document.getElementById('grade-select').value;
+      const unitKeyword = document.getElementById('unit-input').value.trim();
+      const count = parseInt(document.getElementById('question-count').value) || 10;
+
+      // 條件篩選
+      let filtered = allQuestions;
+      if (selectedGrade !== 'all') {
+        filtered = filtered.filter(q => String(q.grade) === selectedGrade);
+      }
+      if (unitKeyword) {
+        filtered = filtered.filter(q => String(q.unit).includes(unitKeyword));
+      }
+
+      if (filtered.length === 0) {
+        showStatus('找不到符合此年級/單元條件的題目，請重新調整篩選條件。', 'error');
+        return;
+      }
+
+      // 隨機抽題
+      currentQuiz = [...filtered].sort(() => 0.5 - Math.random()).slice(0, count);
+
+      // 渲染題目列表
+      const container = document.getElementById('quiz-container');
+      container.innerHTML = '';
+      container.classList.remove('hidden');
+
+      currentQuiz.forEach((q, idx) => {
+        const qCard = document.createElement('div');
+        qCard.className = "bg-white p-6 rounded-xl shadow-sm border border-slate-200";
+        qCard.innerHTML = `
+          <div class="font-medium text-slate-800 mb-3">
+            <span class="inline-block bg-brand-100 text-brand-700 text-xs px-2 py-0.5 rounded mr-2">第 ${idx + 1} 題 / ${q.grade || '綜合'}</span>
+            ${q.title}
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-slate-700">
+            <label class="p-2.5 rounded border border-slate-200 hover:bg-slate-50 cursor-pointer flex items-center">
+              <input type="radio" name="q_${q.id}" value="A" class="mr-2 text-brand-600 focus:ring-brand-500"> A. ${q.optionA}
+            </label>
+            <label class="p-2.5 rounded border border-slate-200 hover:bg-slate-50 cursor-pointer flex items-center">
+              <input type="radio" name="q_${q.id}" value="B" class="mr-2 text-brand-600 focus:ring-brand-500"> B. ${q.optionB}
+            </label>
+            <label class="p-2.5 rounded border border-slate-200 hover:bg-slate-50 cursor-pointer flex items-center">
+              <input type="radio" name="q_${q.id}" value="C" class="mr-2 text-brand-600 focus:ring-brand-500"> C. ${q.optionC}
+            </label>
+            <label class="p-2.5 rounded border border-slate-200 hover:bg-slate-50 cursor-pointer flex items-center">
+              <input type="radio" name="q_${q.id}" value="D" class="mr-2 text-brand-600 focus:ring-brand-500"> D. ${q.optionD}
+            </label>
+          </div>
+        `;
+        container.appendChild(qCard);
+      });
+
+      showStatus(`已為您隨機抽出 ${currentQuiz.length} 題，請開始作答！`, 'success');
+    }
+  </script>
 </body>
 </html>
