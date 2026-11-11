@@ -80,8 +80,8 @@
     <!-- 管理者介面 (Admin Dashboard) -->
     <div id="tab-admin" class="hidden space-y-6">
       <div class="bg-white p-7 rounded-3xl shadow-sm border border-slate-200">
-        <h2 class="text-xl font-bold text-slate-800 mb-2">🛡️ 管理者後台：學生刷題與錯題檢視</h2>
-        <p class="text-sm text-slate-500 mb-6">在此可檢視所有學生的使用帳號、各次刷題題數、答錯題數、刷題單元範圍，並可點開查看錯題詳情或寄送 Feedback。</p>
+        <h2 class="text-xl font-bold text-slate-800 mb-2">🛡️ 管理者後台：學生練習數據與錯題檢視</h2>
+        <p class="text-sm text-slate-500 mb-6">可直接查看所有學生的刷題數、答對數、答錯數以及詳細答錯題目清單，亦可寄送 Feedback。</p>
         
         <div id="admin-students-list" class="space-y-4">
           <!-- 動態載入學生列表與錯題明細 -->
@@ -177,12 +177,9 @@
       <!-- 測驗與試卷展示區 -->
       <section id="quiz-container" class="space-y-5"></section>
       
-      <!-- 線上測驗交卷/寄給老師按鈕區 -->
-      <div id="quiz-finish-actions" class="hidden bg-white p-6 rounded-3xl shadow-sm border border-slate-200 text-center space-y-3 no-print">
-        <p class="text-sm font-bold text-slate-600">測驗題目已全部作答完成！您可以將成績與錯題傳送給老師。</p>
-        <button onclick="sendScoreToTeacher()" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-lg font-bold px-8 py-4 rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 mx-auto">
-          📤 成績寄給老師 (englisheasy88@gmail.com)
-        </button>
+      <!-- 線上測驗完成提示區 -->
+      <div id="quiz-finish-actions" class="hidden bg-white p-6 rounded-3xl shadow-sm border border-slate-200 text-center space-y-2 no-print">
+        <p class="text-base font-bold text-brand-700">🎉 本次測驗已全部作答完成！成績與錯題已自動記錄至雲端後台。</p>
       </div>
       
       <!-- 試卷列印控制按鈕區 -->
@@ -193,7 +190,7 @@
 
     </div>
 
-    <!-- 頁籤二 : 錯題區本 -->
+    <!-- 頁籤二：錯題區本 -->
     <div id="tab-wrong" class="hidden space-y-5">
       <div class="bg-white p-7 rounded-3xl shadow-sm border border-slate-200 flex flex-wrap justify-between items-center gap-4 no-print">
         <div>
@@ -391,13 +388,14 @@
       renderCalendar();
     }
 
+    // 管理者後台 (展示使用者、刷幾題、答對數、答錯數與詳細錯題)
     function loadAdminDashboard() {
       const container = document.getElementById('admin-students-list');
       const allStudents = JSON.parse(localStorage.getItem('yh_all_students') || '{}');
       const studentEmails = Object.keys(allStudents);
 
       if (studentEmails.length === 0) {
-        container.innerHTML = `<div class="p-8 text-center text-slate-400 bg-slate-50 rounded-2xl">目前尚無學生的刷題打卡紀錄。</div>`;
+        container.innerHTML = `<div class="p-8 text-center text-slate-400 bg-slate-50 rounded-2xl">目前尚無學生的刷題練習紀錄。</div>`;
         return;
       }
 
@@ -412,7 +410,7 @@
               <span class="font-bold text-slate-800">📅 ${l.date}</span> 
               <span class="text-brand-700 font-bold ml-2">刷題共 ${l.total} 題</span>
               <span class="text-green-700 font-bold ml-2">答對 ${l.correct} 題</span>
-              <span class="text-red-600 font-bold ml-2">錯 ${l.wrong} 題</span>
+              <span class="text-red-600 font-bold ml-2">答錯 ${l.wrong} 題</span>
               <div class="text-slate-500 mt-0.5">刷題單元範圍：${l.range}</div>
             </div>
             <span class="text-slate-400">${l.timestamp}</span>
@@ -439,22 +437,22 @@
           <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
             <div class="flex justify-between items-center flex-wrap gap-2">
               <div>
-                <span class="text-base font-bold text-slate-800">📧 學生 Email：${email}</span>
+                <span class="text-base font-bold text-slate-800">📧 使用者 (學生)：${email}</span>
                 <span class="ml-3 text-xs bg-brand-100 text-brand-700 px-2.5 py-1 rounded-full font-bold">總練習次數：${logs.length} 次</span>
                 <span class="ml-2 text-xs bg-amber-100 text-amber-800 px-2.5 py-1 rounded-full font-bold">錯題本累積：${wrongs.length} 題</span>
               </div>
               <button onclick="document.getElementById('${wrongBoxId}').classList.toggle('hidden')" class="bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow">
-                👁️ 點開看錯題 (${wrongs.length}題)
+                👁️ 點開看答錯的題目 (${wrongs.length}題)
               </button>
             </div>
             
             <div class="space-y-1">
-              <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">刷題紀錄明細 (題數、錯題數與範圍)：</div>
+              <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">刷題次數與答對/答錯明細：</div>
               <div class="max-h-40 overflow-y-auto pr-2 space-y-1">${logsHtml}</div>
             </div>
 
             <div id="${wrongBoxId}" class="hidden pt-3 border-t border-slate-100 space-y-2">
-              <div class="text-xs font-bold text-red-600 uppercase tracking-wider">該學生的錯題詳情清單：</div>
+              <div class="text-xs font-bold text-red-600 uppercase tracking-wider">該學生答錯的題目詳細清單：</div>
               <div class="max-h-60 overflow-y-auto pr-2 space-y-2">${wrongsHtml}</div>
             </div>
 
@@ -701,40 +699,7 @@
       }
     }
 
-    function sendScoreToTeacher() {
-      if (!window.currentQuizSession) return;
-      const session = window.currentQuizSession;
-      const studentEmail = currentUser ? currentUser.email : '未登入學生';
-
-      let bodyText = `報告老師，我是學生 (${studentEmail})。\n`;
-      bodyText += `我剛剛完成了線上刷題測驗，以下是我的成績與錯題內容：\n\n`;
-      bodyText += `【刷題統計】\n`;
-      bodyText += `• 刷題範圍：${session.rangeText}\n`;
-      bodyText += `• 總刷題數：${session.total} 題\n`;
-      bodyText += `• 答對題數：${session.correct} 題\n`;
-      bodyText += `• 答錯題數：${session.wrong} 題\n\n`;
-
-      if (session.wrongItems.length > 0) {
-        bodyText += `【錯題內容詳情】\n`;
-        session.wrongItems.forEach((w, idx) => {
-          bodyText += `----------------------------------------\n`;
-          bodyText += `錯題 ${idx + 1}：${w.title}\n`;
-          bodyText += `(A) ${w.optionA} | (B) ${w.optionB} | (C) ${w.optionC} | (D) ${w.optionD}\n`;
-          bodyText += `正確答案：(${w.answer}) | 解析：${w.analysis}\n`;
-        });
-      } else {
-        bodyText += `【錯題內容詳情】\n太棒了！本次測驗全數答對，沒有錯題！\n`;
-      }
-
-      const subject = `【學生刷題成績回報】 ${studentEmail} (刷${session.total}題 / 錯${session.wrong}題)`;
-      const mailtoUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=englisheasy88@gmail.com&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(bodyText)}`;
-      
-      window.open(mailtoUrl, '_blank');
-      alert('成績已寄, 你很棒! 🎉');
-    }
-
     function renderPrintableQuizAndAnswers(container, questions) {
-      // 試卷區 (不顯示 C 欄學習類別)
       const paper = document.createElement('div');
       paper.className = "bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6";
       paper.innerHTML = `
@@ -758,7 +723,6 @@
       `;
       container.appendChild(paper);
 
-      // 解答區 (不顯示 C 欄學習類別)
       const answerSheet = document.createElement('div');
       answerSheet.className = "bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6 page-break mt-8";
       answerSheet.innerHTML = `
