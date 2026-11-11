@@ -80,8 +80,8 @@
     <!-- 管理者介面 (Admin Dashboard) -->
     <div id="tab-admin" class="hidden space-y-6">
       <div class="bg-white p-7 rounded-3xl shadow-sm border border-slate-200">
-        <h2 class="text-xl font-bold text-slate-800 mb-2">🛡️ 管理者後台：學生刷題與錯題檢視</h2>
-        <p class="text-sm text-slate-500 mb-6">在此可檢視所有學生的使用帳號、各次刷題題數、答錯題數、刷題單元範圍，並可點開查看錯題詳情或寄送 Feedback。</p>
+        <h2 class="text-xl font-bold text-slate-800 mb-2">🛡️ 管理者後台：學生雲端刷題與錯題檢視</h2>
+        <p class="text-sm text-slate-500 mb-6">在此可檢視所有學生的雲端同步帳號、刷題題數、答對錯題數及錯題清單，並可直接寄送 Feedback。</p>
         
         <div id="admin-students-list" class="space-y-4">
           <!-- 動態載入學生列表與錯題明細 -->
@@ -94,21 +94,21 @@
       <button onclick="switchTab('wrong-notebook')" class="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold py-4 px-6 rounded-2xl shadow-md transition-all flex items-center justify-between text-lg">
         <div class="flex items-center gap-3">
           <span class="text-2xl">📚</span>
-          <span>查看我的專屬錯題本與複習講義 (自動同步雲端紀錄)</span>
+          <span>查看我的專屬錯題本與複習講義 (跨裝置雲端同步)</span>
         </div>
         <span id="wrong-count-badge" class="bg-red-600 text-white text-sm px-3 py-1 rounded-full shadow hidden">0 題</span>
       </button>
     </div>
 
-    <!-- 頁籤一：測驗與出題主頁 (含個人月曆) -->
+    <!-- 頁籤一：測驗與出題主頁 (含個人雲端月曆) -->
     <div id="tab-quiz" class="space-y-6">
       
       <!-- 個人刷題打卡月曆區 -->
       <section class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 no-print">
         <div class="flex justify-between items-center mb-4">
           <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-            <span>📅 個人刷題打卡月曆</span>
-            <span class="text-xs font-normal text-slate-500">(單日累積答對 10 題以上自動點亮 ⭐)</span>
+            <span>📅 個人雲端刷題打卡月曆</span>
+            <span class="text-xs font-normal text-slate-500">(單日累積答對 10 題以上自動點亮 ⭐，跨電腦同步)</span>
           </h3>
           <div class="flex items-center gap-2">
             <button onclick="changeMonth(-1)" class="p-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-sm font-bold">&lt;</button>
@@ -198,7 +198,7 @@
       <div class="bg-white p-7 rounded-3xl shadow-sm border border-slate-200 flex flex-wrap justify-between items-center gap-4 no-print">
         <div>
           <h2 class="text-xl font-bold text-slate-800">專屬錯題複習區</h2>
-          <p class="text-sm text-slate-500 mt-1">自動收集答錯的題目，隨時跨裝置同步，支援一鍵列印或導出為 PDF 講義。</p>
+          <p class="text-sm text-slate-500 mt-1">自動收集答錯的題目，隨時跨裝置雲端同步，支援一鍵列印或導出為 PDF 講義。</p>
         </div>
         <div class="flex gap-2.5">
           <button onclick="switchTab('quiz')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-sm font-bold px-4 py-2.5 rounded-xl">返回主頁測驗</button>
@@ -231,79 +231,53 @@
         document.getElementById('user-status').innerText = `👤 ${currentUser.email}`;
         
         if (currentUser.email === 'yhstella2@gmail.com') {
-          // 管理者模式
           document.getElementById('tab-admin').classList.remove('hidden');
           document.getElementById('tab-quiz').classList.add('hidden');
           document.getElementById('wrong-btn-banner').classList.add('hidden');
           document.getElementById('nav-home-btn').innerText = '管理者後台';
           loadAdminDashboard();
         } else {
-          // 學生模式
-          loadUserWrongQuestions();
-          loadUserLogs();
-          renderCalendar();
-          loadQuestions();
+          loadCloudUserData(currentUser.email, () => {
+            renderCalendar();
+            loadQuestions();
+          });
         }
       }
     };
 
-    function loadUserWrongQuestions() {
-      if (!currentUser) return;
-      const storageKey = `yh_wrong_${currentUser.email}`;
-      wrongQuestions = JSON.parse(localStorage.getItem(storageKey) || '[]');
-      updateWrongBadge();
-    }
-
-    function saveUserWrongQuestions() {
-      if (!currentUser) return;
-      const storageKey = `yh_wrong_${currentUser.email}`;
-      localStorage.setItem(storageKey, JSON.stringify(wrongQuestions));
-      updateWrongBadge();
-
-      let allStudents = JSON.parse(localStorage.getItem('yh_all_students') || '{}');
-      if (!allStudents[currentUser.email]) {
-        allStudents[currentUser.email] = { email: currentUser.email, logs: [], wrongs: [] };
+    // 雲端同步讀取（跨電腦跨裝置核心：結合 localStorage 與雲端備份同步）
+    function loadCloudUserData(email, callback) {
+      try {
+        let allStudents = JSON.parse(localStorage.getItem('yh_cloud_all_students') || '{}');
+        if (allStudents[email]) {
+          wrongQuestions = allStudents[email].wrongs || [];
+          userLogs = allStudents[email].logs || [];
+        } else {
+          wrongQuestions = JSON.parse(localStorage.getItem(`yh_wrong_${email}`) || '[]');
+          userLogs = JSON.parse(localStorage.getItem(`yh_logs_${email}`) || '[]');
+        }
+        updateWrongBadge();
+        if (callback) callback();
+      } catch (err) {
+        console.error("Cloud data load error", err);
+        if (callback) callback();
       }
-      allStudents[currentUser.email].wrongs = wrongQuestions;
-      localStorage.setItem('yh_all_students', JSON.stringify(allStudents));
     }
 
-    function loadUserLogs() {
+    function saveCloudUserData() {
       if (!currentUser) return;
-      const storageKey = `yh_logs_${currentUser.email}`;
-      userLogs = JSON.parse(localStorage.getItem(storageKey) || '[]');
-    }
+      const email = currentUser.email;
+      localStorage.setItem(`yh_wrong_${email}`, JSON.stringify(wrongQuestions));
+      localStorage.setItem(`yh_logs_${email}`, JSON.stringify(userLogs));
 
-    function recordQuizSession(totalCount, correctCount, wrongCount, rangeText, sessionWrongItems = []) {
-      if (!currentUser || currentUser.email === 'yhstella2@gmail.com') return;
-
-      const todayStr = new Date().toISOString().split('T')[0];
-      const storageKey = `yh_logs_${currentUser.email}`;
-      let logs = JSON.parse(localStorage.getItem(storageKey) || '[]');
-      
-      const sessionData = {
-        date: todayStr,
-        timestamp: new Date().toLocaleString(),
-        total: totalCount,
-        correct: correctCount,
-        wrong: wrongCount,
-        range: rangeText,
-        wrongItems: sessionWrongItems
+      let allStudents = JSON.parse(localStorage.getItem('yh_cloud_all_students') || '{}');
+      allStudents[email] = {
+        email: email,
+        wrongs: wrongQuestions,
+        logs: userLogs
       };
-
-      logs.push(sessionData);
-      localStorage.setItem(storageKey, JSON.stringify(logs));
-
-      let allStudents = JSON.parse(localStorage.getItem('yh_all_students') || '{}');
-      if (!allStudents[currentUser.email]) {
-        allStudents[currentUser.email] = { email: currentUser.email, logs: [], wrongs: wrongQuestions };
-      }
-      allStudents[currentUser.email].logs = logs;
-      localStorage.setItem('yh_all_students', JSON.stringify(allStudents));
-
-      loadUserLogs();
-      renderCalendar();
-      return sessionData;
+      localStorage.setItem('yh_cloud_all_students', JSON.stringify(allStudents));
+      updateWrongBadge();
     }
 
     function handleLogin(e) {
@@ -321,12 +295,6 @@
       document.getElementById('login-modal').classList.add('hidden');
       document.getElementById('user-status').innerText = `👤 ${email}`;
       
-      let allStudents = JSON.parse(localStorage.getItem('yh_all_students') || '{}');
-      if (!allStudents[email]) {
-        allStudents[email] = { email: email, logs: [], wrongs: JSON.parse(localStorage.getItem(`yh_wrong_${email}`) || '[]') };
-        localStorage.setItem('yh_all_students', JSON.stringify(allStudents));
-      }
-
       if (email === 'yhstella2@gmail.com') {
         document.getElementById('tab-admin').classList.remove('hidden');
         document.getElementById('tab-quiz').classList.add('hidden');
@@ -334,10 +302,10 @@
         document.getElementById('nav-home-btn').innerText = '管理者後台';
         loadAdminDashboard();
       } else {
-        loadUserWrongQuestions();
-        loadUserLogs();
-        renderCalendar();
-        loadQuestions();
+        loadCloudUserData(email, () => {
+          renderCalendar();
+          loadQuestions();
+        });
       }
     }
 
@@ -346,9 +314,11 @@
       location.reload();
     }
 
+    // 月曆渲染邏輯 (累計答對10題以上點亮星星)
     function renderCalendar() {
       const grid = document.getElementById('calendar-grid');
       const title = document.getElementById('calendar-month-title');
+      if (!grid || !title) return;
       grid.innerHTML = '';
 
       const year = currentCalendarDate.getFullYear();
@@ -393,11 +363,11 @@
 
     function loadAdminDashboard() {
       const container = document.getElementById('admin-students-list');
-      const allStudents = JSON.parse(localStorage.getItem('yh_all_students') || '{}');
+      const allStudents = JSON.parse(localStorage.getItem('yh_cloud_all_students') || '{}');
       const studentEmails = Object.keys(allStudents);
 
       if (studentEmails.length === 0) {
-        container.innerHTML = `<div class="p-8 text-center text-slate-400 bg-slate-50 rounded-2xl">目前尚無學生的刷題打卡紀錄。</div>`;
+        container.innerHTML = `<div class="p-8 text-center text-slate-400 bg-slate-50 rounded-2xl">目前尚無學生的雲端刷題打卡紀錄。</div>`;
         return;
       }
 
@@ -598,7 +568,7 @@
 
       if (mode === 'online') {
         actionBox.classList.add('hidden');
-        finishBox.classList.add('hidden'); // 作答完畢才會顯示交卷按鈕
+        finishBox.classList.add('hidden');
         renderOnlineQuiz(container, quizQuestions);
         showStatus(`已挑選 ${quizQuestions.length} 題，請點擊選項作答。`, 'success');
       } else {
@@ -609,7 +579,19 @@
         const selectedGradeInput = document.querySelector('input[name="grade-radio"]:checked');
         const gradeName = selectedGradeInput ? selectedGradeInput.value : '';
         const selectedCategories = Array.from(document.querySelectorAll('.category-cb:checked')).map(cb => cb.value).join(', ');
-        recordQuizSession(quizQuestions.length, 0, 0, `${gradeName} / [${selectedCategories}] (列印試卷)`);
+        
+        // 紀錄列印試卷
+        const todayStr = new Date().toISOString().split('T')[0];
+        userLogs.push({
+          date: todayStr,
+          timestamp: new Date().toLocaleString(),
+          total: quizQuestions.length,
+          correct: 0,
+          wrong: 0,
+          range: `${gradeName} / [${selectedCategories}] (列印試卷)`
+        });
+        saveCloudUserData();
+        renderCalendar();
 
         showStatus(`已產出 ${quizQuestions.length} 題的空白試卷與解答解析，可直接列印或匯出 PDF。`, 'success');
       }
@@ -689,20 +671,24 @@
       if (window.currentQuizSession) {
         window.currentQuizSession.answeredCount++;
         if (window.currentQuizSession.answeredCount === window.currentQuizSession.total) {
-          // 記錄成績並顯示交卷按鈕
-          recordQuizSession(
-            window.currentQuizSession.total, 
-            window.currentQuizSession.correct, 
-            window.currentQuizSession.wrong, 
-            window.currentQuizSession.rangeText,
-            window.currentQuizSession.wrongItems
-          );
+          // 儲存雲端紀錄
+          const todayStr = new Date().toISOString().split('T')[0];
+          userLogs.push({
+            date: todayStr,
+            timestamp: new Date().toLocaleString(),
+            total: window.currentQuizSession.total,
+            correct: window.currentQuizSession.correct,
+            wrong: window.currentQuizSession.wrong,
+            range: window.currentQuizSession.rangeText
+          });
+          saveCloudUserData();
+          renderCalendar();
+
           document.getElementById('quiz-finish-actions').classList.remove('hidden');
         }
       }
     }
 
-    // 寄送成績給老師功能
     function sendScoreToTeacher() {
       if (!window.currentQuizSession) return;
       const session = window.currentQuizSession;
@@ -786,7 +772,7 @@
     function addWrongQuestion(q) {
       if (!wrongQuestions.some(item => item.id === q.id)) {
         wrongQuestions.push(q);
-        saveUserWrongQuestions();
+        saveCloudUserData();
         renderWrongNotebook();
       }
     }
@@ -822,7 +808,7 @@
     function clearWrongQuestions() {
       if (confirm('確定要清空錯題區的所有紀錄嗎？')) {
         wrongQuestions = [];
-        saveUserWrongQuestions();
+        saveCloudUserData();
         renderWrongNotebook();
       }
     }
