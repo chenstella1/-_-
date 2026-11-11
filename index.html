@@ -81,7 +81,7 @@
     <div id="tab-admin" class="hidden space-y-6">
       <div class="bg-white p-7 rounded-3xl shadow-sm border border-slate-200">
         <h2 class="text-xl font-bold text-slate-800 mb-2">🛡️ 管理者後台：學生練習數據與錯題檢視</h2>
-        <p class="text-sm text-slate-500 mb-6">可直接查看所有學生的刷題數、答對數、答錯數以及詳細答錯題目清單，亦可寄送 Feedback。</p>
+        <p class="text-sm text-slate-500 mb-6">可直接查看所有學生的刷題數、答對數、答錯數以及詳細答錯題目清單，亦可刪除已看完的作答紀錄或寄送 Feedback。</p>
         
         <div id="admin-students-list" class="space-y-4">
           <!-- 動態載入學生列表與錯題明細 -->
@@ -388,7 +388,7 @@
       renderCalendar();
     }
 
-    // 管理者後台 (展示使用者、刷幾題、答對數、答錯數與詳細錯題)
+    // 管理者後台 (展示使用者、刷幾題、答對數、答錯數與詳細錯題，並支援刪除特定作答紀錄)
     function loadAdminDashboard() {
       const container = document.getElementById('admin-students-list');
       const allStudents = JSON.parse(localStorage.getItem('yh_all_students') || '{}');
@@ -404,7 +404,7 @@
         const logs = st.logs || [];
         const wrongs = st.wrongs || [];
 
-        const logsHtml = logs.length > 0 ? logs.map(l => `
+        const logsHtml = logs.length > 0 ? logs.map((l, lIdx) => `
           <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 text-xs flex justify-between items-center mb-1.5">
             <div>
               <span class="font-bold text-slate-800">📅 ${l.date}</span> 
@@ -413,7 +413,12 @@
               <span class="text-red-600 font-bold ml-2">答錯 ${l.wrong} 題</span>
               <div class="text-slate-500 mt-0.5">刷題單元範圍：${l.range}</div>
             </div>
-            <span class="text-slate-400">${l.timestamp}</span>
+            <div class="flex items-center gap-3">
+              <span class="text-slate-400">${l.timestamp}</span>
+              <button onclick="deleteStudentLog('${email}', ${lIdx})" class="bg-red-50 hover:bg-red-100 text-red-600 font-bold px-2.5 py-1 rounded-lg border border-red-200">
+                🗑️ 刪除此筆紀錄
+              </button>
+            </div>
           </div>
         `).join('') : '<div class="text-xs text-slate-400 italic">尚無刷題紀錄</div>';
 
@@ -448,7 +453,7 @@
             
             <div class="space-y-1">
               <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">刷題次數與答對/答錯明細：</div>
-              <div class="max-h-40 overflow-y-auto pr-2 space-y-1">${logsHtml}</div>
+              <div class="max-h-48 overflow-y-auto pr-2 space-y-1">${logsHtml}</div>
             </div>
 
             <div id="${wrongBoxId}" class="hidden pt-3 border-t border-slate-100 space-y-2">
@@ -468,6 +473,27 @@
           </div>
         `;
       }).join('');
+    }
+
+    // 刪除特定學生的某筆作答紀錄
+    function deleteStudentLog(email, logIdx) {
+      if (!confirm(`確定要刪除 ${email} 這筆已看完的作答紀錄嗎？`)) return;
+
+      let allStudents = JSON.parse(localStorage.getItem('yh_all_students') || '{}');
+      if (allStudents[email] && allStudents[email].logs) {
+        allStudents[email].logs.splice(logIdx, 1);
+        localStorage.setItem('yh_all_students', JSON.stringify(allStudents));
+      }
+
+      // 同步更新該學生的本機紀錄（若剛好是當前登入者）
+      let studentLogs = JSON.parse(localStorage.getItem(`yh_logs_${email}`) || '[]');
+      if (studentLogs.length > logIdx) {
+        studentLogs.splice(logIdx, 1);
+        localStorage.setItem(`yh_logs_${email}`, JSON.stringify(studentLogs));
+      }
+
+      alert('該筆作答紀錄已成功刪除！');
+      loadAdminDashboard();
     }
 
     function sendFeedbackEmail(studentEmail) {
