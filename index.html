@@ -93,27 +93,25 @@
       <!-- 條件設定面板 -->
       <section class="bg-white p-7 rounded-3xl shadow-sm border border-slate-200 no-print">
         <h2 class="text-lg font-bold text-slate-800 mb-5 border-l-4 border-brand-500 pl-3 flex items-center justify-between">
-          <span>題目選擇與過濾條件 (動態讀取 B、C 欄與即時題數統計)</span>
+          <span>題目選擇與過濾條件 (年級單選連動)</span>
           <button onclick="loadQuestions()" class="text-sm font-normal text-brand-600 hover:underline">🔄 重新同步 Google Sheet 題庫</button>
         </h2>
 
         <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
           
-          <!-- 1. 年級複選區 (抓取 B 欄文字並統計題數) -->
+          <!-- 1. 年級單選區 (抓取 B 欄文字，不可複選) -->
           <div class="md:col-span-6 border-r border-slate-100 pr-0 md:pr-4">
-            <label class="block text-sm font-semibold text-slate-600 uppercase tracking-wider mb-2.5">1. 選擇年級 (可複選多個 - 抓B欄)</label>
-            <div id="grade-checkboxes" class="grid grid-cols-2 gap-2.5 text-sm">
-              <!-- 動態生成 B 欄選項與題數 -->
+            <label class="block text-sm font-semibold text-slate-600 uppercase tracking-wider mb-2.5">1. 選擇年級 (抓B欄)</label>
+            <div id="grade-radioes" class="grid grid-cols-2 gap-2.5 text-sm">
               <span class="text-slate-400 text-xs">正在載入 B 欄選項...</span>
             </div>
           </div>
 
-          <!-- 2. 學習類別複選區 (抓取 C 欄文字並統計題數) -->
+          <!-- 2. 學習類別複選區 (抓取 C 欄文字，隨年級連動過濾) -->
           <div class="md:col-span-4 border-r border-slate-100 pr-0 md:pr-4">
             <label class="block text-sm font-semibold text-slate-600 uppercase tracking-wider mb-2.5">2. 學習類別 (可複選多個 - 抓C欄)</label>
             <div id="category-checkboxes" class="space-y-2 text-sm max-h-48 overflow-y-auto pr-1">
-              <!-- 動態生成 C 欄選項與題數 -->
-              <span class="text-slate-400 text-xs">正在載入 C 欄選項...</span>
+              <span class="text-slate-400 text-xs">請先選擇年級</span>
             </div>
           </div>
 
@@ -243,8 +241,8 @@
           const c = r.c || [];
           return {
             id: idx + 1,
-            grade: c[1] ? String(c[1].v).trim() : '',       // 修正：B 欄對應年級
-            category: c[2] ? String(c[2].v).trim() : '',    // 修正：C 欄對應學習類別
+            grade: c[1] ? String(c[1].v).trim() : '',       // B 欄: 年級
+            category: c[2] ? String(c[2].v).trim() : '',    // C 欄: 學習類別
             unit: c[3] ? String(c[3].v).trim() : '',        // D 欄: 單元
             title: c[4] ? String(c[4].v).trim() : '',       // E 欄: 題目
             optionA: c[5] ? String(c[5].v) : '',            // F 欄: A
@@ -256,58 +254,75 @@
           };
         }).filter(q => q.title);
 
-        renderDynamicFilters();
+        renderGradeRadios();
         showStatus(`成功載入 ${rawQuestions.length} 筆試題！`, 'success');
       } catch (err) {
         showStatus('題庫讀取失敗，請確認 Google Sheet 是否已開啟公開檢視權限[cite: 1]。', 'error');
       }
     }
 
-    // 動態讀取 B 欄（年級）與 C 欄（學習類別）並計算題數
-    function renderDynamicFilters() {
-      // B 欄（年級）選項與計數
+    // 渲染 B 欄（年級單選）
+    function renderGradeRadios() {
       const grades = [...new Set(rawQuestions.map(q => q.grade).filter(Boolean))];
-      const gradeContainer = document.getElementById('grade-checkboxes');
+      const gradeContainer = document.getElementById('grade-radioes');
+      
       if (grades.length === 0) {
         gradeContainer.innerHTML = '<span class="text-slate-400 text-xs">B 欄無資料</span>';
-      } else {
-        gradeContainer.innerHTML = grades.map(g => {
-          const count = rawQuestions.filter(q => q.grade === g).length;
-          return `
-            <label class="flex items-center gap-2 p-2 rounded-xl bg-slate-50 hover:bg-slate-100 cursor-pointer font-medium">
-              <input type="checkbox" value="${g}" class="grade-cb text-brand-600 rounded w-4 h-4"> 
-              <span>${g}</span> 
-              <span class="text-xs text-slate-400 ml-auto">(題數共: ${count}題)</span>
-            </label>
-          `;
-        }).join('');
+        return;
       }
 
-      // C 欄（學習類別）選項與計數
-      const categories = [...new Set(rawQuestions.map(q => q.category).filter(Boolean))];
+      gradeContainer.innerHTML = grades.map((g, idx) => {
+        const count = rawQuestions.filter(q => q.grade === g).length;
+        const checked = idx === 0 ? 'checked' : ''; // 預設選中第一個年級
+        return `
+          <label class="flex items-center gap-2 p-2 rounded-xl bg-slate-50 hover:bg-slate-100 cursor-pointer font-medium">
+            <input type="radio" name="grade-radio" value="${g}" ${checked} onchange="onGradeChange()" class="text-brand-600 w-4 h-4"> 
+            <span>${g}</span> 
+            <span class="text-xs text-slate-400 ml-auto">(題數共: ${count}題)</span>
+          </label>
+        `;
+      }).join('');
+
+      // 初始化時載入第一個年級對應的 C 欄選項
+      onGradeChange();
+    }
+
+    // 當年級切換時，自動連動更新 C 欄（學習類別）選項，避免選到其他年級
+    function onGradeChange() {
+      const selectedGradeInput = document.querySelector('input[name="grade-radio"]:checked');
+      if (!selectedGradeInput) return;
+
+      const selectedGrade = selectedGradeInput.value;
+      // 只留下該年級的題目
+      const gradeQuestions = rawQuestions.filter(q => q.grade === selectedGrade);
+      
+      const categories = [...new Set(gradeQuestions.map(q => q.category).filter(Boolean))];
       const categoryContainer = document.getElementById('category-checkboxes');
+
       if (categories.length === 0) {
-        categoryContainer.innerHTML = '<span class="text-slate-400 text-xs">C 欄無資料</span>';
-      } else {
-        categoryContainer.innerHTML = categories.map(cat => {
-          const count = rawQuestions.filter(q => q.category === cat).length;
-          return `
-            <label class="flex items-center gap-2 p-2 rounded-xl bg-slate-50 hover:bg-slate-100 cursor-pointer font-medium">
-              <input type="checkbox" value="${cat}" class="category-cb text-brand-600 rounded w-4 h-4"> 
-              <span>${cat}</span> 
-              <span class="text-xs text-slate-400 ml-auto">(題數共: ${count}題)</span>
-            </label>
-          `;
-        }).join('');
+        categoryContainer.innerHTML = '<span class="text-slate-400 text-xs">此年級無學習類別資料</span>';
+        return;
       }
+
+      categoryContainer.innerHTML = categories.map(cat => {
+        const count = gradeQuestions.filter(q => q.category === cat).length;
+        return `
+          <label class="flex items-center gap-2 p-2 rounded-xl bg-slate-50 hover:bg-slate-100 cursor-pointer font-medium">
+            <input type="checkbox" value="${cat}" class="category-cb text-brand-600 rounded w-4 h-4" checked> 
+            <span>${cat}</span> 
+            <span class="text-xs text-slate-400 ml-auto">(題數共: ${count}題)</span>
+          </label>
+        `;
+      }).join('');
     }
 
     function getFilteredQuestions() {
-      const selectedGrades = Array.from(document.querySelectorAll('.grade-cb:checked')).map(cb => cb.value);
+      const selectedGradeInput = document.querySelector('input[name="grade-radio"]:checked');
+      const selectedGrade = selectedGradeInput ? selectedGradeInput.value : '';
       const selectedCategories = Array.from(document.querySelectorAll('.category-cb:checked')).map(cb => cb.value);
 
       return rawQuestions.filter(q => {
-        if (selectedGrades.length > 0 && !selectedGrades.includes(q.grade)) return false;
+        if (q.grade !== selectedGrade) return false;
         if (selectedCategories.length > 0 && !selectedCategories.includes(q.category)) return false;
         return true;
       });
@@ -318,7 +333,7 @@
       const count = parseInt(document.getElementById('question-count').value) || 10;
 
       if (filtered.length === 0) {
-        showStatus('找不到符合條件的題目，請至少勾選一項年級或學習類別！', 'error');
+        showStatus('找不到符合條件的題目，請至少勾選一項學習類別！', 'error');
         return;
       }
 
@@ -345,7 +360,7 @@
         card.innerHTML = `
           <div class="flex items-center gap-2 mb-3">
             <span class="bg-brand-100 text-brand-700 text-sm px-3 py-1 rounded-full font-bold">第 ${idx + 1} 題</span>
-            <span class="text-sm bg-slate-100 text-slate-700 px-2.5 py-1 rounded-lg font-medium">${q.grade || '通用'} / ${q.category}</span>
+            <span class="text-sm bg-slate-100 text-slate-700 px-2.5 py-1 rounded-lg font-medium">${q.grade} / ${q.category}</span>
             <span class="text-sm text-slate-500 font-medium">${q.unit}</span>
           </div>
           <div class="text-slate-900 font-bold mb-4 text-lg">${q.title}</div>
@@ -499,7 +514,6 @@
 
     function showStatus(msg, type = 'info') {
       const el = document.getElementById('status-msg');
-      el.classList.resets && el.classList.resets();
       el.classList.remove('hidden', 'bg-blue-50', 'text-blue-800', 'bg-red-50', 'text-red-800', 'bg-green-50', 'text-green-800');
       
       if (type === 'error') el.classList.add('bg-red-50', 'text-red-800', 'border-red-200');
