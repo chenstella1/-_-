@@ -80,11 +80,11 @@
     <!-- 管理者介面 (Admin Dashboard) -->
     <div id="tab-admin" class="hidden space-y-6">
       <div class="bg-white p-7 rounded-3xl shadow-sm border border-slate-200">
-        <h2 class="text-xl font-bold text-slate-800 mb-2">🛡️ 管理者後台：學生刷題與回饋管理</h2>
-        <p class="text-sm text-slate-500 mb-6">在此可檢視所有學生的刷題紀錄（日期、題數、範圍），並可直接編寫 Feedback 寄送至學生信箱。</p>
+        <h2 class="text-xl font-bold text-slate-800 mb-2">🛡️ 管理者後台：學生刷題與錯題檢視</h2>
+        <p class="text-sm text-slate-500 mb-6">在此可檢視所有學生的使用帳號、各次刷題題數、答錯題數、刷題單元範圍，並可點開查看錯題詳情或寄送 Feedback。</p>
         
         <div id="admin-students-list" class="space-y-4">
-          <!-- 動態載入學生列表 -->
+          <!-- 動態載入學生列表與錯題明細 -->
         </div>
       </div>
     </div>
@@ -251,6 +251,14 @@
       const storageKey = `yh_wrong_${currentUser.email}`;
       localStorage.setItem(storageKey, JSON.stringify(wrongQuestions));
       updateWrongBadge();
+
+      // 同步更新全站所有學生錯題本（供管理者後台讀取）
+      let allStudents = JSON.parse(localStorage.getItem('yh_all_students') || '{}');
+      if (!allStudents[currentUser.email]) {
+        allStudents[currentUser.email] = { email: currentUser.email, logs: [], wrongs: [] };
+      }
+      allStudents[currentUser.email].wrongs = wrongQuestions;
+      localStorage.setItem('yh_all_students', JSON.stringify(allStudents));
     }
 
     function loadUserLogs() {
@@ -259,10 +267,8 @@
       userLogs = JSON.parse(localStorage.getItem(storageKey) || '[]');
     }
 
-    // 記錄答對題數打卡
-    function recordCorrectLog(correctCount, rangeText) {
+    function recordQuizSession(totalCount, correctCount, wrongCount, rangeText) {
       if (!currentUser || currentUser.email === 'yhstella2@gmail.com') return;
-      if (correctCount <= 0) return;
 
       const todayStr = new Date().toISOString().split('T')[0];
       const storageKey = `yh_logs_${currentUser.email}`;
@@ -271,7 +277,9 @@
       logs.push({
         date: todayStr,
         timestamp: new Date().toLocaleString(),
-        count: correctCount,
+        total: totalCount,
+        correct: correctCount,
+        wrong: wrongCount,
         range: rangeText
       });
       localStorage.setItem(storageKey, JSON.stringify(logs));
@@ -279,7 +287,7 @@
       // 同步更新全站所有學生列表紀錄（供管理者後台讀取）
       let allStudents = JSON.parse(localStorage.getItem('yh_all_students') || '{}');
       if (!allStudents[currentUser.email]) {
-        allStudents[currentUser.email] = { email: currentUser.email, logs: [] };
+        allStudents[currentUser.email] = { email: currentUser.email, logs: [], wrongs: wrongQuestions };
       }
       allStudents[currentUser.email].logs = logs;
       localStorage.setItem('yh_all_students', JSON.stringify(allStudents));
@@ -303,6 +311,13 @@
       document.getElementById('login-modal').classList.add('hidden');
       document.getElementById('user-status').innerText = `👤 ${email}`;
       
+      // 確保使用者登入時加入學生總表
+      let allStudents = JSON.parse(localStorage.getItem('yh_all_students') || '{}');
+      if (!allStudents[email]) {
+        allStudents[email] = { email: email, logs: [], wrongs: JSON.parse(localStorage.getItem(`yh_wrong_${email}`) || '[]') };
+        localStorage.setItem('yh_all_students', JSON.stringify(allStudents));
+      }
+
       if (email === 'yhstella2@gmail.com') {
         document.getElementById('tab-admin').classList.remove('hidden');
         document.getElementById('tab-quiz').classList.add('hidden');
@@ -335,10 +350,9 @@
       const firstDayIndex = new Date(year, month, 1).getDay();
       const totalDays = new Date(year, month + 1, 0).getDate();
 
-      // 計算每天累積答對題數
-      let dailyCounts = {};
+      let dailyCorrectCounts = {};
       userLogs.forEach(log => {
-        dailyCounts[log.date] = (dailyCounts[log.date] || 0) + log.count;
+        dailyCorrectCounts[log.date] = (dailyCorrectCounts[log.date] || 0) + log.correct;
       });
 
       for (let i = 0; i < firstDayIndex; i++) {
@@ -349,15 +363,15 @@
         const mStr = String(month + 1).padStart(2, '0');
         const dStr = String(day).padStart(2, '0');
         const dateKey = `${year}-${mStr}-${dStr}`;
-        const count = dailyCounts[dateKey] || 0;
-        const hasStar = count >= 10; // 答對10題以上打星星
+        const correctCount = dailyCorrectCounts[dateKey] || 0;
+        const hasStar = correctCount >= 10;
 
         grid.innerHTML += `
           <div class="h-14 border border-slate-100 rounded-xl p-1.5 flex flex-col justify-between items-center bg-slate-50 relative">
             <span class="text-xs font-semibold text-slate-700">${day}</span>
             <div class="flex flex-col items-center">
               ${hasStar ? '<span class="text-base drop-shadow">⭐</span>' : ''}
-              ${count > 0 ? `<span class="text-[10px] text-brand-700 font-bold">答對${count}題</span>` : '<span class="text-[10px] text-slate-300">-</span>'}
+              ${correctCount > 0 ? `<span class="text-[10px] text-brand-700 font-bold">答對${correctCount}題</span>` : '<span class="text-[10px] text-slate-300">-</span>'}
             </div>
           </div>
         `;
@@ -369,7 +383,7 @@
       renderCalendar();
     }
 
-    // 管理者後台邏輯
+    // 管理者後台邏輯 (查看使用者、題數、錯題與範圍)
     function loadAdminDashboard() {
       const container = document.getElementById('admin-students-list');
       const allStudents = JSON.parse(localStorage.getItem('yh_all_students') || '{}');
@@ -380,31 +394,63 @@
         return;
       }
 
-      container.innerHTML = studentEmails.map(email => {
+      container.innerHTML = studentEmails.map((email, index) => {
         const st = allStudents[email];
-        const logsHtml = st.logs.length > 0 ? st.logs.map(l => `
+        const logs = st.logs || [];
+        const wrongs = st.wrongs || [];
+
+        const logsHtml = logs.length > 0 ? logs.map(l => `
           <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 text-xs flex justify-between items-center mb-1.5">
             <div>
               <span class="font-bold text-slate-800">📅 ${l.date}</span> 
-              <span class="text-brand-700 font-bold ml-2">答對 ${l.count} 題</span>
-              <div class="text-slate-500 mt-0.5">範圍：${l.range}</div>
+              <span class="text-brand-700 font-bold ml-2">刷題共 ${l.total} 題</span>
+              <span class="text-green-700 font-bold ml-2">答對 ${l.correct} 題</span>
+              <span class="text-red-600 font-bold ml-2">錯 ${l.wrong} 題</span>
+              <div class="text-slate-500 mt-0.5">刷題單元範圍：${l.range}</div>
             </div>
             <span class="text-slate-400">${l.timestamp}</span>
           </div>
         `).join('') : '<div class="text-xs text-slate-400 italic">尚無刷題紀錄</div>';
+
+        const wrongsHtml = wrongs.length > 0 ? wrongs.map((w, wIdx) => `
+          <div class="bg-red-50/50 p-3 rounded-xl border border-red-100 text-xs space-y-1 mb-2">
+            <div class="font-bold text-red-700">錯題 #${wIdx + 1} (${w.grade} / ${w.category})</div>
+            <div class="font-bold text-slate-800">${w.title}</div>
+            <div class="text-slate-600 pl-2">
+              <div>(A) ${w.optionA}</div>
+              <div>(B) ${w.optionB}</div>
+              <div>(C) ${w.optionC}</div>
+              <div>(D) ${w.optionD}</div>
+            </div>
+            <div class="text-brand-700 font-bold">正確答案：(${w.answer}) | 解析：${w.analysis}</div>
+          </div>
+        `).join('') : '<div class="text-xs text-slate-400 italic">該學生目前沒有錯題紀錄</div>';
+
+        const safeId = `student_box_${index}`;
+        const wrongBoxId = `wrong_box_${index}`;
 
         return `
           <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
             <div class="flex justify-between items-center flex-wrap gap-2">
               <div>
                 <span class="text-base font-bold text-slate-800">📧 學生 Email：${email}</span>
-                <span class="ml-3 text-xs bg-brand-100 text-brand-700 px-2.5 py-1 rounded-full font-bold">總練習次數：${st.logs.length} 次</span>
+                <span class="ml-3 text-xs bg-brand-100 text-brand-700 px-2.5 py-1 rounded-full font-bold">總練習次數：${logs.length} 次</span>
+                <span class="ml-2 text-xs bg-amber-100 text-amber-800 px-2.5 py-1 rounded-full font-bold">錯題本累積：${wrongs.length} 題</span>
               </div>
+              <button onclick="document.getElementById('${wrongBoxId}').classList.toggle('hidden')" class="bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow">
+                👁️ 點開看錯題 (${wrongs.length}題)
+              </button>
             </div>
             
             <div class="space-y-1">
-              <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">刷題與答對日期紀錄：</div>
+              <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">刷題紀錄明細 (題數、錯題數與範圍)：</div>
               <div class="max-h-40 overflow-y-auto pr-2 space-y-1">${logsHtml}</div>
+            </div>
+
+            <!-- 點開看錯題的隱藏區塊 -->
+            <div id="${wrongBoxId}" class="hidden pt-3 border-t border-slate-100 space-y-2">
+              <div class="text-xs font-bold text-red-600 uppercase tracking-wider">該學生的錯題詳情清單：</div>
+              <div class="max-h-60 overflow-y-auto pr-2 space-y-2">${wrongsHtml}</div>
             </div>
 
             <!-- Feedback 寄送表單 -->
@@ -548,15 +594,35 @@
       if (mode === 'online') {
         actionBox.classList.add('hidden');
         renderOnlineQuiz(container, quizQuestions);
-        showStatus(`已挑選 ${quizQuestions.length} 題，請點擊選項作答。(答對將自動計入月曆打卡)`, 'success');
+        showStatus(`已挑選 ${quizQuestions.length} 題，請點擊選項作答。`, 'success');
       } else {
         actionBox.classList.remove('hidden');
         renderPrintableQuizAndAnswers(container, quizQuestions);
+        
+        // 列印試卷也視為一次練習記錄
+        const selectedGradeInput = document.querySelector('input[name="grade-radio"]:checked');
+        const gradeName = selectedGradeInput ? selectedGradeInput.value : '';
+        const selectedCategories = Array.from(document.querySelectorAll('.category-cb:checked')).map(cb => cb.value).join(', ');
+        recordQuizSession(quizQuestions.length, 0, 0, `${gradeName} / [${selectedCategories}] (列印試卷)`);
+
         showStatus(`已產出 ${quizQuestions.length} 題的空白試卷與解答解析，可直接列印或匯出 PDF。`, 'success');
       }
     }
 
     function renderOnlineQuiz(container, questions) {
+      // 暫存本次線上測驗的統計數據
+      window.currentQuizSession = {
+        total: questions.length,
+        correct: 0,
+        wrong: 0,
+        answeredCount: 0,
+        rangeText: (() => {
+          const g = document.querySelector('input[name="grade-radio"]:checked')?.value || '';
+          const cats = Array.from(document.querySelectorAll('.category-cb:checked')).map(cb => cb.value).join(', ');
+          return `${g} / [${cats}]`;
+        })()
+      };
+
       questions.forEach((q, idx) => {
         const card = document.createElement('div');
         card.className = "bg-white p-6 rounded-3xl shadow-sm border border-slate-200 card-box";
@@ -593,12 +659,11 @@
       if (isCorrect) {
         feedbackEl.className = "p-4 rounded-2xl text-base border bg-green-50 border-green-200 text-green-900 font-medium";
         feedbackEl.innerHTML = `
-          <div class="font-bold text-green-700 mb-1">✅ 回答正確！ (+1 答對打卡數)</div>
+          <div class="font-bold text-green-700 mb-1">✅ 回答正確！</div>
           <div><strong>正確答案：</strong> (${correctOpt})</div>
           <div class="text-sm text-green-950 mt-1"><strong>【解析】</strong> ${q.analysis}</div>
         `;
-        // 答對 1 題即計入打卡
-        recordCorrectLog(1, `${grade} / ${category}`);
+        if (window.currentQuizSession) window.currentQuizSession.correct++;
       } else {
         feedbackEl.className = "p-4 rounded-2xl text-base border bg-red-50 border-red-200 text-red-900 font-medium";
         feedbackEl.innerHTML = `
@@ -606,10 +671,24 @@
           <div><strong>您的選擇：</strong> ${selectedOpt} | <strong>正確答案：</strong> (${correctOpt})</div>
           <div class="text-sm text-red-950 mt-1"><strong>【解析】</strong> ${q.analysis}</div>
         `;
+        if (window.currentQuizSession) window.currentQuizSession.wrong++;
         addWrongQuestion(q);
       }
 
       feedbackEl.classList.remove('hidden');
+
+      // 檢查是否整份測驗作答完畢，自動記錄回饋至後台
+      if (window.currentQuizSession) {
+        window.currentQuizSession.answeredCount++;
+        if (window.currentQuizSession.answeredCount === window.currentQuizSession.total) {
+          recordQuizSession(
+            window.currentQuizSession.total, 
+            window.currentQuizSession.correct, 
+            window.currentQuizSession.wrong, 
+            window.currentQuizSession.rangeText
+          );
+        }
+      }
     }
 
     function renderPrintableQuizAndAnswers(container, questions) {
