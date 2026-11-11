@@ -30,129 +30,131 @@
       .no-print { display: none !important; }
       .print-only { display: block !important; }
       body { background: #fff !important; color: #000 !important; }
-      .card-box { border: 1px solid #ccc !important; box-shadow: none !important; margin-bottom: 15px !important; break-inside: avoid; }
+      .card-box { border: 1px solid #ccc !important; box-shadow: none !important; margin-bottom: 20px !important; break-inside: avoid; }
     }
   </style>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans">
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col font-sans text-base">
 
-  <!-- 1. 強制登入畫面 (Modal) -->
+  <!-- 3. 精簡版登入畫面 (Modal) -->
   <div id="login-modal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 border border-slate-100">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-8 border border-slate-100">
       <div class="text-center mb-6">
-        <h2 class="text-2xl font-black text-slate-800">優華數位英文學習網</h2>
-        <p class="text-xs text-slate-500 mt-1">請使用您的 Email 與密碼登入系統</p>
+        <h2 class="text-3xl font-black text-slate-800">優華數位英文學習網</h2>
+        <p class="text-sm text-slate-500 mt-2">學生請用 Email 登入，密碼請洽老師</p>
       </div>
       <form onsubmit="handleLogin(event)" class="space-y-4">
         <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1 uppercase tracking-wider">電子郵件 (Email)</label>
-          <input type="email" id="login-email" required placeholder="name@example.com" class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+          <label class="block text-sm font-semibold text-slate-700 mb-1.5 uppercase tracking-wider">電子郵件 (Email)</label>
+          <input type="email" id="login-email" required placeholder="name@example.com" class="w-full border border-slate-300 rounded-xl p-3.5 text-base focus:ring-2 focus:ring-brand-500 focus:outline-none">
         </div>
         <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1 uppercase tracking-wider">登入密碼</label>
-          <input type="password" id="login-pass" required placeholder="請輸入密碼" class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
-          <div class="text-[11px] text-slate-400 mt-1.5 space-y-0.5">
-            <p>💡 學生密碼：<code>1155665</code></p>
-            <p>💡 管理者帳號：<code>yhstella2@gmail.com</code> (密碼：<code>a18177300</code>)</p>
-          </div>
+          <label class="block text-sm font-semibold text-slate-700 mb-1.5 uppercase tracking-wider">登入密碼</label>
+          <input type="password" id="login-pass" required placeholder="請輸入密碼" class="w-full border border-slate-300 rounded-xl p-3.5 text-base focus:ring-2 focus:ring-brand-500 focus:outline-none">
         </div>
-        <button type="submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-semibold py-3 rounded-xl transition-colors shadow-md text-sm mt-2">
+        <button type="submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-3.5 rounded-xl transition-colors shadow-lg text-base mt-3">
           立即登入系統
         </button>
       </form>
     </div>
   </div>
 
-  <!-- 頂部導覽列 -->
+  <!-- 頂部導覽列 (字大一級，移除右上角錯題本) -->
   <header class="bg-brand-600 text-white shadow-md no-print">
-    <div class="max-w-6xl mx-auto px-4 py-3.5 flex justify-between items-center">
+    <div class="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
       <div class="flex items-center gap-2">
-        <span class="text-xl font-black tracking-wide">優華數位英文</span>
-        <span class="text-xs bg-brand-700 text-brand-100 px-2 py-0.5 rounded-full font-normal">刷題網</span>
+        <span class="text-2xl font-black tracking-wide">優華數位英文</span>
+        <span class="text-sm bg-brand-700 text-brand-100 px-2.5 py-0.5 rounded-full font-normal">刷題網</span>
       </div>
-      <div class="flex items-center gap-3">
-        <span id="user-status" class="text-xs bg-brand-700 px-3 py-1.5 rounded-full">未登入</span>
-        <button onclick="switchTab('quiz')" class="text-xs hover:underline">主頁測驗</button>
-        <button onclick="switchTab('wrong-notebook')" class="text-xs bg-amber-500 hover:bg-amber-600 text-white px-2.5 py-1 rounded-full relative">
-          錯題區 <span id="wrong-count-badge" class="bg-red-600 text-white text-[10px] px-1.5 py-0.2 rounded-full hidden">0</span>
-        </button>
-        <button onclick="logout()" class="text-xs text-brand-100 hover:text-white underline">登出</button>
+      <div class="flex items-center gap-4">
+        <span id="user-status" class="text-sm bg-brand-700 px-3.5 py-1.5 rounded-full">未登入</span>
+        <button onclick="switchTab('quiz')" class="text-sm font-medium hover:underline">主頁測驗</button>
+        <button onclick="logout()" class="text-sm text-brand-100 hover:text-white underline">登出</button>
       </div>
     </div>
   </header>
 
   <!-- 主要內容區 -->
-  <main class="max-w-5xl mx-auto px-4 py-6 flex-grow w-full">
+  <main class="max-w-4xl mx-auto px-4 py-8 flex-grow w-full">
     
+    <!-- 2. 明顯的獨立錯題本按鈕區 -->
+    <div id="wrong-btn-banner" class="mb-6 no-print">
+      <button onclick="switchTab('wrong-notebook')" class="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold py-4 px-6 rounded-2xl shadow-md transition-all flex items-center justify-between text-lg">
+        <div class="flex items-center gap-3">
+          <span class="text-2xl">📚</span>
+          <span>查看我的專屬錯題本與複習講義</span>
+        </div>
+        <span id="wrong-count-badge" class="bg-red-600 text-white text-sm px-3 py-1 rounded-full shadow hidden">0 題</span>
+      </button>
+    </div>
+
     <!-- 頁籤一：測驗與出題主頁 -->
     <div id="tab-quiz" class="space-y-6">
       
       <!-- 條件設定面板 -->
-      <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 no-print">
-        <h2 class="text-base font-bold text-slate-800 mb-4 border-l-4 border-brand-500 pl-3 flex items-center justify-between">
+      <section class="bg-white p-7 rounded-3xl shadow-sm border border-slate-200 no-print">
+        <h2 class="text-lg font-bold text-slate-800 mb-5 border-l-4 border-brand-500 pl-3 flex items-center justify-between">
           <span>題目選擇與過濾條件</span>
-          <button onclick="loadQuestions()" class="text-xs font-normal text-brand-600 hover:underline">🔄 重新同步 Google Sheet 題庫</button>
+          <button onclick="loadQuestions()" class="text-sm font-normal text-brand-600 hover:underline">🔄 重新同步 Google Sheet 題庫</button>
         </h2>
 
         <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
           
           <!-- 年級複選區 -->
           <div class="md:col-span-5 border-r border-slate-100 pr-0 md:pr-4">
-            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">1. 選擇年級 (可複選多個)</label>
-            <div class="grid grid-cols-3 gap-2 text-xs" id="grade-checkboxes">
-              <label class="flex items-center gap-1.5 p-2 rounded bg-slate-50 hover:bg-slate-100 cursor-pointer">
-                <input type="checkbox" value="國七" class="grade-cb text-brand-600 rounded"> 國七
+            <label class="block text-sm font-semibold text-slate-600 uppercase tracking-wider mb-2.5">1. 選擇年級 (可複選多個)</label>
+            <div class="grid grid-cols-3 gap-2.5 text-sm" id="grade-checkboxes">
+              <label class="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 cursor-pointer font-medium">
+                <input type="checkbox" value="國七" class="grade-cb text-brand-600 rounded w-4 h-4"> 國七
               </label>
-              <label class="flex items-center gap-1.5 p-2 rounded bg-slate-50 hover:bg-slate-100 cursor-pointer">
-                <input type="checkbox" value="國八" class="grade-cb text-brand-600 rounded"> 國八
+              <label class="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 cursor-pointer font-medium">
+                <input type="checkbox" value="國八" class="grade-cb text-brand-600 rounded w-4 h-4"> 國八
               </label>
-              <label class="flex items-center gap-1.5 p-2 rounded bg-slate-50 hover:bg-slate-100 cursor-pointer">
-                <input type="checkbox" value="國九" class="grade-cb text-brand-600 rounded"> 國九
+              <label class="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 cursor-pointer font-medium">
+                <input type="checkbox" value="國九" class="grade-cb text-brand-600 rounded w-4 h-4"> 國九
               </label>
-              <label class="flex items-center gap-1.5 p-2 rounded bg-slate-50 hover:bg-slate-100 cursor-pointer">
-                <input type="checkbox" value="高一" class="grade-cb text-brand-600 rounded"> 高一
+              <label class="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 cursor-pointer font-medium">
+                <input type="checkbox" value="高一" class="grade-cb text-brand-600 rounded w-4 h-4"> 高一
               </label>
-              <label class="flex items-center gap-1.5 p-2 rounded bg-slate-50 hover:bg-slate-100 cursor-pointer">
-                <input type="checkbox" value="高二" class="grade-cb text-brand-600 rounded"> 高二
+              <label class="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 cursor-pointer font-medium">
+                <input type="checkbox" value="高二" class="grade-cb text-brand-600 rounded w-4 h-4"> 高二
               </label>
-              <label class="flex items-center gap-1.5 p-2 rounded bg-slate-50 hover:bg-slate-100 cursor-pointer">
-                <input type="checkbox" value="高三" class="grade-cb text-brand-600 rounded"> 高三
+              <label class="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 cursor-pointer font-medium">
+                <input type="checkbox" value="高三" class="grade-cb text-brand-600 rounded w-4 h-4"> 高三
               </label>
             </div>
           </div>
 
-          <!-- 類別與單元關鍵字 -->
-          <div class="md:col-span-4 border-r border-slate-100 pr-0 md:pr-4 space-y-3">
+          <!-- B, C 欄動態抓取設定 -->
+          <div class="md:col-span-4 border-r border-slate-100 pr-0 md:pr-4 space-y-4">
             <div>
-              <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">2. 學習類別</label>
-              <select id="category-select" class="w-full border-slate-200 rounded-lg text-sm p-2 border">
-                <option value="all">全部 (單字 + 文法)</option>
-                <option value="單字">單字單元</option>
-                <option value="文法">文法單元</option>
+              <label class="block text-sm font-semibold text-slate-600 uppercase tracking-wider mb-1.5">2. 學習類別 (B欄)</label>
+              <select id="category-select" class="w-full border-slate-200 rounded-xl text-base p-3 border font-medium">
+                <option value="all">全部 (顯示所有類別)</option>
               </select>
             </div>
             <div>
-              <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">單元關鍵字 (留空代表全部)</label>
-              <input type="text" id="unit-input" placeholder="如：時態, 核心單字" class="w-full border-slate-200 rounded-lg text-sm p-2 border">
+              <label class="block text-sm font-semibold text-slate-600 uppercase tracking-wider mb-1.5">單元關鍵字 (C欄)</label>
+              <input type="text" id="unit-input" placeholder="輸入 C 欄關鍵字或留空" class="w-full border-slate-200 rounded-xl text-base p-3 border font-medium">
             </div>
           </div>
 
           <!-- 題數 -->
-          <div class="md:col-span-3 space-y-3">
+          <div class="md:col-span-3 space-y-4">
             <div>
-              <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">3. 練習題數</label>
-              <input type="number" id="question-count" value="10" min="1" max="100" class="w-full border-slate-200 rounded-lg text-sm p-2 border">
+              <label class="block text-sm font-semibold text-slate-600 uppercase tracking-wider mb-1.5">3. 練習題數</label>
+              <input type="number" id="question-count" value="10" min="1" max="100" class="w-full border-slate-200 rounded-xl text-base p-3 border font-medium">
             </div>
           </div>
 
         </div>
 
         <!-- 模式按鈕選擇 -->
-        <div class="mt-6 pt-4 border-t border-slate-100 flex flex-wrap gap-3">
-          <button onclick="startQuiz('online')" class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-5 py-2.5 rounded-lg shadow-sm flex items-center gap-2">
+        <div class="mt-6 pt-5 border-t border-slate-100 flex flex-wrap gap-4">
+          <button onclick="startQuiz('online')" class="bg-brand-600 hover:bg-brand-700 text-white text-base font-bold px-6 py-3 rounded-xl shadow-md flex items-center gap-2">
             🚀 線上練習 (亂數出題 + 即時解析)
           </button>
-          <button onclick="startQuiz('print')" class="bg-slate-800 hover:bg-slate-900 text-white text-sm font-medium px-5 py-2.5 rounded-lg shadow-sm flex items-center gap-2">
+          <button onclick="startQuiz('print')" class="bg-slate-800 hover:bg-slate-900 text-white text-base font-bold px-6 py-3 rounded-xl shadow-md flex items-center gap-2">
             🖨️ 生成可列印試卷 (列印/PDF)
           </button>
         </div>
@@ -160,34 +162,35 @@
       </section>
 
       <!-- 狀態提示 -->
-      <div id="status-msg" class="p-3.5 rounded-xl text-sm border hidden no-print"></div>
+      <div id="status-msg" class="p-4 rounded-2xl text-base border hidden no-print"></div>
 
       <!-- 測驗與試卷展示區 -->
-      <section id="quiz-container" class="space-y-4"></section>
+      <section id="quiz-container" class="space-y-5"></section>
       
       <!-- 試卷列印控制按鈕區 -->
       <div id="print-actions" class="hidden flex gap-3 justify-end no-print">
-        <button onclick="window.print()" class="bg-slate-700 text-white px-4 py-2 rounded-lg text-sm">直接列印題目卷</button>
-        <button onclick="exportToPDF('quiz-container', '英文試卷')" class="bg-brand-600 text-white px-4 py-2 rounded-lg text-sm">下載 PDF 題目卷</button>
+        <button onclick="window.print()" class="bg-slate-700 text-white px-5 py-2.5 rounded-xl text-base font-bold">直接列印題目卷</button>
+        <button onclick="exportToPDF('quiz-container', '英文試卷')" class="bg-brand-600 text-white px-5 py-2.5 rounded-xl text-base font-bold">下載 PDF 題目卷</button>
       </div>
 
     </div>
 
     <!-- 頁籤二：錯題區本 -->
-    <div id="tab-wrong" class="hidden space-y-4">
-      <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex justify-between items-center no-print">
+    <div id="tab-wrong" class="hidden space-y-5">
+      <div class="bg-white p-7 rounded-3xl shadow-sm border border-slate-200 flex flex-wrap justify-between items-center gap-4 no-print">
         <div>
-          <h2 class="text-lg font-bold text-slate-800">專屬錯題複習區</h2>
-          <p class="text-xs text-slate-500">自動收集答錯的題目，支援一鍵列印或導出為 PDF 講義[cite: 1]。</p>
+          <h2 class="text-xl font-bold text-slate-800">專屬錯題複習區</h2>
+          <p class="text-sm text-slate-500 mt-1">自動收集答錯的題目，支援一鍵列印或導出為 PDF 講義[cite: 1]。</p>
         </div>
-        <div class="flex gap-2">
-          <button onclick="exportToPDF('wrong-list-container', '英文錯題本')" class="bg-brand-600 hover:bg-brand-700 text-white text-xs px-3.5 py-2 rounded-lg">匯出錯題本 PDF</button>
-          <button onclick="window.print()" class="bg-slate-700 text-white text-xs px-3.5 py-2 rounded-lg">列印錯題講義</button>
-          <button onclick="clearWrongQuestions()" class="bg-red-50 text-red-600 hover:bg-red-100 text-xs px-3.5 py-2 rounded-lg border border-red-200">清空錯題本</button>
+        <div class="flex gap-2.5">
+          <button onclick="switchTab('quiz')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-sm font-bold px-4 py-2.5 rounded-xl">返回主頁測驗</button>
+          <button onclick="exportToPDF('wrong-list-container', '英文錯題本')" class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-bold px-4 py-2.5 rounded-xl">匯出錯題本 PDF</button>
+          <button onclick="window.print()" class="bg-slate-700 text-white text-sm font-bold px-4 py-2.5 rounded-xl">列印錯題講義</button>
+          <button onclick="clearWrongQuestions()" class="bg-red-50 text-red-600 hover:bg-red-100 text-sm font-bold px-4 py-2.5 rounded-xl border border-red-200">清空</button>
         </div>
       </div>
 
-      <div id="wrong-list-container" class="space-y-4"></div>
+      <div id="wrong-list-container" class="space-y-5"></div>
     </div>
 
   </main>
@@ -206,32 +209,25 @@
       if (savedUser) {
         currentUser = JSON.parse(savedUser);
         document.getElementById('login-modal').classList.add('hidden');
-        document.getElementById('user-status').innerText = currentUser.role === 'admin' ? `👑 老師 (${currentUser.email})` : `👤 學生 (${currentUser.email})`;
+        document.getElementById('user-status').innerText = `👤 ${currentUser.email}`;
         loadQuestions();
       }
     };
 
-    // 登入驗證邏輯
     function handleLogin(e) {
       e.preventDefault();
       const email = document.getElementById('login-email').value.trim();
       const pass = document.getElementById('login-pass').value.trim();
 
-      let role = 'student';
-
-      if (email === 'yhstella2@gmail.com' && pass === 'a18177300') {
-        role = 'admin';
-      } else if (pass === '1155665') {
-        role = 'student';
-      } else {
-        alert('密碼錯誤！學生請輸入 1155665，管理者請輸入正確帳號密碼。');
+      if (!email || !pass) {
+        alert('請完整輸入 Email 與密碼');
         return;
       }
 
-      currentUser = { email, role };
+      currentUser = { email };
       localStorage.setItem('yh_user', JSON.stringify(currentUser));
       document.getElementById('login-modal').classList.add('hidden');
-      document.getElementById('user-status').innerText = role === 'admin' ? `👑 老師 (${email})` : `👤 學生 (${email})`;
+      document.getElementById('user-status').innerText = `👤 ${email}`;
       loadQuestions();
     }
 
@@ -240,7 +236,7 @@
       location.reload();
     }
 
-    // 載入 Google Sheet 題庫[cite: 1]
+    // 4. 從 Google Sheet 動態載入並解析 B, C 欄
     async function loadQuestions() {
       showStatus('連線至 Google Sheet 載入題庫中...', 'info');
       try {
@@ -254,23 +250,36 @@
           const c = r.c || [];
           return {
             id: idx + 1,
-            grade: c[0] ? String(c[0].v).trim() : '',       
-            category: c[1] ? String(c[1].v).trim() : '文法', 
-            unit: c[2] ? String(c[2].v).trim() : '',        
-            title: c[3] ? String(c[3].v).trim() : '',       
-            optionA: c[4] ? String(c[4].v) : '',            
-            optionB: c[5] ? String(c[5].v) : '',            
-            optionC: c[6] ? String(c[6].v) : '',            
-            optionD: c[7] ? String(c[7].v) : '',            
-            answer: c[8] ? String(c[8].v).trim().toUpperCase() : '', 
-            analysis: c[9] ? String(c[9].v) : '暫無詳細解析'   
+            grade: c[0] ? String(c[0].v).trim() : '',       // A欄: 年級
+            category: c[1] ? String(c[1].v).trim() : '',    // B欄: 類別 (直接抓取)
+            unit: c[2] ? String(c[2].v).trim() : '',        // C欄: 單元 (直接抓取)
+            title: c[3] ? String(c[3].v).trim() : '',       // D欄: 題目
+            optionA: c[4] ? String(c[4].v) : '',            // E欄: A
+            optionB: c[5] ? String(c[5].v) : '',            // F欄: B
+            optionC: c[6] ? String(c[6].v) : '',            // G欄: C
+            optionD: c[7] ? String(c[7].v) : '',            // H欄: D
+            answer: c[8] ? String(c[8].v).trim().toUpperCase() : '', // I欄: 解答
+            analysis: c[9] ? String(c[9].v) : '暫無詳細解析'   // J欄: 解析
           };
         }).filter(q => q.title);
 
+        updateCategoryDropdown();
         showStatus(`成功載入 ${rawQuestions.length} 筆試題！`, 'success');
       } catch (err) {
-        showStatus('題庫讀取失敗，請確認 Google Sheet 是否已開啟公開檢視權限。', 'error');
+        showStatus('題庫讀取失敗，請確認 Google Sheet 是否已開啟公開檢視權限[cite: 1]。', 'error');
       }
+    }
+
+    // 動態更新 B 欄下拉選單選項
+    function updateCategoryDropdown() {
+      const select = document.getElementById('category-select');
+      const categories = [...new Set(rawQuestions.map(q => q.category).filter(Boolean))];
+      
+      let html = '<option value="all">全部 (顯示所有類別)</option>';
+      categories.forEach(cat => {
+        html += `<option value="${cat}">${cat}</option>`;
+      });
+      select.innerHTML = html;
     }
 
     function getFilteredQuestions() {
@@ -314,25 +323,25 @@
     function renderOnlineQuiz(container, questions) {
       questions.forEach((q, idx) => {
         const card = document.createElement('div');
-        card.className = "bg-white p-5 rounded-2xl shadow-sm border border-slate-200 card-box";
+        card.className = "bg-white p-6 rounded-3xl shadow-sm border border-slate-200 card-box";
         card.innerHTML = `
           <div class="flex items-center gap-2 mb-3">
-            <span class="bg-brand-100 text-brand-700 text-xs px-2.5 py-0.5 rounded-full font-bold">第 ${idx + 1} 題</span>
-            <span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded">${q.grade || '通用'} / ${q.category || '文法'}</span>
-            <span class="text-xs text-slate-400">${q.unit}</span>
+            <span class="bg-brand-100 text-brand-700 text-sm px-3 py-1 rounded-full font-bold">第 ${idx + 1} 題</span>
+            <span class="text-sm bg-slate-100 text-slate-700 px-2.5 py-1 rounded-lg font-medium">${q.grade || '通用'} / ${q.category}</span>
+            <span class="text-sm text-slate-500 font-medium">${q.unit}</span>
           </div>
-          <div class="text-slate-800 font-medium mb-4 text-base">${q.title}</div>
+          <div class="text-slate-900 font-bold mb-4 text-lg">${q.title}</div>
           
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm mb-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-base mb-4">
             ${['A', 'B', 'C', 'D'].map(opt => `
               <button onclick="checkAnswer(${q.id}, '${opt}', '${q.answer}')" 
-                class="opt-btn-${q.id} w-full text-left p-3 rounded-xl border border-slate-200 hover:bg-slate-50 transition-all flex items-center justify-between">
+                class="opt-btn-${q.id} w-full text-left p-3.5 rounded-2xl border border-slate-200 hover:bg-slate-50 transition-all font-medium flex items-center justify-between">
                 <span><strong class="text-slate-400 mr-2">${opt}.</strong> ${q[`option${opt}`]}</span>
               </button>
             `).join('')}
           </div>
 
-          <div id="feedback-${q.id}" class="hidden p-4 rounded-xl text-sm border space-y-1"></div>
+          <div id="feedback-${q.id}" class="hidden p-4 rounded-2xl text-base border space-y-1.5"></div>
         `;
         container.appendChild(card);
       });
@@ -347,18 +356,18 @@
       const isCorrect = selectedOpt === correctOpt;
 
       if (isCorrect) {
-        feedbackEl.className = "p-4 rounded-xl text-sm border bg-green-50 border-green-200 text-green-800";
+        feedbackEl.className = "p-4 rounded-2xl text-base border bg-green-50 border-green-200 text-green-900 font-medium";
         feedbackEl.innerHTML = `
           <div class="font-bold text-green-700 mb-1">✅ 回答正確！</div>
           <div><strong>正確答案：</strong> (${correctOpt})</div>
-          <div class="text-xs text-green-900 mt-1"><strong>【解析】</strong> ${q.analysis}</div>
+          <div class="text-sm text-green-950 mt-1"><strong>【解析】</strong> ${q.analysis}</div>
         `;
       } else {
-        feedbackEl.className = "p-4 rounded-xl text-sm border bg-red-50 border-red-200 text-red-800";
+        feedbackEl.className = "p-4 rounded-2xl text-base border bg-red-50 border-red-200 text-red-900 font-medium";
         feedbackEl.innerHTML = `
           <div class="font-bold text-red-700 mb-1">❌ 回答錯誤 (已自動收錄至錯題區)</div>
           <div><strong>您的選擇：</strong> ${selectedOpt} | <strong>正確答案：</strong> (${correctOpt})</div>
-          <div class="text-xs text-red-900 mt-1"><strong>【解析】</strong> ${q.analysis}</div>
+          <div class="text-sm text-red-950 mt-1"><strong>【解析】</strong> ${q.analysis}</div>
         `;
         addWrongQuestion(q);
       }
@@ -368,18 +377,18 @@
 
     function renderPrintableQuiz(container, questions) {
       const paper = document.createElement('div');
-      paper.className = "bg-white p-8 rounded-xl border border-slate-200 shadow-sm space-y-6";
+      paper.className = "bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6";
       paper.innerHTML = `
         <div class="text-center border-b pb-4 mb-6">
-          <h1 class="text-2xl font-bold">優華數位英文測驗卷</h1>
-          <p class="text-xs text-slate-500 mt-1">班級：________ 姓名：________ 座號：________ 得分：________</p>
+          <h1 class="text-2xl font-black">優華數位英文測驗卷</h1>
+          <p class="text-sm text-slate-500 mt-1.5">班級：________ 姓名：________ 座號：________ 得分：________</p>
         </div>
         ${questions.map((q, idx) => `
-          <div class="space-y-2 break-inside-avoid">
-            <div class="font-medium text-slate-800 text-sm">
-              ${idx + 1}. (${q.grade}/${q.category}) ${q.title}
+          <div class="space-y-2.5 break-inside-avoid">
+            <div class="font-bold text-slate-900 text-base">
+              ${idx + 1}. (${q.grade}/${q.category}-${q.unit}) ${q.title}
             </div>
-            <div class="grid grid-cols-2 gap-x-8 gap-y-1 text-xs pl-4">
+            <div class="grid grid-cols-2 gap-x-8 gap-y-1.5 text-sm pl-4 font-medium">
               <div>(A) ${q.optionA}</div>
               <div>(B) ${q.optionB}</div>
               <div>(C) ${q.optionC}</div>
@@ -403,26 +412,26 @@
     function renderWrongNotebook() {
       const container = document.getElementById('wrong-list-container');
       if (wrongQuestions.length === 0) {
-        container.innerHTML = `<div class="bg-white p-8 rounded-xl text-center text-slate-400 text-sm">目前沒有任何錯題紀錄！</div>`;
+        container.innerHTML = `<div class="bg-white p-10 rounded-3xl text-center text-slate-400 text-base">目前沒有任何錯題紀錄！</div>`;
         return;
       }
 
       container.innerHTML = wrongQuestions.map((q, idx) => `
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm card-box">
-          <div class="flex items-center justify-between mb-2">
-            <span class="text-xs font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded">錯題 #${idx + 1}</span>
-            <span class="text-xs text-slate-400">${q.grade} / ${q.unit}</span>
+        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm card-box">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-sm font-bold text-red-600 bg-red-50 px-3 py-1 rounded-full">錯題 #${idx + 1}</span>
+            <span class="text-sm text-slate-500 font-medium">${q.grade} / ${q.category} - ${q.unit}</span>
           </div>
-          <div class="font-medium text-slate-800 mb-3 text-sm">${q.title}</div>
-          <div class="text-xs text-slate-600 space-y-1 mb-3 pl-2 border-l-2 border-slate-200">
+          <div class="font-bold text-slate-900 mb-3 text-base">${q.title}</div>
+          <div class="text-sm text-slate-700 space-y-1 mb-4 pl-3 border-l-4 border-slate-200 font-medium">
             <div>(A) ${q.optionA}</div>
             <div>(B) ${q.optionB}</div>
             <div>(C) ${q.optionC}</div>
             <div>(D) ${q.optionD}</div>
           </div>
-          <div class="bg-slate-50 p-3 rounded-lg text-xs border border-slate-100">
+          <div class="bg-slate-50 p-4 rounded-2xl text-sm border border-slate-100">
             <span class="font-bold text-brand-700">正確答案：(${q.answer})</span>
-            <p class="text-slate-600 mt-1"><strong>解析：</strong>${q.analysis}</p>
+            <p class="text-slate-700 mt-1.5"><strong>解析：</strong>${q.analysis}</p>
           </div>
         </div>
       `).join('');
@@ -440,7 +449,7 @@
     function updateWrongBadge() {
       const badge = document.getElementById('wrong-count-badge');
       if (wrongQuestions.length > 0) {
-        badge.innerText = wrongQuestions.length;
+        badge.innerText = `${wrongQuestions.length} 題`;
         badge.classList.remove('hidden');
       } else {
         badge.classList.add('hidden');
@@ -451,9 +460,11 @@
       if (tab === 'quiz') {
         document.getElementById('tab-quiz').classList.remove('hidden');
         document.getElementById('tab-wrong').classList.add('hidden');
+        document.getElementById('wrong-btn-banner').classList.remove('hidden');
       } else {
         document.getElementById('tab-quiz').classList.add('hidden');
         document.getElementById('tab-wrong').classList.remove('hidden');
+        document.getElementById('wrong-btn-banner').classList.add('hidden');
         renderWrongNotebook();
       }
     }
@@ -472,11 +483,11 @@
 
     function showStatus(msg, type = 'info') {
       const el = document.getElementById('status-msg');
-      el.classList.remove('hidden', 'bg-blue-50', 'text-blue-700', 'bg-red-50', 'text-red-700', 'bg-green-50', 'text-green-700');
+      el.classList.remove('hidden', 'bg-blue-50', 'text-blue-800', 'bg-red-50', 'text-red-800', 'bg-green-50', 'text-green-800');
       
-      if (type === 'error') el.classList.add('bg-red-50', 'text-red-700', 'border-red-200');
-      else if (type === 'success') el.classList.add('bg-green-50', 'text-green-700', 'border-green-200');
-      else el.classList.add('bg-blue-50', 'text-blue-700', 'border-blue-200');
+      if (type === 'error') el.classList.add('bg-red-50', 'text-red-800', 'border-red-200');
+      else if (type === 'success') el.classList.add('bg-green-50', 'text-green-800', 'border-green-200');
+      else el.classList.add('bg-blue-50', 'text-blue-800', 'border-blue-200');
       
       el.innerText = msg;
     }
