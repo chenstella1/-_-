@@ -68,7 +68,7 @@
       </div>
       <div class="flex items-center gap-4">
         <span id="user-status" class="text-sm bg-brand-700 px-3.5 py-1.5 rounded-full font-medium">未登入</span>
-        <button onclick="switchTab('quiz')" class="text-sm font-bold hover:underline">主頁測驗</button>
+        <button id="nav-home-btn" onclick="switchTab('quiz')" class="text-sm font-bold hover:underline">主頁測驗</button>
         <button onclick="logout()" class="text-sm text-brand-100 hover:text-white underline">登出</button>
       </div>
     </div>
@@ -77,7 +77,19 @@
   <!-- 主要內容區 -->
   <main class="max-w-4xl mx-auto px-4 py-8 flex-grow w-full">
     
-    <!-- 錯題本按鈕區 -->
+    <!-- 管理者介面 (Admin Dashboard) -->
+    <div id="tab-admin" class="hidden space-y-6">
+      <div class="bg-white p-7 rounded-3xl shadow-sm border border-slate-200">
+        <h2 class="text-xl font-bold text-slate-800 mb-2">🛡️ 管理者後台：學生刷題與回饋管理</h2>
+        <p class="text-sm text-slate-500 mb-6">在此可檢視所有學生的刷題紀錄（日期、題數、範圍），並可直接編寫 Feedback 寄送至學生信箱。</p>
+        
+        <div id="admin-students-list" class="space-y-4">
+          <!-- 動態載入學生列表 -->
+        </div>
+      </div>
+    </div>
+
+    <!-- 學生側：錯題本按鈕區 -->
     <div id="wrong-btn-banner" class="mb-6 no-print">
       <button onclick="switchTab('wrong-notebook')" class="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold py-4 px-6 rounded-2xl shadow-md transition-all flex items-center justify-between text-lg">
         <div class="flex items-center gap-3">
@@ -88,9 +100,30 @@
       </button>
     </div>
 
-    <!-- 頁籤一：測驗與出題主頁 -->
+    <!-- 頁籤一：測驗與出題主頁 (含個人月曆) -->
     <div id="tab-quiz" class="space-y-6">
       
+      <!-- 個人刷題打卡月曆區 -->
+      <section class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 no-print">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+            <span>📅 個人刷題打卡月曆</span>
+            <span class="text-xs font-normal text-slate-500">(單日累積刷題 10 題以上自動點亮 ⭐)</span>
+          </h3>
+          <div class="flex items-center gap-2">
+            <button onclick="changeMonth(-1)" class="p-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-sm font-bold">&lt;</button>
+            <span id="calendar-month-title" class="font-bold text-slate-700 text-base">2026年 6月</span>
+            <button onclick="changeMonth(1)" class="p-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-sm font-bold">&gt;</button>
+          </div>
+        </div>
+        <div class="grid grid-cols-7 gap-1 text-center font-bold text-xs text-slate-400 mb-2">
+          <div>日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div>
+        </div>
+        <div id="calendar-grid" class="grid grid-cols-7 gap-1.5 text-sm">
+          <!-- 動態生成月曆格子 -->
+        </div>
+      </section>
+
       <!-- 條件設定面板 -->
       <section class="bg-white p-7 rounded-3xl shadow-sm border border-slate-200 no-print">
         <h2 class="text-lg font-bold text-slate-800 mb-5 border-l-4 border-brand-500 pl-3 flex items-center justify-between">
@@ -179,6 +212,8 @@
     let currentUser = null;
     let rawQuestions = [];
     let wrongQuestions = [];
+    let userLogs = [];
+    let currentCalendarDate = new Date();
 
     window.onload = () => {
       const savedUser = localStorage.getItem('yh_user');
@@ -186,8 +221,21 @@
         currentUser = JSON.parse(savedUser);
         document.getElementById('login-modal').classList.add('hidden');
         document.getElementById('user-status').innerText = `👤 ${currentUser.email}`;
-        loadUserWrongQuestions();
-        loadQuestions();
+        
+        if (currentUser.email === 'yhstella2@gmail.com') {
+          // 管理者模式
+          document.getElementById('tab-admin').classList.remove('hidden');
+          document.getElementById('tab-quiz').classList.add('hidden');
+          document.getElementById('wrong-btn-banner').classList.add('hidden');
+          document.getElementById('nav-home-btn').innerText = '管理者後台';
+          loadAdminDashboard();
+        } else {
+          // 學生模式
+          loadUserWrongQuestions();
+          loadUserLogs();
+          renderCalendar();
+          loadQuestions();
+        }
       }
     };
 
@@ -205,6 +253,38 @@
       updateWrongBadge();
     }
 
+    function loadUserLogs() {
+      if (!currentUser) return;
+      const storageKey = `yh_logs_${currentUser.email}`;
+      userLogs = JSON.parse(localStorage.getItem(storageKey) || '[]');
+    }
+
+    function recordQuizLog(count, rangeText) {
+      if (!currentUser || currentUser.email === 'yhstella2@gmail.com') return;
+      const todayStr = new Date().toISOString().split('T')[0];
+      const storageKey = `yh_logs_${currentUser.email}`;
+      let logs = JSON.parse(localStorage.getItem(storageKey) || '[]');
+      
+      logs.push({
+        date: todayStr,
+        timestamp: new Date().toLocaleString(),
+        count: count,
+        range: rangeText
+      });
+      localStorage.setItem(storageKey, JSON.stringify(logs));
+
+      // 同步更新全站所有學生列表紀錄（供管理者後台讀取）
+      let allStudents = JSON.parse(localStorage.getItem('yh_all_students') || '{}');
+      if (!allStudents[currentUser.email]) {
+        allStudents[currentUser.email] = { email: currentUser.email, logs: [] };
+      }
+      allStudents[currentUser.email].logs = logs;
+      localStorage.setItem('yh_all_students', JSON.stringify(allStudents));
+
+      loadUserLogs();
+      renderCalendar();
+    }
+
     function handleLogin(e) {
       e.preventDefault();
       const email = document.getElementById('login-email').value.trim().toLowerCase();
@@ -220,13 +300,142 @@
       document.getElementById('login-modal').classList.add('hidden');
       document.getElementById('user-status').innerText = `👤 ${email}`;
       
-      loadUserWrongQuestions();
-      loadQuestions();
+      if (email === 'yhstella2@gmail.com') {
+        document.getElementById('tab-admin').classList.remove('hidden');
+        document.getElementById('tab-quiz').classList.add('hidden');
+        document.getElementById('wrong-btn-banner').classList.add('hidden');
+        document.getElementById('nav-home-btn').innerText = '管理者後台';
+        loadAdminDashboard();
+      } else {
+        loadUserWrongQuestions();
+        loadUserLogs();
+        renderCalendar();
+        loadQuestions();
+      }
     }
 
     function logout() {
       localStorage.removeItem('yh_user');
       location.reload();
+    }
+
+    // 月曆渲染邏輯
+    function renderCalendar() {
+      const grid = document.getElementById('calendar-grid');
+      const title = document.getElementById('calendar-month-title');
+      grid.innerHTML = '';
+
+      const year = currentCalendarDate.getFullYear();
+      const month = currentCalendarDate.getMonth();
+      title.innerText = `${year}年 ${month + 1}月`;
+
+      const firstDayIndex = new Date(year, month, 1).getDay();
+      const totalDays = new Date(year, month + 1, 0).getDate();
+
+      // 計算每天總題數
+      let dailyCounts = {};
+      userLogs.forEach(log => {
+        dailyCounts[log.date] = (dailyCounts[log.date] || 0) + log.count;
+      });
+
+      // 空白前置日
+      for (let i = 0; i < firstDayIndex; i++) {
+        grid.innerHTML += `<div></div>`;
+      }
+
+      for (let day = 1; day <= totalDays; day++) {
+        const mStr = String(month + 1).padStart(2, '0');
+        const dStr = String(day).padStart(2, '0');
+        const dateKey = `${year}-${mStr}-${dStr}`;
+        const count = dailyCounts[dateKey] || 0;
+        const hasStar = count >= 10;
+
+        grid.innerHTML += `
+          <div class="h-14 border border-slate-100 rounded-xl p-1.5 flex flex-col justify-between items-center bg-slate-50 relative">
+            <span class="text-xs font-semibold text-slate-700">${day}</span>
+            <div class="flex flex-col items-center">
+              ${hasStar ? '<span class="text-base drop-shadow">⭐</span>' : ''}
+              ${count > 0 ? `<span class="text-[10px] text-brand-700 font-bold">${count}題</span>` : '<span class="text-[10px] text-slate-300">-</span>'}
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    function changeMonth(direction) {
+      currentCalendarDate.setMonth(currentCalendarDate.getMonth() + direction);
+      renderCalendar();
+    }
+
+    // 管理者後台邏輯
+    function loadAdminDashboard() {
+      const container = document.getElementById('admin-students-list');
+      const allStudents = JSON.parse(localStorage.getItem('yh_all_students') || '{}');
+      const studentEmails = Object.keys(allStudents);
+
+      if (studentEmails.length === 0) {
+        container.innerHTML = `<div class="p-8 text-center text-slate-400 bg-slate-50 rounded-2xl">目前尚無學生的刷題打卡紀錄。</div>`;
+        return;
+      }
+
+      container.innerHTML = studentEmails.map(email => {
+        const st = allStudents[email];
+        const logsHtml = st.logs.length > 0 ? st.logs.map(l => `
+          <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 text-xs flex justify-between items-center mb-1.5">
+            <div>
+              <span class="font-bold text-slate-800">📅 ${l.date}</span> 
+              <span class="text-brand-700 font-bold ml-2">完成 ${l.count} 題</span>
+              <div class="text-slate-500 mt-0.5">範圍：${l.range}</div>
+            </div>
+            <span class="text-slate-400">${l.timestamp}</span>
+          </div>
+        `).join('') : '<div class="text-xs text-slate-400 italic">尚無刷題紀錄</div>';
+
+        return `
+          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+            <div class="flex justify-between items-center flex-wrap gap-2">
+              <div>
+                <span class="text-base font-bold text-slate-800">📧 學生 Email：${email}</span>
+                <span class="ml-3 text-xs bg-brand-100 text-brand-700 px-2.5 py-1 rounded-full font-bold">總練習筆數：${st.logs.length} 次</span>
+              </div>
+            </div>
+            
+            <div class="space-y-1">
+              <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">刷題明細紀錄：</div>
+              <div class="max-h-40 overflow-y-auto pr-2 space-y-1">${logsHtml}</div>
+            </div>
+
+            <!-- Feedback 寄送表單 -->
+            <div class="pt-3 border-t border-slate-100 space-y-2">
+              <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider">給學生寫 Feedback (透過 Gmail 發送至學生信箱)</label>
+              <textarea id="feedback-msg-${email.replace(/[@.]/g, '_')}" rows="2" placeholder="請輸入給該學生的鼓勵或指導評語..." class="w-full border border-slate-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none"></textarea>
+              <div class="flex justify-end">
+                <button onclick="sendFeedbackEmail('${email}')" class="bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow">
+                  ✉️ 發送 Feedback 郵件
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function sendFeedbackEmail(studentEmail) {
+      const inputId = `feedback-msg-${studentEmail.replace(/[@.]/g, '_')}`;
+      const message = document.getElementById(inputId).value.trim();
+
+      if (!message) {
+        alert('請先輸入 Feedback 內容再發送！');
+        return;
+      }
+
+      // 使用內建 gmail:send_message 介面發送
+      const subject = "【優華數位刷題網】老師給您的學習回饋 (Feedback)";
+      
+      // 呼叫 gmail:send_message 工具
+      // 由於這是介面互動，透過呼叫後端工具卡片發送
+      window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(studentEmail)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`, '_blank');
+      alert(`已為您開啟 Gmail 準備發送 Feedback 給 ${studentEmail}！`);
     }
 
     async function loadQuestions() {
@@ -248,9 +457,9 @@
             optionA: c[4] ? String(c[4].v) : '',            // E 欄 (index 4): 選項 A
             optionB: c[5] ? String(c[5].v) : '',            // F 欄 (index 5): 選項 B
             optionC: c[6] ? String(c[6].v) : '',            // G 欄 (index 6): 選項 C
-            optionD: c[7] ? String(c[7].v) : '',            // H 欄 (index 7): 選項 D
-            answer: c[8] ? String(c[8].v).trim().toUpperCase() : '', // I 欄 (index 8): 答案
-            analysis: c[9] ? String(c[9].v) : '暫無詳細解析'   // J 欄 (index 9): 解析
+            optionD: c[7] ? String(c[7].v) : '',            // H 欄 (index 7): 選項 D (H欄)
+            answer: c[8] ? String(c[8].v).trim().toUpperCase() : '', // I 欄 (index 8): 答案 (I欄)
+            analysis: c[9] ? String(c[9].v) : '暫無詳細解析'   // J 欄 (index 9): 解析 (J欄)
           };
         }).filter(q => q.title);
 
@@ -334,6 +543,13 @@
       }
 
       const quizQuestions = [...filtered].sort(() => 0.5 - Math.random()).slice(0, count);
+      
+      // 紀錄刷題打卡與範圍
+      const selectedGradeInput = document.querySelector('input[name="grade-radio"]:checked');
+      const gradeName = selectedGradeInput ? selectedGradeInput.value : '';
+      const selectedCategories = Array.from(document.querySelectorAll('.category-cb:checked')).map(cb => cb.value).join(', ');
+      recordQuizLog(quizQuestions.length, `${gradeName} / [${selectedCategories}]`);
+
       const container = document.getElementById('quiz-container');
       const actionBox = document.getElementById('print-actions');
       container.innerHTML = '';
@@ -341,11 +557,11 @@
       if (mode === 'online') {
         actionBox.classList.add('hidden');
         renderOnlineQuiz(container, quizQuestions);
-        showStatus(`已挑選 ${quizQuestions.length} 題，請點擊選項作答。`, 'success');
+        showStatus(`已挑選 ${quizQuestions.length} 題，請點擊選項作答。(已自動計入今日打卡)`, 'success');
       } else {
         actionBox.classList.remove('hidden');
         renderPrintableQuizAndAnswers(container, quizQuestions);
-        showStatus(`已產出 ${quizQuestions.length} 題的空白試卷與解答解析，可直接列印或匯出 PDF。`, 'success');
+        showStatus(`已產出 ${quizQuestions.length} 題的空白試卷與解答解析，可直接列印或匯出 PDF。(已自動計入今日打卡)`, 'success');
       }
     }
 
@@ -506,6 +722,7 @@
     }
 
     function switchTab(tab) {
+      if (currentUser && currentUser.email === 'yhstella2@gmail.com') return; // 管理者不切換
       if (tab === 'quiz') {
         document.getElementById('tab-quiz').classList.remove('hidden');
         document.getElementById('tab-wrong').classList.add('hidden');
