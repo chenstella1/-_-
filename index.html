@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>優華數位英文學習題庫刷題網</title>
+  <title>優華數位刷題網</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- html2pdf.js 支援錯題本與試卷轉成 PDF -->
@@ -36,11 +36,11 @@
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col font-sans text-base">
 
-  <!-- 3. 精簡版登入畫面 (Modal) -->
+  <!-- 登入畫面 (Modal) -->
   <div id="login-modal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-8 border border-slate-100">
       <div class="text-center mb-6">
-        <h2 class="text-3xl font-black text-slate-800">優華數位英文學習網</h2>
+        <h2 class="text-3xl font-black text-slate-800">優華數位刷題網</h2>
         <p class="text-sm text-slate-500 mt-2">學生請用 Email 登入，密碼請洽老師</p>
       </div>
       <form onsubmit="handleLogin(event)" class="space-y-4">
@@ -59,16 +59,15 @@
     </div>
   </div>
 
-  <!-- 頂部導覽列 (字大一級，移除右上角錯題本) -->
+  <!-- 頂部導覽列 -->
   <header class="bg-brand-600 text-white shadow-md no-print">
     <div class="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
-      <div class="flex items-center gap-2">
-        <span class="text-2xl font-black tracking-wide">優華數位英文</span>
-        <span class="text-sm bg-brand-700 text-brand-100 px-2.5 py-0.5 rounded-full font-normal">刷題網</span>
+      <div class="flex items-center gap-3">
+        <span class="text-3xl font-black tracking-wider drop-shadow-sm">優華數位刷題網</span>
       </div>
       <div class="flex items-center gap-4">
-        <span id="user-status" class="text-sm bg-brand-700 px-3.5 py-1.5 rounded-full">未登入</span>
-        <button onclick="switchTab('quiz')" class="text-sm font-medium hover:underline">主頁測驗</button>
+        <span id="user-status" class="text-sm bg-brand-700 px-3.5 py-1.5 rounded-full font-medium">未登入</span>
+        <button onclick="switchTab('quiz')" class="text-sm font-bold hover:underline">主頁測驗</button>
         <button onclick="logout()" class="text-sm text-brand-100 hover:text-white underline">登出</button>
       </div>
     </div>
@@ -77,12 +76,12 @@
   <!-- 主要內容區 -->
   <main class="max-w-4xl mx-auto px-4 py-8 flex-grow w-full">
     
-    <!-- 2. 明顯的獨立錯題本按鈕區 -->
+    <!-- 錯題本按鈕區 (綁定 Email 跨裝置同步) -->
     <div id="wrong-btn-banner" class="mb-6 no-print">
       <button onclick="switchTab('wrong-notebook')" class="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold py-4 px-6 rounded-2xl shadow-md transition-all flex items-center justify-between text-lg">
         <div class="flex items-center gap-3">
           <span class="text-2xl">📚</span>
-          <span>查看我的專屬錯題本與複習講義</span>
+          <span>查看我的專屬錯題本與複習講義 (自動同步雲端紀錄)</span>
         </div>
         <span id="wrong-count-badge" class="bg-red-600 text-white text-sm px-3 py-1 rounded-full shadow hidden">0 題</span>
       </button>
@@ -94,55 +93,34 @@
       <!-- 條件設定面板 -->
       <section class="bg-white p-7 rounded-3xl shadow-sm border border-slate-200 no-print">
         <h2 class="text-lg font-bold text-slate-800 mb-5 border-l-4 border-brand-500 pl-3 flex items-center justify-between">
-          <span>題目選擇與過濾條件</span>
+          <span>題目選擇與過濾條件 (動態讀取 B、C 欄與即時題數統計)</span>
           <button onclick="loadQuestions()" class="text-sm font-normal text-brand-600 hover:underline">🔄 重新同步 Google Sheet 題庫</button>
         </h2>
 
         <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
           
-          <!-- 年級複選區 -->
-          <div class="md:col-span-5 border-r border-slate-100 pr-0 md:pr-4">
-            <label class="block text-sm font-semibold text-slate-600 uppercase tracking-wider mb-2.5">1. 選擇年級 (可複選多個)</label>
-            <div class="grid grid-cols-3 gap-2.5 text-sm" id="grade-checkboxes">
-              <label class="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 cursor-pointer font-medium">
-                <input type="checkbox" value="國七" class="grade-cb text-brand-600 rounded w-4 h-4"> 國七
-              </label>
-              <label class="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 cursor-pointer font-medium">
-                <input type="checkbox" value="國八" class="grade-cb text-brand-600 rounded w-4 h-4"> 國八
-              </label>
-              <label class="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 cursor-pointer font-medium">
-                <input type="checkbox" value="國九" class="grade-cb text-brand-600 rounded w-4 h-4"> 國九
-              </label>
-              <label class="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 cursor-pointer font-medium">
-                <input type="checkbox" value="高一" class="grade-cb text-brand-600 rounded w-4 h-4"> 高一
-              </label>
-              <label class="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 cursor-pointer font-medium">
-                <input type="checkbox" value="高二" class="grade-cb text-brand-600 rounded w-4 h-4"> 高二
-              </label>
-              <label class="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 cursor-pointer font-medium">
-                <input type="checkbox" value="高三" class="grade-cb text-brand-600 rounded w-4 h-4"> 高三
-              </label>
+          <!-- 1. 年級複選區 (抓取 B 欄文字並統計題數) -->
+          <div class="md:col-span-6 border-r border-slate-100 pr-0 md:pr-4">
+            <label class="block text-sm font-semibold text-slate-600 uppercase tracking-wider mb-2.5">1. 選擇年級 (可複選多個 - 抓B欄)</label>
+            <div id="grade-checkboxes" class="grid grid-cols-2 gap-2.5 text-sm">
+              <!-- 動態生成 B 欄選項與題數 -->
+              <span class="text-slate-400 text-xs">正在載入 B 欄選項...</span>
             </div>
           </div>
 
-          <!-- B, C 欄動態抓取設定 -->
-          <div class="md:col-span-4 border-r border-slate-100 pr-0 md:pr-4 space-y-4">
-            <div>
-              <label class="block text-sm font-semibold text-slate-600 uppercase tracking-wider mb-1.5">2. 學習類別 (B欄)</label>
-              <select id="category-select" class="w-full border-slate-200 rounded-xl text-base p-3 border font-medium">
-                <option value="all">全部 (顯示所有類別)</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-semibold text-slate-600 uppercase tracking-wider mb-1.5">單元關鍵字 (C欄)</label>
-              <input type="text" id="unit-input" placeholder="輸入 C 欄關鍵字或留空" class="w-full border-slate-200 rounded-xl text-base p-3 border font-medium">
+          <!-- 2. 學習類別複選區 (抓取 C 欄文字並統計題數) -->
+          <div class="md:col-span-4 border-r border-slate-100 pr-0 md:pr-4">
+            <label class="block text-sm font-semibold text-slate-600 uppercase tracking-wider mb-2.5">2. 學習類別 (可複選多個 - 抓C欄)</label>
+            <div id="category-checkboxes" class="space-y-2 text-sm max-h-48 overflow-y-auto pr-1">
+              <!-- 動態生成 C 欄選項與題數 -->
+              <span class="text-slate-400 text-xs">正在載入 C 欄選項...</span>
             </div>
           </div>
 
-          <!-- 題數 -->
-          <div class="md:col-span-3 space-y-4">
+          <!-- 3. 練習題數 -->
+          <div class="md:col-span-2 space-y-4">
             <div>
-              <label class="block text-sm font-semibold text-slate-600 uppercase tracking-wider mb-1.5">3. 練習題數</label>
+              <label class="block text-sm font-semibold text-slate-600 uppercase tracking-wider mb-1.5">3. 題數</label>
               <input type="number" id="question-count" value="10" min="1" max="100" class="w-full border-slate-200 rounded-xl text-base p-3 border font-medium">
             </div>
           </div>
@@ -180,7 +158,7 @@
       <div class="bg-white p-7 rounded-3xl shadow-sm border border-slate-200 flex flex-wrap justify-between items-center gap-4 no-print">
         <div>
           <h2 class="text-xl font-bold text-slate-800">專屬錯題複習區</h2>
-          <p class="text-sm text-slate-500 mt-1">自動收集答錯的題目，支援一鍵列印或導出為 PDF 講義[cite: 1]。</p>
+          <p class="text-sm text-slate-500 mt-1">自動收集答錯的題目，隨時跨裝置同步，支援一鍵列印或導出為 PDF 講義[cite: 1]。</p>
         </div>
         <div class="flex gap-2.5">
           <button onclick="switchTab('quiz')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-sm font-bold px-4 py-2.5 rounded-xl">返回主頁測驗</button>
@@ -201,22 +179,36 @@
 
     let currentUser = null;
     let rawQuestions = [];
-    let wrongQuestions = JSON.parse(localStorage.getItem('yh_wrong_questions') || '[]');
+    let wrongQuestions = [];
 
     window.onload = () => {
-      updateWrongBadge();
       const savedUser = localStorage.getItem('yh_user');
       if (savedUser) {
         currentUser = JSON.parse(savedUser);
         document.getElementById('login-modal').classList.add('hidden');
         document.getElementById('user-status').innerText = `👤 ${currentUser.email}`;
+        loadUserWrongQuestions();
         loadQuestions();
       }
     };
 
+    function loadUserWrongQuestions() {
+      if (!currentUser) return;
+      const storageKey = `yh_wrong_${currentUser.email}`;
+      wrongQuestions = JSON.parse(localStorage.getItem(storageKey) || '[]');
+      updateWrongBadge();
+    }
+
+    function saveUserWrongQuestions() {
+      if (!currentUser) return;
+      const storageKey = `yh_wrong_${currentUser.email}`;
+      localStorage.setItem(storageKey, JSON.stringify(wrongQuestions));
+      updateWrongBadge();
+    }
+
     function handleLogin(e) {
       e.preventDefault();
-      const email = document.getElementById('login-email').value.trim();
+      const email = document.getElementById('login-email').value.trim().toLowerCase();
       const pass = document.getElementById('login-pass').value.trim();
 
       if (!email || !pass) {
@@ -228,6 +220,8 @@
       localStorage.setItem('yh_user', JSON.stringify(currentUser));
       document.getElementById('login-modal').classList.add('hidden');
       document.getElementById('user-status').innerText = `👤 ${email}`;
+      
+      loadUserWrongQuestions();
       loadQuestions();
     }
 
@@ -236,7 +230,6 @@
       location.reload();
     }
 
-    // 4. 從 Google Sheet 動態載入並解析 B, C 欄
     async function loadQuestions() {
       showStatus('連線至 Google Sheet 載入題庫中...', 'info');
       try {
@@ -250,47 +243,72 @@
           const c = r.c || [];
           return {
             id: idx + 1,
-            grade: c[0] ? String(c[0].v).trim() : '',       // A欄: 年級
-            category: c[1] ? String(c[1].v).trim() : '',    // B欄: 類別 (直接抓取)
-            unit: c[2] ? String(c[2].v).trim() : '',        // C欄: 單元 (直接抓取)
-            title: c[3] ? String(c[3].v).trim() : '',       // D欄: 題目
-            optionA: c[4] ? String(c[4].v) : '',            // E欄: A
-            optionB: c[5] ? String(c[5].v) : '',            // F欄: B
-            optionC: c[6] ? String(c[6].v) : '',            // G欄: C
-            optionD: c[7] ? String(c[7].v) : '',            // H欄: D
-            answer: c[8] ? String(c[8].v).trim().toUpperCase() : '', // I欄: 解答
-            analysis: c[9] ? String(c[9].v) : '暫無詳細解析'   // J欄: 解析
+            grade: c[1] ? String(c[1].v).trim() : '',       // 修正：B 欄對應年級
+            category: c[2] ? String(c[2].v).trim() : '',    // 修正：C 欄對應學習類別
+            unit: c[3] ? String(c[3].v).trim() : '',        // D 欄: 單元
+            title: c[4] ? String(c[4].v).trim() : '',       // E 欄: 題目
+            optionA: c[5] ? String(c[5].v) : '',            // F 欄: A
+            optionB: c[6] ? String(c[6].v) : '',            // G 欄: B
+            optionC: c[7] ? String(c[7].v) : '',            // H 欄: C
+            optionD: c[8] ? String(c[8].v) : '',            // I 欄: D
+            answer: c[9] ? String(c[9].v).trim().toUpperCase() : '', // J 欄: 解答
+            analysis: c[10] ? String(c[10].v) : '暫無詳細解析'   // K 欄: 解析
           };
         }).filter(q => q.title);
 
-        updateCategoryDropdown();
+        renderDynamicFilters();
         showStatus(`成功載入 ${rawQuestions.length} 筆試題！`, 'success');
       } catch (err) {
         showStatus('題庫讀取失敗，請確認 Google Sheet 是否已開啟公開檢視權限[cite: 1]。', 'error');
       }
     }
 
-    // 動態更新 B 欄下拉選單選項
-    function updateCategoryDropdown() {
-      const select = document.getElementById('category-select');
+    // 動態讀取 B 欄（年級）與 C 欄（學習類別）並計算題數
+    function renderDynamicFilters() {
+      // B 欄（年級）選項與計數
+      const grades = [...new Set(rawQuestions.map(q => q.grade).filter(Boolean))];
+      const gradeContainer = document.getElementById('grade-checkboxes');
+      if (grades.length === 0) {
+        gradeContainer.innerHTML = '<span class="text-slate-400 text-xs">B 欄無資料</span>';
+      } else {
+        gradeContainer.innerHTML = grades.map(g => {
+          const count = rawQuestions.filter(q => q.grade === g).length;
+          return `
+            <label class="flex items-center gap-2 p-2 rounded-xl bg-slate-50 hover:bg-slate-100 cursor-pointer font-medium">
+              <input type="checkbox" value="${g}" class="grade-cb text-brand-600 rounded w-4 h-4"> 
+              <span>${g}</span> 
+              <span class="text-xs text-slate-400 ml-auto">(題數共: ${count}題)</span>
+            </label>
+          `;
+        }).join('');
+      }
+
+      // C 欄（學習類別）選項與計數
       const categories = [...new Set(rawQuestions.map(q => q.category).filter(Boolean))];
-      
-      let html = '<option value="all">全部 (顯示所有類別)</option>';
-      categories.forEach(cat => {
-        html += `<option value="${cat}">${cat}</option>`;
-      });
-      select.innerHTML = html;
+      const categoryContainer = document.getElementById('category-checkboxes');
+      if (categories.length === 0) {
+        categoryContainer.innerHTML = '<span class="text-slate-400 text-xs">C 欄無資料</span>';
+      } else {
+        categoryContainer.innerHTML = categories.map(cat => {
+          const count = rawQuestions.filter(q => q.category === cat).length;
+          return `
+            <label class="flex items-center gap-2 p-2 rounded-xl bg-slate-50 hover:bg-slate-100 cursor-pointer font-medium">
+              <input type="checkbox" value="${cat}" class="category-cb text-brand-600 rounded w-4 h-4"> 
+              <span>${cat}</span> 
+              <span class="text-xs text-slate-400 ml-auto">(題數共: ${count}題)</span>
+            </label>
+          `;
+        }).join('');
+      }
     }
 
     function getFilteredQuestions() {
       const selectedGrades = Array.from(document.querySelectorAll('.grade-cb:checked')).map(cb => cb.value);
-      const selectedCategory = document.getElementById('category-select').value;
-      const unitKeyword = document.getElementById('unit-input').value.trim().toLowerCase();
+      const selectedCategories = Array.from(document.querySelectorAll('.category-cb:checked')).map(cb => cb.value);
 
       return rawQuestions.filter(q => {
         if (selectedGrades.length > 0 && !selectedGrades.includes(q.grade)) return false;
-        if (selectedCategory !== 'all' && q.category !== selectedCategory) return false;
-        if (unitKeyword && !q.unit.toLowerCase().includes(unitKeyword)) return false;
+        if (selectedCategories.length > 0 && !selectedCategories.includes(q.category)) return false;
         return true;
       });
     }
@@ -300,7 +318,7 @@
       const count = parseInt(document.getElementById('question-count').value) || 10;
 
       if (filtered.length === 0) {
-        showStatus('找不到符合條件的題目，請重新調整篩選條件！', 'error');
+        showStatus('找不到符合條件的題目，請至少勾選一項年級或學習類別！', 'error');
         return;
       }
 
@@ -380,7 +398,7 @@
       paper.className = "bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6";
       paper.innerHTML = `
         <div class="text-center border-b pb-4 mb-6">
-          <h1 class="text-2xl font-black">優華數位英文測驗卷</h1>
+          <h1 class="text-2xl font-black">優華數位測驗卷</h1>
           <p class="text-sm text-slate-500 mt-1.5">班級：________ 姓名：________ 座號：________ 得分：________</p>
         </div>
         ${questions.map((q, idx) => `
@@ -403,8 +421,7 @@
     function addWrongQuestion(q) {
       if (!wrongQuestions.some(item => item.id === q.id)) {
         wrongQuestions.push(q);
-        localStorage.setItem('yh_wrong_questions', JSON.stringify(wrongQuestions));
-        updateWrongBadge();
+        saveUserWrongQuestions();
         renderWrongNotebook();
       }
     }
@@ -440,8 +457,7 @@
     function clearWrongQuestions() {
       if (confirm('確定要清空錯題區的所有紀錄嗎？')) {
         wrongQuestions = [];
-        localStorage.removeItem('yh_wrong_questions');
-        updateWrongBadge();
+        saveUserWrongQuestions();
         renderWrongNotebook();
       }
     }
@@ -483,6 +499,7 @@
 
     function showStatus(msg, type = 'info') {
       const el = document.getElementById('status-msg');
+      el.classList.resets && el.classList.resets();
       el.classList.remove('hidden', 'bg-blue-50', 'text-blue-800', 'bg-red-50', 'text-red-800', 'bg-green-50', 'text-green-800');
       
       if (type === 'error') el.classList.add('bg-red-50', 'text-red-800', 'border-red-200');
