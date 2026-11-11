@@ -177,6 +177,14 @@
       <!-- 測驗與試卷展示區 -->
       <section id="quiz-container" class="space-y-5"></section>
       
+      <!-- 線上測驗交卷/寄給老師按鈕區 -->
+      <div id="quiz-finish-actions" class="hidden bg-white p-6 rounded-3xl shadow-sm border border-slate-200 text-center space-y-3 no-print">
+        <p class="text-sm font-bold text-slate-600">測驗題目已全部作答完成！您可以將成績與錯題傳送給老師。</p>
+        <button onclick="sendScoreToTeacher()" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-lg font-bold px-8 py-4 rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 mx-auto">
+          📤 成績寄給老師 (englisheasy88@gmail.com)
+        </button>
+      </div>
+      
       <!-- 試卷列印控制按鈕區 -->
       <div id="print-actions" class="hidden flex gap-3 justify-end no-print">
         <button onclick="window.print()" class="bg-slate-700 text-white px-5 py-2.5 rounded-xl text-base font-bold">直接列印試卷與答案解析</button>
@@ -252,7 +260,6 @@
       localStorage.setItem(storageKey, JSON.stringify(wrongQuestions));
       updateWrongBadge();
 
-      // 同步更新全站所有學生錯題本（供管理者後台讀取）
       let allStudents = JSON.parse(localStorage.getItem('yh_all_students') || '{}');
       if (!allStudents[currentUser.email]) {
         allStudents[currentUser.email] = { email: currentUser.email, logs: [], wrongs: [] };
@@ -267,24 +274,26 @@
       userLogs = JSON.parse(localStorage.getItem(storageKey) || '[]');
     }
 
-    function recordQuizSession(totalCount, correctCount, wrongCount, rangeText) {
+    function recordQuizSession(totalCount, correctCount, wrongCount, rangeText, sessionWrongItems = []) {
       if (!currentUser || currentUser.email === 'yhstella2@gmail.com') return;
 
       const todayStr = new Date().toISOString().split('T')[0];
       const storageKey = `yh_logs_${currentUser.email}`;
       let logs = JSON.parse(localStorage.getItem(storageKey) || '[]');
       
-      logs.push({
+      const sessionData = {
         date: todayStr,
         timestamp: new Date().toLocaleString(),
         total: totalCount,
         correct: correctCount,
         wrong: wrongCount,
-        range: rangeText
-      });
+        range: rangeText,
+        wrongItems: sessionWrongItems
+      };
+
+      logs.push(sessionData);
       localStorage.setItem(storageKey, JSON.stringify(logs));
 
-      // 同步更新全站所有學生列表紀錄（供管理者後台讀取）
       let allStudents = JSON.parse(localStorage.getItem('yh_all_students') || '{}');
       if (!allStudents[currentUser.email]) {
         allStudents[currentUser.email] = { email: currentUser.email, logs: [], wrongs: wrongQuestions };
@@ -294,6 +303,7 @@
 
       loadUserLogs();
       renderCalendar();
+      return sessionData;
     }
 
     function handleLogin(e) {
@@ -311,7 +321,6 @@
       document.getElementById('login-modal').classList.add('hidden');
       document.getElementById('user-status').innerText = `👤 ${email}`;
       
-      // 確保使用者登入時加入學生總表
       let allStudents = JSON.parse(localStorage.getItem('yh_all_students') || '{}');
       if (!allStudents[email]) {
         allStudents[email] = { email: email, logs: [], wrongs: JSON.parse(localStorage.getItem(`yh_wrong_${email}`) || '[]') };
@@ -337,7 +346,6 @@
       location.reload();
     }
 
-    // 月曆渲染邏輯 (累積答對10題以上點亮星星)
     function renderCalendar() {
       const grid = document.getElementById('calendar-grid');
       const title = document.getElementById('calendar-month-title');
@@ -383,7 +391,6 @@
       renderCalendar();
     }
 
-    // 管理者後台邏輯 (查看使用者、題數、錯題與範圍)
     function loadAdminDashboard() {
       const container = document.getElementById('admin-students-list');
       const allStudents = JSON.parse(localStorage.getItem('yh_all_students') || '{}');
@@ -426,7 +433,6 @@
           </div>
         `).join('') : '<div class="text-xs text-slate-400 italic">該學生目前沒有錯題紀錄</div>';
 
-        const safeId = `student_box_${index}`;
         const wrongBoxId = `wrong_box_${index}`;
 
         return `
@@ -447,13 +453,11 @@
               <div class="max-h-40 overflow-y-auto pr-2 space-y-1">${logsHtml}</div>
             </div>
 
-            <!-- 點開看錯題的隱藏區塊 -->
             <div id="${wrongBoxId}" class="hidden pt-3 border-t border-slate-100 space-y-2">
               <div class="text-xs font-bold text-red-600 uppercase tracking-wider">該學生的錯題詳情清單：</div>
               <div class="max-h-60 overflow-y-auto pr-2 space-y-2">${wrongsHtml}</div>
             </div>
 
-            <!-- Feedback 寄送表單 -->
             <div class="pt-3 border-t border-slate-100 space-y-2">
               <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider">給學生寫 Feedback (透過 Gmail 發送至學生信箱)</label>
               <textarea id="feedback-msg-${email.replace(/[@.]/g, '_')}" rows="2" placeholder="請輸入給該學生的鼓勵或指導評語..." class="w-full border border-slate-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none"></textarea>
@@ -589,17 +593,19 @@
       const quizQuestions = [...filtered].sort(() => 0.5 - Math.random()).slice(0, count);
       const container = document.getElementById('quiz-container');
       const actionBox = document.getElementById('print-actions');
+      const finishBox = document.getElementById('quiz-finish-actions');
       container.innerHTML = '';
 
       if (mode === 'online') {
         actionBox.classList.add('hidden');
+        finishBox.classList.add('hidden'); // 作答完畢才會顯示交卷按鈕
         renderOnlineQuiz(container, quizQuestions);
         showStatus(`已挑選 ${quizQuestions.length} 題，請點擊選項作答。`, 'success');
       } else {
+        finishBox.classList.add('hidden');
         actionBox.classList.remove('hidden');
         renderPrintableQuizAndAnswers(container, quizQuestions);
         
-        // 列印試卷也視為一次練習記錄
         const selectedGradeInput = document.querySelector('input[name="grade-radio"]:checked');
         const gradeName = selectedGradeInput ? selectedGradeInput.value : '';
         const selectedCategories = Array.from(document.querySelectorAll('.category-cb:checked')).map(cb => cb.value).join(', ');
@@ -610,12 +616,12 @@
     }
 
     function renderOnlineQuiz(container, questions) {
-      // 暫存本次線上測驗的統計數據
       window.currentQuizSession = {
         total: questions.length,
         correct: 0,
         wrong: 0,
         answeredCount: 0,
+        wrongItems: [],
         rangeText: (() => {
           const g = document.querySelector('input[name="grade-radio"]:checked')?.value || '';
           const cats = Array.from(document.querySelectorAll('.category-cb:checked')).map(cb => cb.value).join(', ');
@@ -671,24 +677,62 @@
           <div><strong>您的選擇：</strong> ${selectedOpt} | <strong>正確答案：</strong> (${correctOpt})</div>
           <div class="text-sm text-red-950 mt-1"><strong>【解析】</strong> ${q.analysis}</div>
         `;
-        if (window.currentQuizSession) window.currentQuizSession.wrong++;
+        if (window.currentQuizSession) {
+          window.currentQuizSession.wrong++;
+          window.currentQuizSession.wrongItems.push(q);
+        }
         addWrongQuestion(q);
       }
 
       feedbackEl.classList.remove('hidden');
 
-      // 檢查是否整份測驗作答完畢，自動記錄回饋至後台
       if (window.currentQuizSession) {
         window.currentQuizSession.answeredCount++;
         if (window.currentQuizSession.answeredCount === window.currentQuizSession.total) {
+          // 記錄成績並顯示交卷按鈕
           recordQuizSession(
             window.currentQuizSession.total, 
             window.currentQuizSession.correct, 
             window.currentQuizSession.wrong, 
-            window.currentQuizSession.rangeText
+            window.currentQuizSession.rangeText,
+            window.currentQuizSession.wrongItems
           );
+          document.getElementById('quiz-finish-actions').classList.remove('hidden');
         }
       }
+    }
+
+    // 寄送成績給老師功能
+    function sendScoreToTeacher() {
+      if (!window.currentQuizSession) return;
+      const session = window.currentQuizSession;
+      const studentEmail = currentUser ? currentUser.email : '未登入學生';
+
+      let bodyText = `報告老師，我是學生 (${studentEmail})。\n`;
+      bodyText += `我剛剛完成了線上刷題測驗，以下是我的成績與錯題內容：\n\n`;
+      bodyText += `【刷題統計】\n`;
+      bodyText += `• 刷題範圍：${session.rangeText}\n`;
+      bodyText += `• 總刷題數：${session.total} 題\n`;
+      bodyText += `• 答對題數：${session.correct} 題\n`;
+      bodyText += `• 答錯題數：${session.wrong} 題\n\n`;
+
+      if (session.wrongItems.length > 0) {
+        bodyText += `【錯題內容詳情】\n`;
+        session.wrongItems.forEach((w, idx) => {
+          bodyText += `----------------------------------------\n`;
+          bodyText += `錯題 ${idx + 1}：${w.title}\n`;
+          bodyText += `(A) ${w.optionA} | (B) ${w.optionB} | (C) ${w.optionC} | (D) ${w.optionD}\n`;
+          bodyText += `正確答案：(${w.answer}) | 解析：${w.analysis}\n`;
+        });
+      } else {
+        bodyText += `【錯題內容詳情】\n太棒了！本次測驗全數答對，沒有錯題！\n`;
+      }
+
+      const subject = `【學生刷題成績回報】 ${studentEmail} (刷${session.total}題 / 錯${session.wrong}題)`;
+      const mailtoUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=englisheasy88@gmail.com&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(bodyText)}`;
+      
+      window.open(mailtoUrl, '_blank');
+      alert('成績已寄, 你很棒! 🎉');
     }
 
     function renderPrintableQuizAndAnswers(container, questions) {
