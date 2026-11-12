@@ -6,8 +6,10 @@
   <title>優華數位刷題網</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- html2pdf.js 支援錯題本與試卷轉成 PDF -->
+  <!-- html2pdf.js 支援轉成 PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <!-- html-docx-js 支援轉成 Word (.docx) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html-docx-js/0.3.1/html-docx.js"></script>
   <script>
     tailwind.config = {
       theme: {
@@ -26,6 +28,11 @@
     }
   </script>
   <style>
+    /* 全站套用字級 16px 與行距 2 */
+    body {
+      font-size: 16px !important;
+      line-height: 2 !important;
+    }
     @media print {
       .no-print { display: none !important; }
       .print-only { display: block !important; }
@@ -35,7 +42,7 @@
     }
   </style>
 </head>
-<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col font-sans text-base">
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col font-sans">
 
   <!-- 登入畫面 (Modal) -->
   <div id="login-modal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -171,7 +178,7 @@
             🚀 線上練習 (亂數出題 + 即時解析)
           </button>
           <button onclick="startQuiz('print')" class="bg-slate-800 hover:bg-slate-900 text-white text-base font-bold px-6 py-3 rounded-xl shadow-md flex items-center gap-2">
-            🖨️ 生成可列印試卷及答案解析 (列印/PDF)
+            🖨️ 生成可列印試卷及答案解析 (列印/PDF/Word)
           </button>
         </div>
 
@@ -188,10 +195,11 @@
         <p class="text-base font-bold text-brand-700">🎉 本次測驗已全部作答完成！成績與錯題已自動記錄至雲端後台。</p>
       </div>
       
-      <!-- 試卷列印控制按鈕區 -->
-      <div id="print-actions" class="hidden flex gap-3 justify-end no-print">
-        <button onclick="window.print()" class="bg-slate-700 text-white px-5 py-2.5 rounded-xl text-base font-bold">直接列印試卷與答案解析</button>
+      <!-- 試卷列印與匯出檔案控制按鈕區 -->
+      <div id="print-actions" class="hidden flex flex-wrap gap-3 justify-end no-print">
+        <button onclick="window.print()" class="bg-slate-700 text-white px-5 py-2.5 rounded-xl text-base font-bold">直接列印試卷與解答</button>
         <button onclick="exportToPDF('quiz-container', '英文試卷與解答')" class="bg-brand-600 text-white px-5 py-2.5 rounded-xl text-base font-bold">下載 PDF 試卷與解答</button>
+        <button onclick="exportToWord('quiz-container', '英文試卷與解答')" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-base font-bold">下載 Word 試卷與解答</button>
       </div>
 
     </div>
@@ -201,11 +209,12 @@
       <div class="bg-white p-7 rounded-3xl shadow-sm border border-slate-200 flex flex-wrap justify-between items-center gap-4 no-print">
         <div>
           <h2 class="text-xl font-bold text-slate-800">專屬錯題複習區</h2>
-          <p class="text-sm text-slate-500 mt-1">自動收集答錯的題目，隨時跨裝置同步，支援一鍵列印或導出為 PDF 講義。</p>
+          <p class="text-sm text-slate-500 mt-1">自動收集答錯的題目，隨時跨裝置同步，支援一鍵列印或導出為 PDF / Word 講義。</p>
         </div>
-        <div class="flex gap-2.5">
+        <div class="flex flex-wrap gap-2.5">
           <button onclick="switchTab('quiz')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-sm font-bold px-4 py-2.5 rounded-xl">返回主頁測驗</button>
           <button onclick="exportToPDF('wrong-list-container', '英文錯題本')" class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-bold px-4 py-2.5 rounded-xl">匯出錯題本 PDF</button>
+          <button onclick="exportToWord('wrong-list-container', '英文錯題本')" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold px-4 py-2.5 rounded-xl">匯出錯題本 Word</button>
           <button onclick="window.print()" class="bg-slate-700 text-white text-sm font-bold px-4 py-2.5 rounded-xl">列印錯題講義</button>
           <button onclick="clearWrongQuestions()" class="bg-red-50 text-red-600 hover:bg-red-100 text-sm font-bold px-4 py-2.5 rounded-xl border border-red-200">清空</button>
         </div>
@@ -234,14 +243,12 @@
         document.getElementById('user-status').innerText = `👤 ${currentUser.email}`;
         
         if (currentUser.email === 'yhstella2@gmail.com') {
-          // 管理者模式
           document.getElementById('tab-admin').classList.remove('hidden');
           document.getElementById('tab-quiz').classList.add('hidden');
           document.getElementById('wrong-btn-banner').classList.add('hidden');
           document.getElementById('nav-home-btn').innerText = '管理者後台';
           loadAdminDashboard();
         } else {
-          // 學生模式
           loadUserWrongQuestions();
           loadUserLogs();
           renderCalendar();
@@ -394,7 +401,6 @@
       renderCalendar();
     }
 
-    // 管理者後台 (展示使用者、刷幾題、答對數、答錯數與詳細錯題)
     function loadAdminDashboard() {
       const container = document.getElementById('admin-students-list');
       const allStudents = JSON.parse(localStorage.getItem('yh_all_students') || '{}');
@@ -423,19 +429,22 @@
           </div>
         `).join('') : '<div class="text-xs text-slate-400 italic">尚無刷題紀錄</div>';
 
-        const wrongsHtml = wrongs.length > 0 ? wrongs.map((w, wIdx) => `
-          <div class="bg-red-50/50 p-3 rounded-xl border border-red-100 text-xs space-y-1 mb-2">
-            <div class="font-bold text-red-700">錯題 #${wIdx + 1} (${w.grade} / ${w.category})</div>
-            <div class="font-bold text-slate-800">${w.title}</div>
-            <div class="text-slate-600 pl-2">
-              <div>(A) ${w.optionA}</div>
-              <div>(B) ${w.optionB}</div>
-              <div>(C) ${w.optionC}</div>
-              <div>(D) ${w.optionD}</div>
+        const wrongsHtml = wrongs.length > 0 ? wrongs.map((w, wIdx) => {
+          let optsHtml = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].map(opt => {
+            const val = w[`option${opt}`];
+            if (!val || val.trim() === '') return '';
+            return `<div>(${opt}) ${val}</div>`;
+          }).join('');
+
+          return `
+            <div class="bg-red-50/50 p-3 rounded-xl border border-red-100 text-xs space-y-1 mb-2">
+              <div class="font-bold text-red-700">錯題 #${wIdx + 1} (${w.grade} / ${w.category})</div>
+              <div class="font-bold text-slate-800">${w.title}</div>
+              <div class="text-slate-600 pl-2">${optsHtml}</div>
+              <div class="text-brand-700 font-bold">正確答案：(${w.answer}) | 解析：${w.analysis}</div>
             </div>
-            <div class="text-brand-700 font-bold">正確答案：(${w.answer}) | 解析：${w.analysis}</div>
-          </div>
-        `).join('') : '<div class="text-xs text-slate-400 italic">該學生目前沒有錯題紀錄</div>';
+          `;
+        }).join('') : '<div class="text-xs text-slate-400 italic">該學生目前沒有錯題紀錄</div>';
 
         const wrongBoxId = `wrong_box_${index}`;
 
@@ -510,8 +519,45 @@
             optionB: c[5] ? String(c[5].v) : '',            // F 欄: B
             optionC: c[6] ? String(c[6].v) : '',            // G 欄: C
             optionD: c[7] ? String(c[7].v) : '',            // H 欄: D
-            answer: c[8] ? String(c[8].v).trim().toUpperCase() : '', // I 欄: 答案
-            analysis: c[9] ? String(c[9].v) : '暫無詳細解析'   // J 欄: 解析
+            optionE: c[8] ? String(c[8].v) : '',            // I 欄: E (選填)
+            optionF: c[9] ? String(c[9].v) : '',            // J 欄: F (選填)
+            optionG: c[10] ? String(c[10].v) : '',          // K 欄: G (選填)
+            optionH: c[11] ? String(c[11].v) : '',          // L 欄: H (選填)
+            answer: c[12] ? String(c[12].v).trim().toUpperCase() : (c[8] && !c[8].v ? c[8] : ''), // 根據欄位依序調整
+            // 由於欄位變多，為確保與原本表格相容，我們用動態抓取邏輯：
+            // 假設原本 J 是解析。若加入了 E~H，解析欄位順序會往後。
+            // 我們這裡自動抓取最後一個非空欄位當作解析，答案倒數第二個欄位。
+          };
+        });
+
+        // 更穩健地對應 Google Sheet 欄位 (支援任意欄位數新增)
+        rawQuestions = rows.map((r, idx) => {
+          const c = r.c || [];
+          const cols = c.map(cell => cell ? String(cell.v || '').trim() : '');
+          // cols[0] = A欄(時間戳記等), cols[1] = 年級, cols[2] = 學習類別, cols[3] = 題目
+          // 最後兩欄通常為：倒數第2欄 = 答案，最後1欄 = 解析
+          // 中間為選項 A, B, C, D, E, F, G, H...
+          const grade = cols[1] || '';
+          const category = cols[2] || '';
+          const title = cols[3] || '';
+          const answer = cols[cols.length - 2] || '';
+          const analysis = cols[cols.length - 1] || '暫無詳細解析';
+
+          // 中間的選項從 index 4 開始，直到倒數第 3 個 index 結束
+          const optKeys = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+          let opts = {};
+          for (let i = 0; i < optKeys.length; i++) {
+            opts[`option${optKeys[i]}`] = cols[4 + i] || '';
+          }
+
+          return {
+            id: idx + 1,
+            grade,
+            category,
+            title,
+            ...opts,
+            answer,
+            analysis
           };
         }).filter(q => q.title);
 
@@ -573,7 +619,6 @@
       }).join('');
     }
 
-    // 學習類別：全選 / 清除功能
     function toggleAllCategories(select) {
       const checkboxes = document.querySelectorAll('.category-cb');
       checkboxes.forEach(cb => {
@@ -623,7 +668,7 @@
         const selectedCategories = Array.from(document.querySelectorAll('.category-cb:checked')).map(cb => cb.value).join(', ');
         recordQuizSession(quizQuestions.length, 0, 0, `${gradeName} / [${selectedCategories}] (列印試卷)`);
 
-        showStatus(`已產出 ${quizQuestions.length} 題的空白試卷與解答解析，可直接列印或匯出 PDF。`, 'success');
+        showStatus(`已產出 ${quizQuestions.length} 題的空白試卷與解答解析，可直接列印或匯出 PDF/Word。`, 'success');
       }
     }
 
@@ -642,24 +687,30 @@
       };
 
       questions.forEach((q, idx) => {
+        let optsHtml = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].map(opt => {
+          const val = q[`option${opt}`];
+          if (!val || val.trim() === '') return '';
+          return `
+            <button onclick="checkAnswer(${q.id}, '${opt}', '${q.answer}', '${q.grade}', '${q.category}')" 
+              class="opt-btn-${q.id} w-full text-left p-3.5 rounded-2xl border border-slate-200 hover:bg-slate-50 transition-all font-medium flex items-center justify-between">
+              <span><strong class="text-slate-400 mr-2">${opt}.</strong> ${val}</span>
+            </button>
+          `;
+        }).join('');
+
         const card = document.createElement('div');
-        card.className = "bg-white p-6 rounded-3xl shadow-sm border border-slate-200 card-box";
+        card.className = "bg-white p-6 rounded-3xl shadow-sm border border-slate-200 card-box leading-[2] text-[16px]";
         card.innerHTML = `
           <div class="flex items-center gap-2 mb-3">
             <span class="bg-brand-100 text-brand-700 text-sm px-3 py-1 rounded-full font-bold">第 ${idx + 1} 題</span>
           </div>
-          <div class="text-slate-900 font-bold mb-4 text-lg">${q.title}</div>
+          <div class="text-slate-900 font-bold mb-4 text-[16px]">${q.title}</div>
           
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-base mb-4">
-            ${['A', 'B', 'C', 'D'].map(opt => `
-              <button onclick="checkAnswer(${q.id}, '${opt}', '${q.answer}', '${q.grade}', '${q.category}')" 
-                class="opt-btn-${q.id} w-full text-left p-3.5 rounded-2xl border border-slate-200 hover:bg-slate-50 transition-all font-medium flex items-center justify-between">
-                <span><strong class="text-slate-400 mr-2">${opt}.</strong> ${q[`option${opt}`]}</span>
-              </button>
-            `).join('')}
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-[16px] mb-4">
+            ${optsHtml}
           </div>
 
-          <div id="feedback-${q.id}" class="hidden p-4 rounded-2xl text-base border space-y-1.5"></div>
+          <div id="feedback-${q.id}" class="hidden p-4 rounded-2xl text-[16px] border space-y-1.5"></div>
         `;
         container.appendChild(card);
       });
@@ -674,19 +725,19 @@
       const isCorrect = selectedOpt === correctOpt;
 
       if (isCorrect) {
-        feedbackEl.className = "p-4 rounded-2xl text-base border bg-green-50 border-green-200 text-green-900 font-medium";
+        feedbackEl.className = "p-4 rounded-2xl text-[16px] border bg-green-50 border-green-200 text-green-900 font-medium leading-[2]";
         feedbackEl.innerHTML = `
           <div class="font-bold text-green-700 mb-1">✅ 回答正確！</div>
           <div><strong>正確答案：</strong> (${correctOpt})</div>
-          <div class="text-sm text-green-950 mt-1"><strong>【解析】</strong> ${q.analysis}</div>
+          <div class="text-[16px] text-green-950 mt-1"><strong>【解析】</strong> ${q.analysis}</div>
         `;
         if (window.currentQuizSession) window.currentQuizSession.correct++;
       } else {
-        feedbackEl.className = "p-4 rounded-2xl text-base border bg-red-50 border-red-200 text-red-900 font-medium";
+        feedbackEl.className = "p-4 rounded-2xl text-[16px] border bg-red-50 border-red-200 text-red-900 font-medium leading-[2]";
         feedbackEl.innerHTML = `
           <div class="font-bold text-red-700 mb-1">❌ 回答錯誤 (已自動收錄至錯題區)</div>
           <div><strong>您的選擇：</strong> ${selectedOpt} | <strong>正確答案：</strong> (${correctOpt})</div>
-          <div class="text-sm text-red-950 mt-1"><strong>【解析】</strong> ${q.analysis}</div>
+          <div class="text-[16px] text-red-950 mt-1"><strong>【解析】</strong> ${q.analysis}</div>
         `;
         if (window.currentQuizSession) {
           window.currentQuizSession.wrong++;
@@ -700,112 +751,17 @@
       if (window.currentQuizSession) {
         window.currentQuizSession.answeredCount++;
         if (window.currentQuizSession.answeredCount === window.currentQuizSession.total) {
-          recordQuizSession(
-            window.currentQuizSession.total, 
-            window.currentQuizSession.correct, 
-            window.currentQuizSession.wrong, 
-            window.currentQuizSession.rangeText,
-            window.currentQuizSession.wrongItems
-          );
+          const s = window.currentQuizSession;
+          recordQuizSession(s.total, s.correct, s.wrong, s.rangeText, s.wrongItems);
           document.getElementById('quiz-finish-actions').classList.remove('hidden');
         }
       }
     }
 
-    function renderPrintableQuizAndAnswers(container, questions) {
-      const selectedGradeInput = document.querySelector('input[name="grade-radio"]:checked');
-      const gradeName = selectedGradeInput ? selectedGradeInput.value : '';
-      const selectedCategories = Array.from(document.querySelectorAll('.category-cb:checked')).map(cb => cb.value);
-      const unitNameString = `${gradeName} / ${selectedCategories.join(' / ')}`;
-
-      const paper = document.createElement('div');
-      paper.className = "bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6";
-      paper.innerHTML = `
-        <div class="flex justify-between items-start border-b pb-4 mb-6">
-          <h1 class="text-2xl font-black">優華數位測驗卷</h1>
-          <div class="text-[8px] text-slate-500 font-bold text-right pt-1">${unitNameString}</div>
-        </div>
-        ${questions.map((q, idx) => `
-          <div class="space-y-2.5 break-inside-avoid" style="font-size: 15px; line-height: 1.5;">
-            <div class="font-bold text-slate-900">
-              ${idx + 1}. ${q.title}
-            </div>
-            <div class="grid grid-cols-2 gap-x-8 gap-y-1.5 pl-4 font-medium" style="font-size: 15px;">
-              <div>(A) ${q.optionA}</div>
-              <div>(B) ${q.optionB}</div>
-              <div>(C) ${q.optionC}</div>
-              <div>(D) ${q.optionD}</div>
-            </div>
-          </div>
-        `).join('')}
-      `;
-      container.appendChild(paper);
-
-      const answerSheet = document.createElement('div');
-      answerSheet.className = "bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6 page-break mt-8";
-      answerSheet.innerHTML = `
-        <div class="flex justify-between items-start border-b pb-4 mb-6">
-          <h1 class="text-2xl font-black text-brand-700">優華數位測驗卷 - 標準答案與詳細解析</h1>
-          <div class="text-[8px] text-slate-500 font-bold text-right pt-1">${unitNameString}</div>
-        </div>
-        ${questions.map((q, idx) => `
-          <div class="space-y-2 break-inside-avoid border-b border-slate-100 pb-4" style="font-size: 15px; line-height: 1.5;">
-            <div class="font-bold text-slate-900">
-              第 ${idx + 1} 題：${q.title}
-            </div>
-            <div class="text-brand-700 font-bold">
-              正確答案：(${q.answer})
-            </div>
-            <div class="text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-100">
-              <strong>解析：</strong>${q.analysis}
-            </div>
-          </div>
-        `).join('')}
-      `;
-      container.appendChild(answerSheet);
-    }
-
     function addWrongQuestion(q) {
-      if (!wrongQuestions.some(item => item.id === q.id)) {
+      if (!wrongQuestions.some(item => item.id === q.id && item.title === q.title)) {
         wrongQuestions.push(q);
         saveUserWrongQuestions();
-        renderWrongNotebook();
-      }
-    }
-
-    function renderWrongNotebook() {
-      const container = document.getElementById('wrong-list-container');
-      if (wrongQuestions.length === 0) {
-        container.innerHTML = `<div class="bg-white p-10 rounded-3xl text-center text-slate-400 text-base">目前沒有任何錯題紀錄！</div>`;
-        return;
-      }
-
-      container.innerHTML = wrongQuestions.map((q, idx) => `
-        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm card-box">
-          <div class="flex items-center justify-between mb-3">
-            <span class="text-sm font-bold text-red-600 bg-red-50 px-3 py-1 rounded-full">錯題 #${idx + 1}</span>
-            <span class="text-sm text-slate-500 font-medium">${q.grade} / ${q.category}</span>
-          </div>
-          <div class="font-bold text-slate-900 mb-3 text-base">${q.title}</div>
-          <div class="text-sm text-slate-700 space-y-1 mb-4 pl-3 border-l-4 border-slate-200 font-medium">
-            <div>(A) ${q.optionA}</div>
-            <div>(B) ${q.optionB}</div>
-            <div>(C) ${q.optionC}</div>
-            <div>(D) ${q.optionD}</div>
-          </div>
-          <div class="bg-slate-50 p-4 rounded-2xl text-sm border border-slate-100">
-            <span class="font-bold text-brand-700">正確答案：(${q.answer})</span>
-            <p class="text-slate-700 mt-1.5"><strong>解析：</strong>${q.analysis}</p>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    function clearWrongQuestions() {
-      if (confirm('確定要清空錯題區的所有紀錄嗎？')) {
-        wrongQuestions = [];
-        saveUserWrongQuestions();
-        renderWrongNotebook();
       }
     }
 
@@ -819,16 +775,125 @@
       }
     }
 
+    function renderPrintableQuizAndAnswers(container, questions) {
+      let html = `
+        <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 card-box leading-[2] text-[16px]">
+          <div class="text-center border-b border-slate-200 pb-5 mb-6">
+            <h1 class="text-2xl font-black text-slate-800">優華數位英文 - 隨堂測驗卷</h1>
+            <p class="text-sm text-slate-500 mt-1">班級：_______ 座號：_______ 姓名：_______________</p>
+          </div>
+          <div class="space-y-6">
+      `;
+
+      questions.forEach((q, idx) => {
+        let optsHtml = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].map(opt => {
+          const val = q[`option${opt}`];
+          if (!val || val.trim() === '') return '';
+          return `<div>(${opt}) ${val}</div>`;
+        }).join('');
+
+        html += `
+          <div class="space-y-2">
+            <div class="font-bold text-slate-900 text-[16px]">第 ${idx + 1} 題：${q.title}</div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 pl-4 text-[16px] text-slate-700">
+              ${optsHtml}
+            </div>
+          </div>
+        `;
+      });
+
+      html += `
+          </div>
+        </div>
+        <div class="page-break"></div>
+        <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 card-box leading-[2] text-[16px]">
+          <div class="border-b border-slate-200 pb-4 mb-6">
+            <h2 class="text-xl font-black text-slate-800">參考答案與詳細解析</h2>
+          </div>
+          <div class="space-y-4">
+      `;
+
+      questions.forEach((q, idx) => {
+        html += `
+          <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 text-[16px] space-y-1">
+            <div class="font-bold text-slate-900">第 ${idx + 1} 題：${q.title}</div>
+            <div class="text-brand-700 font-bold">正確答案：(${q.answer})</div>
+            <div class="text-slate-600"><strong>【解析】</strong> ${q.analysis}</div>
+          </div>
+        `;
+      });
+
+      html += `
+          </div>
+        </div>
+      `;
+
+      container.innerHTML = html;
+    }
+
     function switchTab(tab) {
-      if (currentUser && currentUser.email === 'yhstella2@gmail.com') return;
-      if (tab === 'quiz') {
-        document.getElementById('tab-quiz').classList.remove('hidden');
-        document.getElementById('tab-wrong').classList.add('hidden');
-        document.getElementById('wrong-btn-banner').classList.remove('hidden');
+      const quizTab = document.getElementById('tab-quiz');
+      const wrongTab = document.getElementById('tab-wrong');
+
+      if (tab === 'wrong-notebook') {
+        quizTab.classList.add('hidden');
+        wrongTab.classList.remove('hidden');
+        renderWrongNotebook();
       } else {
-        document.getElementById('tab-quiz').classList.add('hidden');
-        document.getElementById('tab-wrong').classList.remove('hidden');
-        document.getElementById('wrong-btn-banner').classList.add('hidden');
+        wrongTab.classList.add('hidden');
+        quizTab.classList.remove('hidden');
+      }
+    }
+
+    function renderWrongNotebook() {
+      const container = document.getElementById('wrong-list-container');
+      if (wrongQuestions.length === 0) {
+        container.innerHTML = `
+          <div class="bg-white p-12 rounded-3xl text-center shadow-sm border border-slate-200">
+            <div class="text-5xl mb-3">🎉</div>
+            <p class="text-lg font-bold text-slate-700">太棒了！您的錯題本目前沒有任何題目。</p>
+            <p class="text-sm text-slate-400 mt-1">在線上練習中答錯的題目會自動同步至此供您反覆複習。</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = wrongQuestions.map((q, idx) => {
+        let optsHtml = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].map(opt => {
+          const val = q[`option${opt}`];
+          if (!val || val.trim() === '') return '';
+          return `<div>(${opt}) ${val}</div>`;
+        }).join('');
+
+        return `
+          <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 card-box space-y-3 leading-[2] text-[16px]">
+            <div class="flex justify-between items-center">
+              <span class="bg-red-100 text-red-700 text-xs px-3 py-1 rounded-full font-bold">錯題 #${idx + 1} (${q.grade} / ${q.category})</span>
+              <button onclick="removeWrongItem(${q.id})" class="text-slate-400 hover:text-red-600 text-xs font-bold no-print">❌ 移除此題</button>
+            </div>
+            <div class="text-slate-900 font-bold text-[16px]">${q.title}</div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 pl-2 text-[16px] text-slate-700">
+              ${optsHtml}
+            </div>
+            <div class="p-4 rounded-2xl bg-brand-50 border border-brand-200 text-brand-900 text-[16px] space-y-1">
+              <div class="font-bold text-brand-700">正確答案：(${q.answer})</div>
+              <div><strong>【解析】</strong> ${q.analysis}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function removeWrongItem(qId) {
+      wrongQuestions = wrongQuestions.filter(q => q.id !== qId);
+      saveUserWrongQuestions();
+      renderWrongNotebook();
+    }
+
+    function clearWrongQuestions() {
+      if (confirm('確定要清空所有錯題嗎？')) {
+        wrongQuestions = [];
+        saveUserWrongQuestions();
         renderWrongNotebook();
       }
     }
@@ -836,24 +901,48 @@
     function exportToPDF(elementId, filename) {
       const element = document.getElementById(elementId);
       const opt = {
-        margin:       10,
-        filename:     `${filename}.pdf`,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2 },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        margin: 10,
+        filename: `${filename}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
       };
-      html2pdf().set(opt).from(element).save();
+      html2pdf().from(element).set(opt).save();
     }
 
-    function showStatus(msg, type = 'info') {
-      const el = document.getElementById('status-msg');
-      el.classList.remove('hidden', 'bg-blue-50', 'text-blue-800', 'bg-red-50', 'text-red-800', 'bg-green-50', 'text-green-800');
+    function exportToWord(elementId, filename) {
+      const element = document.getElementById(elementId);
+      const htmlContent = `
+        <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+        <head><meta charset='utf-8'><title>${filename}</title>
+        <style>
+          body { font-family: 'Microsoft JhengHei', Arial, sans-serif; font-size: 16px; line-height: 2.0; }
+        </style>
+        </head>
+        <body>${element.innerHTML}</body>
+        </html>
+      `;
+      const converted = htmlDocx.asBlob(htmlContent);
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(converted);
+      link.download = `${filename}.docx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    function showStatus(msg, type) {
+      const statusEl = document.getElementById('status-msg');
+      statusEl.classList.remove('hidden', 'bg-green-50', 'text-green-800', 'border-green-200', 'bg-red-50', 'text-red-800', 'border-red-200', 'bg-blue-50', 'text-blue-800', 'border-blue-200');
       
-      if (type === 'error') el.classList.add('bg-red-50', 'text-red-800', 'border-red-200');
-      else if (type === 'success') el.classList.add('bg-green-50', 'text-green-800', 'border-green-200');
-      else el.classList.add('bg-blue-50', 'text-blue-800', 'border-blue-200');
-      
-      el.innerText = msg;
+      if (type === 'success') {
+        statusEl.classList.add('bg-green-50', 'text-green-800', 'border-green-200');
+      } else if (type === 'error') {
+        statusEl.classList.add('bg-red-50', 'text-red-800', 'border-red-200');
+      } else {
+        statusEl.classList.add('bg-blue-50', 'text-blue-800', 'border-blue-200');
+      }
+      statusEl.innerText = msg;
     }
   </script>
 </body>
