@@ -38,6 +38,15 @@
       .card-box { border: 1px solid #ccc !important; box-shadow: none !important; margin-bottom: 20px !important; break-inside: avoid; }
       .page-break { page-break-before: always; }
     }
+    /* 點擊英文單字查詢樣式 */
+    .lookup-word {
+      border-bottom: 1px dashed #059669;
+      cursor: pointer;
+      color: #047857;
+    }
+    .lookup-word:hover {
+      background-color: #dcfce7;
+    }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col font-sans">
@@ -74,6 +83,7 @@
       <div class="flex items-center gap-4">
         <span id="user-status" class="text-sm bg-brand-700 px-3.5 py-1.5 rounded-full font-medium">未登入</span>
         <button id="nav-home-btn" onclick="switchTab('quiz')" class="text-sm font-bold hover:underline">主頁測驗</button>
+        <button onclick="switchTab('vocab-bank')" class="text-sm font-bold hover:underline">我的單字庫 <span id="vocab-count-badge" class="bg-amber-400 text-slate-900 px-1.5 py-0.2 rounded-full text-xs">0</span></button>
         <button onclick="logout()" class="text-sm text-brand-100 hover:text-white underline">登出</button>
       </div>
     </div>
@@ -85,8 +95,8 @@
     <!-- 管理者介面 (Admin Dashboard) -->
     <div id="tab-admin" class="hidden space-y-6">
       <div class="bg-white p-7 rounded-3xl shadow-sm border border-slate-200">
-        <h2 class="text-xl font-bold text-slate-800 mb-2">🛡️ 管理者後台：學生練習數據與錯題檢視</h2>
-        <p class="text-sm text-slate-500 mb-6">可直接查看所有學生的刷題數、答對數、答錯數以及詳細答錯題目清單，亦可寄送 Feedback。</p>
+        <h2 class="text-xl font-bold text-slate-800 mb-2">🛡️ 管理者後台：學生練習數據與錯題檢視 (依最新時間排序)</h2>
+        <p class="text-sm text-slate-500 mb-6">可查看所有學生的刷題紀錄（最新排在最上方）、答對/答錯數與詳細錯題清單，並可發送 Feedback。</p>
         
         <div id="admin-students-list" class="space-y-4">
           <!-- 動態載入學生列表與錯題明細 -->
@@ -99,7 +109,7 @@
       <button onclick="switchTab('wrong-notebook')" class="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold py-4 px-6 rounded-2xl shadow-md transition-all flex items-center justify-between text-lg">
         <div class="flex items-center gap-3">
           <span class="text-2xl">📚</span>
-          <span>查看我的專屬錯題本與複習講義 (自動同步雲端紀錄)</span>
+          <span>查看我的專屬錯題本與複習講義 (支援再次練習)</span>
         </div>
         <span id="wrong-count-badge" class="bg-red-600 text-white text-sm px-3 py-1 rounded-full shadow hidden">0 題</span>
       </button>
@@ -188,9 +198,17 @@
       <!-- 測驗與試卷展示區 -->
       <section id="quiz-container" class="space-y-5"></section>
       
-      <!-- 線上測驗完成提示區 -->
-      <div id="quiz-finish-actions" class="hidden bg-white p-6 rounded-3xl shadow-sm border border-slate-200 text-center space-y-2 no-print">
-        <p class="text-base font-bold text-brand-700">🎉 本次測驗已全部作答完成！成績與錯題已自動記錄至雲端後台。</p>
+      <!-- 線上測驗完成結算提示區 -->
+      <div id="quiz-finish-actions" class="hidden bg-white p-8 rounded-3xl shadow-sm border border-slate-200 text-center space-y-4 no-print">
+        <div class="text-4xl">🎉</div>
+        <h3 class="text-2xl font-bold text-slate-800">本次測驗已全部完成！</h3>
+        <div id="quiz-score-summary" class="text-lg font-bold text-brand-700 bg-brand-50 p-4 rounded-2xl border border-brand-200 inline-block">
+          <!-- 成績統計顯示 -->
+        </div>
+        <p class="text-sm text-slate-500">成績與錯題已自動記錄至雲端後台。</p>
+        <div>
+          <button onclick="switchTab('wrong-notebook')" class="bg-amber-500 hover:bg-amber-600 text-white font-bold px-6 py-3 rounded-xl shadow">前往錯題本再次練習 📚</button>
+        </div>
       </div>
       
       <!-- 試卷列印與匯出檔案控制按鈕區 -->
@@ -207,13 +225,13 @@
       <div class="bg-white p-7 rounded-3xl shadow-sm border border-slate-200 flex flex-wrap justify-between items-center gap-4 no-print">
         <div>
           <h2 class="text-xl font-bold text-slate-800">專屬錯題複習區</h2>
-          <p class="text-sm text-slate-500 mt-1">自動收集答錯的題目，隨時跨裝置同步，支援一鍵列印或導出為 PDF / Word 講義。</p>
+          <p class="text-sm text-slate-500 mt-1">自動收集答錯的題目，隨時複習，支援「再次練習測驗」與匯出講義。</p>
         </div>
         <div class="flex flex-wrap gap-2.5">
+          <button onclick="startWrongPractice()" class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-bold px-4 py-2.5 rounded-xl shadow">▶️ 針對錯題再次練習</button>
           <button onclick="switchTab('quiz')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-sm font-bold px-4 py-2.5 rounded-xl">返回主頁測驗</button>
           <button onclick="exportToPDF('wrong-list-container', '英文錯題本')" class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-bold px-4 py-2.5 rounded-xl">匯出錯題本 PDF</button>
           <button onclick="exportToWord('wrong-list-container', '英文錯題本')" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold px-4 py-2.5 rounded-xl">匯出錯題本 Word</button>
-          <button onclick="window.print()" class="bg-slate-700 text-white text-sm font-bold px-4 py-2.5 rounded-xl">列印錯題講義</button>
           <button onclick="clearWrongQuestions()" class="bg-red-50 text-red-600 hover:bg-red-100 text-sm font-bold px-4 py-2.5 rounded-xl border border-red-200">清空</button>
         </div>
       </div>
@@ -221,7 +239,41 @@
       <div id="wrong-list-container" class="space-y-5"></div>
     </div>
 
+    <!-- 頁籤三：個人單字庫 -->
+    <div id="tab-vocab-bank" class="hidden space-y-5">
+      <div class="bg-white p-7 rounded-3xl shadow-sm border border-slate-200 flex flex-wrap justify-between items-center gap-4 no-print">
+        <div>
+          <h2 class="text-xl font-bold text-slate-800">📖 我的單字庫</h2>
+          <p class="text-sm text-slate-500 mt-1">你在測驗中長按或點擊查詢並加入的生字會儲存於此，學會後可隨時刪除。</p>
+        </div>
+        <div>
+          <button onclick="switchTab('quiz')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-sm font-bold px-4 py-2.5 rounded-xl">返回主頁測驗</button>
+        </div>
+      </div>
+
+      <div id="vocab-list-container" class="space-y-4"></div>
+    </div>
+
   </main>
+
+  <!-- 單字查字典與加入單字庫 Modal -->
+  <div id="vocab-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-6 space-y-4 text-center">
+      <h3 id="modal-word-title" class="text-2xl font-black text-brand-700">Word</h3>
+      <p class="text-sm text-slate-500">線上字典與發音輔助</p>
+      <div class="flex flex-col gap-2.5 pt-2">
+        <a id="modal-dict-link" href="#" target="_blank" class="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-3 rounded-xl transition-colors">
+          🔍 開啟線上字典與發音
+        </a>
+        <button onclick="confirmAddVocab()" class="bg-brand-600 hover:bg-brand-700 text-white font-bold py-3 rounded-xl transition-colors shadow">
+          ⭐ 加入我的單字庫
+        </button>
+        <button onclick="closeVocabModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2.5 rounded-xl transition-colors">
+          關閉
+        </button>
+      </div>
+    </div>
+  </div>
 
   <script>
     const SPREADSHEET_ID = '11rFyQ1FLFflBAUzBoJGI2p8EChYSJWuje16DkZZdSWc';
@@ -230,8 +282,10 @@
     let currentUser = null;
     let rawQuestions = [];
     let wrongQuestions = [];
+    let vocabBank = [];
     let userLogs = [];
     let currentCalendarDate = new Date();
+    let activeSelectedWord = '';
 
     window.onload = () => {
       const savedUser = localStorage.getItem('yh_user');
@@ -247,47 +301,59 @@
           document.getElementById('nav-home-btn').innerText = '管理者後台';
           loadAdminDashboard();
         } else {
-          loadUserWrongQuestions();
-          loadUserLogs();
+          loadUserData();
           renderCalendar();
           loadQuestions();
         }
       }
     };
 
-    function loadUserWrongQuestions() {
+    function loadUserData() {
       if (!currentUser) return;
-      const storageKey = `yh_wrong_${currentUser.email}`;
-      wrongQuestions = JSON.parse(localStorage.getItem(storageKey) || '[]');
+      const wrongKey = `yh_wrong_${currentUser.email}`;
+      wrongQuestions = JSON.parse(localStorage.getItem(wrongKey) || '[]');
       updateWrongBadge();
+
+      const vocabKey = `yh_vocab_${currentUser.email}`;
+      vocabBank = JSON.parse(localStorage.getItem(vocabKey) || '[]');
+      updateVocabBadge();
+
+      const logKey = `yh_logs_${currentUser.email}`;
+      userLogs = JSON.parse(localStorage.getItem(logKey) || '[]');
     }
 
     function saveUserWrongQuestions() {
       if (!currentUser) return;
-      const storageKey = `yh_wrong_${currentUser.email}`;
-      localStorage.setItem(storageKey, JSON.stringify(wrongQuestions));
+      const wrongKey = `yh_wrong_${currentUser.email}`;
+      localStorage.setItem(wrongKey, JSON.stringify(wrongQuestions));
       updateWrongBadge();
 
+      syncAllStudentsData();
+    }
+
+    function saveVocabBank() {
+      if (!currentUser) return;
+      const vocabKey = `yh_vocab_${currentUser.email}`;
+      localStorage.setItem(vocabKey, JSON.stringify(vocabBank));
+      updateVocabBadge();
+    }
+
+    function syncAllStudentsData() {
       let allStudents = JSON.parse(localStorage.getItem('yh_all_students') || '{}');
       if (!allStudents[currentUser.email]) {
         allStudents[currentUser.email] = { email: currentUser.email, logs: [], wrongs: [] };
       }
       allStudents[currentUser.email].wrongs = wrongQuestions;
+      allStudents[currentUser.email].logs = userLogs;
       localStorage.setItem('yh_all_students', JSON.stringify(allStudents));
-    }
-
-    function loadUserLogs() {
-      if (!currentUser) return;
-      const storageKey = `yh_logs_${currentUser.email}`;
-      userLogs = JSON.parse(localStorage.getItem(storageKey) || '[]');
     }
 
     function recordQuizSession(totalCount, correctCount, wrongCount, rangeText, sessionWrongItems = []) {
       if (!currentUser || currentUser.email === 'yhstella2@gmail.com') return;
 
       const todayStr = new Date().toISOString().split('T')[0];
-      const storageKey = `yh_logs_${currentUser.email}`;
-      let logs = JSON.parse(localStorage.getItem(storageKey) || '[]');
+      const logKey = `yh_logs_${currentUser.email}`;
+      let logs = JSON.parse(localStorage.getItem(logKey) || '[]');
       
       const sessionData = {
         date: todayStr,
@@ -300,16 +366,10 @@
       };
 
       logs.push(sessionData);
-      localStorage.setItem(storageKey, JSON.stringify(logs));
+      localStorage.setItem(logKey, JSON.stringify(logs));
+      userLogs = logs;
 
-      let allStudents = JSON.parse(localStorage.getItem('yh_all_students') || '{}');
-      if (!allStudents[currentUser.email]) {
-        allStudents[currentUser.email] = { email: currentUser.email, logs: [], wrongs: wrongQuestions };
-      }
-      allStudents[currentUser.email].logs = logs;
-      localStorage.setItem('yh_all_students', JSON.stringify(allStudents));
-
-      loadUserLogs();
+      syncAllStudentsData();
       renderCalendar();
       return sessionData;
     }
@@ -342,8 +402,7 @@
         document.getElementById('nav-home-btn').innerText = '管理者後台';
         loadAdminDashboard();
       } else {
-        loadUserWrongQuestions();
-        loadUserLogs();
+        loadUserData();
         renderCalendar();
         loadQuestions();
       }
@@ -399,6 +458,7 @@
       renderCalendar();
     }
 
+    // 依時間最新排序的管理者後台
     function loadAdminDashboard() {
       const container = document.getElementById('admin-students-list');
       const allStudents = JSON.parse(localStorage.getItem('yh_all_students') || '{}');
@@ -411,19 +471,19 @@
 
       container.innerHTML = studentEmails.map((email, index) => {
         const st = allStudents[email];
-        const logs = st.logs || [];
+        // 依照時間排序 (最新的排在最前面)
+        const logs = [...(st.logs || [])].reverse();
         const wrongs = st.wrongs || [];
 
         const logsHtml = logs.length > 0 ? logs.map(l => `
           <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 text-xs flex justify-between items-center mb-1.5">
             <div>
-              <span class="font-bold text-slate-800">📅 ${l.date}</span> 
+              <span class="font-bold text-slate-800">📅 ${l.timestamp}</span> 
               <span class="text-brand-700 font-bold ml-2">刷題共 ${l.total} 題</span>
               <span class="text-green-700 font-bold ml-2">答對 ${l.correct} 題</span>
               <span class="text-red-600 font-bold ml-2">答錯 ${l.wrong} 題</span>
               <div class="text-slate-500 mt-0.5">刷題單元範圍：${l.range}</div>
             </div>
-            <span class="text-slate-400">${l.timestamp}</span>
           </div>
         `).join('') : '<div class="text-xs text-slate-400 italic">尚無刷題紀錄</div>';
 
@@ -437,7 +497,7 @@
           return `
             <div class="bg-red-50/50 p-3 rounded-xl border border-red-100 text-xs space-y-1 mb-2">
               <div class="font-bold text-red-700">錯題 #${wIdx + 1} (${w.grade} / ${w.category})</div>
-              <div class="font-bold text-slate-800">${w.title}</div>
+              <div class="font-bold text-slate-800">${processTextWithLookup(w.title)}</div>
               <div class="text-slate-600 pl-2">${optsHtml}</div>
               <div class="text-brand-700 font-bold">正確答案：(${w.answer}) | 解析：${w.analysis}</div>
             </div>
@@ -460,7 +520,7 @@
             </div>
             
             <div class="space-y-1">
-              <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">刷題次數與答對/答錯明細：</div>
+              <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">刷題次數與明細 (最新在上)：</div>
               <div class="max-h-40 overflow-y-auto pr-2 space-y-1">${logsHtml}</div>
             </div>
 
@@ -611,6 +671,45 @@
       });
     }
 
+    // 英文單字點擊或長按查字典處理
+    function processTextWithLookup(text) {
+      if (!text) return '';
+      // 將英文單字用 span 包裹以便點擊查詢
+      return text.replace(/\b[a-zA-Z]+\b/g, (word) => {
+        if (word.length > 1) {
+          return `<span class="lookup-word" onclick="openVocabModal('${word}')">${word}</span>`;
+        }
+        return word;
+      });
+    }
+
+    function openVocabModal(word) {
+      activeSelectedWord = word;
+      document.getElementById('modal-word-title').innerText = word;
+      document.getElementById('modal-dict-link').href = `https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/${word}`;
+      document.getElementById('vocab-modal').classList.remove('hidden');
+    }
+
+    function closeVocabModal() {
+      document.getElementById('vocab-modal').classList.add('hidden');
+    }
+
+    function confirmAddVocab() {
+      if (!activeSelectedWord) return;
+      if (!vocabBank.includes(activeSelectedWord)) {
+        vocabBank.push(activeSelectedWord);
+        saveVocabBank();
+        alert(`已成功將 "${activeSelectedWord}" 加入單字庫！`);
+      } else {
+        alert(`"${activeSelectedWord}" 已經在你的單字庫中囉！`);
+      }
+      closeVocabModal();
+    }
+
+    function updateVocabBadge() {
+      document.getElementById('vocab-count-badge').innerText = vocabBank.length;
+    }
+
     function startQuiz(mode) {
       const filtered = getFilteredQuestions();
       const count = parseInt(document.getElementById('question-count').value) || 10;
@@ -666,7 +765,7 @@
           return `
             <button onclick="checkAnswer(${q.id}, '${opt}', '${q.answer}', '${q.grade}', '${q.category}')" 
               class="opt-btn-${q.id} w-full text-left p-3.5 rounded-2xl border border-slate-200 hover:bg-slate-50 transition-all font-medium flex items-center justify-between">
-              <span><strong class="text-slate-400 mr-2">${opt}.</strong> ${val}</span>
+              <span><strong class="text-slate-400 mr-2">${opt}.</strong> ${processTextWithLookup(val)}</span>
             </button>
           `;
         }).join('');
@@ -677,7 +776,7 @@
           <div class="flex items-center gap-2 mb-3">
             <span class="bg-brand-100 text-brand-700 text-sm px-3 py-1 rounded-full font-bold">第 ${idx + 1} 題</span>
           </div>
-          <div class="text-slate-900 font-bold mb-4 text-[18px]">${q.title}</div>
+          <div class="text-slate-900 font-bold mb-4 text-[18px]">${processTextWithLookup(q.title)}</div>
           
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-[18px] mb-4">
             ${optsHtml}
@@ -702,7 +801,7 @@
         feedbackEl.innerHTML = `
           <div class="font-bold text-green-700 mb-1">✅ 回答正確！</div>
           <div><strong>正確答案：</strong> (${correctOpt})</div>
-          <div class="text-[18px] text-green-950 mt-1"><strong>【解析】</strong> ${q.analysis}</div>
+          <div class="text-[18px] text-green-950 mt-1"><strong>【解析】</strong> ${processTextWithLookup(q.analysis)}</div>
         `;
         if (window.currentQuizSession) window.currentQuizSession.correct++;
       } else {
@@ -710,7 +809,7 @@
         feedbackEl.innerHTML = `
           <div class="font-bold text-red-700 mb-1">❌ 回答錯誤 (已自動收錄至錯題區)</div>
           <div><strong>您的選擇：</strong> ${selectedOpt} | <strong>正確答案：</strong> (${correctOpt})</div>
-          <div class="text-[18px] text-red-950 mt-1"><strong>【解析】</strong> ${q.analysis}</div>
+          <div class="text-[18px] text-red-950 mt-1"><strong>【解析】</strong> ${processTextWithLookup(q.analysis)}</div>
         `;
         if (window.currentQuizSession) {
           window.currentQuizSession.wrong++;
@@ -726,6 +825,10 @@
         if (window.currentQuizSession.answeredCount === window.currentQuizSession.total) {
           const s = window.currentQuizSession;
           recordQuizSession(s.total, s.correct, s.wrong, s.rangeText, s.wrongItems);
+          
+          // 顯示測驗結算畫面 (如: 共10題，錯3題)
+          const summaryEl = document.getElementById('quiz-score-summary');
+          summaryEl.innerText = `本次測驗共 ${s.total} 題｜答對 ${s.correct} 題｜答錯 ${s.wrong} 題`;
           document.getElementById('quiz-finish-actions').classList.remove('hidden');
         }
       }
@@ -754,7 +857,6 @@
       let html = `
         <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 card-box leading-[2] text-[18px]">
           <div class="relative border-b border-slate-200 pb-5 mb-6">
-            <!-- 右上角學習類別，字級 8 -->
             <div class="absolute top-0 right-0 text-slate-500 font-medium text-[8px]">
               ${selectedCategories ? `學習類別：${selectedCategories}` : ''}
             </div>
@@ -812,13 +914,21 @@
     function switchTab(tab) {
       const quizTab = document.getElementById('tab-quiz');
       const wrongTab = document.getElementById('tab-wrong');
+      const vocabTab = document.getElementById('tab-vocab-bank');
+      const adminTab = document.getElementById('tab-admin');
+
+      quizTab.classList.add('hidden');
+      wrongTab.classList.add('hidden');
+      vocabTab.classList.add('hidden');
+      if(adminTab) adminTab.classList.add('hidden');
 
       if (tab === 'wrong-notebook') {
-        quizTab.classList.add('hidden');
         wrongTab.classList.remove('hidden');
         renderWrongNotebook();
+      } else if (tab === 'vocab-bank') {
+        vocabTab.classList.remove('hidden');
+        renderVocabBank();
       } else {
-        wrongTab.classList.add('hidden');
         quizTab.classList.remove('hidden');
       }
     }
@@ -840,7 +950,7 @@
         let optsHtml = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].map(opt => {
           const val = q[`option${opt}`];
           if (!val || val.trim() === '') return '';
-          return `<div>(${opt}) ${val}</div>`;
+          return `<div>(${opt}) ${processTextWithLookup(val)}</div>`;
         }).join('');
 
         return `
@@ -849,17 +959,32 @@
               <span class="bg-red-100 text-red-700 text-xs px-3 py-1 rounded-full font-bold">錯題 #${idx + 1} (${q.grade} / ${q.category})</span>
               <button onclick="removeWrongItem(${q.id})" class="text-slate-400 hover:text-red-600 text-xs font-bold no-print">❌ 移除此題</button>
             </div>
-            <div class="text-slate-900 font-bold text-[18px]">${q.title}</div>
+            <div class="text-slate-900 font-bold text-[18px]">${processTextWithLookup(q.title)}</div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-2 pl-2 text-[18px] text-slate-700">
               ${optsHtml}
             </div>
             <div class="p-4 rounded-2xl bg-brand-50 border border-brand-200 text-brand-900 text-[18px] space-y-1">
               <div class="font-bold text-brand-700">正確答案：(${q.answer})</div>
-              <div><strong>【解析】</strong> ${q.analysis}</div>
+              <div><strong>【解析】</strong> ${processTextWithLookup(q.analysis)}</div>
             </div>
           </div>
         `;
       }).join('');
+    }
+
+    // 錯題再次練習功能
+    function startWrongPractice() {
+      if (wrongQuestions.length === 0) {
+        alert('目前沒有錯題可以練習！');
+        return;
+      }
+      switchTab('quiz');
+      const container = document.getElementById('quiz-container');
+      document.getElementById('print-actions').classList.add('hidden');
+      document.getElementById('quiz-finish-actions').classList.add('hidden');
+      container.innerHTML = '';
+      showStatus(`已載入錯題本中的 ${wrongQuestions.length} 題進行再次練習！`, 'success');
+      renderOnlineQuiz(container, wrongQuestions);
     }
 
     function removeWrongItem(qId) {
@@ -874,6 +999,40 @@
         saveUserWrongQuestions();
         renderWrongNotebook();
       }
+    }
+
+    // 渲染單字庫
+    function renderVocabBank() {
+      const container = document.getElementById('vocab-list-container');
+      if (vocabBank.length === 0) {
+        container.innerHTML = `
+          <div class="bg-white p-12 rounded-3xl text-center shadow-sm border border-slate-200">
+            <div class="text-5xl mb-3">📖</div>
+            <p class="text-lg font-bold text-slate-700">你的單字庫目前是空的。</p>
+            <p class="text-sm text-slate-400 mt-1">在測驗題目或選項中點擊任何英文單字即可加入單字庫！</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = vocabBank.map((word, idx) => `
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex justify-between items-center">
+          <div class="flex items-center gap-4">
+            <span class="bg-brand-100 text-brand-700 text-xs px-2.5 py-1 rounded-full font-bold">#${idx + 1}</span>
+            <span class="text-xl font-black text-slate-800">${word}</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <a href="https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/${word}" target="_blank" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3.5 py-2 rounded-xl">🔍 查字典/發音</a>
+            <button onclick="removeVocabWord('${word}')" class="bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold px-3.5 py-2 rounded-xl border border-red-200">🗑️ 刪除已學會</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function removeVocabWord(word) {
+      vocabBank = vocabBank.filter(w => w !== word);
+      saveVocabBank();
+      renderVocabBank();
     }
 
     function exportToPDF(elementId, filename) {
