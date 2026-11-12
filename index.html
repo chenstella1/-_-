@@ -141,7 +141,7 @@
             </div>
           </div>
 
-          <!-- 學習類別複選區 (加上全選/清除按鈕) -->
+          <!-- 學習類別複選區 -->
           <div class="md:col-span-4 border-r border-slate-100 pr-0 md:pr-4">
             <div class="flex items-center justify-between mb-2.5">
               <label class="block text-sm font-semibold text-slate-600 uppercase tracking-wider">2. 學習類別 (可複選多個)</label>
@@ -647,7 +647,6 @@
         card.innerHTML = `
           <div class="flex items-center gap-2 mb-3">
             <span class="bg-brand-100 text-brand-700 text-sm px-3 py-1 rounded-full font-bold">第 ${idx + 1} 題</span>
-            <span class="text-sm bg-slate-100 text-slate-700 px-2.5 py-1 rounded-lg font-medium">${q.grade} / ${q.category}</span>
           </div>
           <div class="text-slate-900 font-bold mb-4 text-lg">${q.title}</div>
           
@@ -714,19 +713,24 @@
     }
 
     function renderPrintableQuizAndAnswers(container, questions) {
+      const selectedGradeInput = document.querySelector('input[name="grade-radio"]:checked');
+      const gradeName = selectedGradeInput ? selectedGradeInput.value : '';
+      const selectedCategories = Array.from(document.querySelectorAll('.category-cb:checked')).map(cb => cb.value);
+      const unitNameString = `${gradeName} / ${selectedCategories.join(' / ')}`;
+
       const paper = document.createElement('div');
       paper.className = "bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6";
       paper.innerHTML = `
-        <div class="text-center border-b pb-4 mb-6">
+        <div class="flex justify-between items-start border-b pb-4 mb-6">
           <h1 class="text-2xl font-black">優華數位測驗卷</h1>
-          <p class="text-sm text-slate-500 mt-1.5">班級：________ 姓名：________ 座號：________ 得分：________</p>
+          <div class="text-[8px] text-slate-500 font-bold text-right pt-1">${unitNameString}</div>
         </div>
         ${questions.map((q, idx) => `
-          <div class="space-y-2.5 break-inside-avoid">
-            <div class="font-bold text-slate-900 text-base">
+          <div class="space-y-2.5 break-inside-avoid" style="font-size: 15px; line-height: 1.5;">
+            <div class="font-bold text-slate-900">
               ${idx + 1}. ${q.title}
             </div>
-            <div class="grid grid-cols-2 gap-x-8 gap-y-1.5 text-sm pl-4 font-medium">
+            <div class="grid grid-cols-2 gap-x-8 gap-y-1.5 pl-4 font-medium" style="font-size: 15px;">
               <div>(A) ${q.optionA}</div>
               <div>(B) ${q.optionB}</div>
               <div>(C) ${q.optionC}</div>
@@ -740,19 +744,19 @@
       const answerSheet = document.createElement('div');
       answerSheet.className = "bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6 page-break mt-8";
       answerSheet.innerHTML = `
-        <div class="text-center border-b pb-4 mb-6">
+        <div class="flex justify-between items-start border-b pb-4 mb-6">
           <h1 class="text-2xl font-black text-brand-700">優華數位測驗卷 - 標準答案與詳細解析</h1>
-          <p class="text-sm text-slate-500 mt-1.5">教師參考用卷</p>
+          <div class="text-[8px] text-slate-500 font-bold text-right pt-1">${unitNameString}</div>
         </div>
         ${questions.map((q, idx) => `
-          <div class="space-y-2 break-inside-avoid border-b border-slate-100 pb-4">
-            <div class="font-bold text-slate-900 text-sm">
+          <div class="space-y-2 break-inside-avoid border-b border-slate-100 pb-4" style="font-size: 15px; line-height: 1.5;">
+            <div class="font-bold text-slate-900">
               第 ${idx + 1} 題：${q.title}
             </div>
-            <div class="text-xs text-brand-700 font-bold">
+            <div class="text-brand-700 font-bold">
               正確答案：(${q.answer})
             </div>
-            <div class="text-xs text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-100">
+            <div class="text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-100">
               <strong>解析：</strong>${q.analysis}
             </div>
           </div>
