@@ -91,7 +91,7 @@
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
         </svg>
-        <span id="loadingText" class="text-sm font-medium">正在同步 Google 試算表題庫...</span>
+        <span id="loadingText" class="text-sm font-medium">正在同步「單字文法題庫」...</span>
       </div>
       <button onclick="fetchQuestions()" class="text-xs underline hover:text-emerald-950">重新載入</button>
     </div>
@@ -213,10 +213,6 @@
           <span id="readingUnitTag" class="text-xs bg-amber-200 text-amber-900 px-2.5 py-0.5 rounded-full font-medium"></span>
         </div>
         <div id="readingPassageContent" class="text-slate-800 leading-relaxed text-base whitespace-pre-line"></div>
-        <div id="wordBankBox" class="hidden bg-white p-3 rounded-xl border border-amber-300">
-          <p class="text-xs font-bold text-amber-800 mb-1">🔤 單字庫 / 備註：</p>
-          <div id="wordBankList" class="flex flex-wrap gap-2"></div>
-        </div>
       </div>
 
       <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-emerald-100 space-y-6">
@@ -366,7 +362,7 @@
     const DEFAULT_SHEET_ID = '11rFyQ1FLFflBAUzBoJGI2p8EChYSJWuje16DkZZdSWc';
     let config = {
       sheetId: localStorage.getItem('yh_sheet_id') || DEFAULT_SHEET_ID,
-      sheetName: localStorage.getItem('yh_sheet_name') || '工作表1'
+      sheetName: localStorage.getItem('yh_sheet_name') || '單字文法題庫'
     };
 
     let currentUser = localStorage.getItem('yh_user_email') || '';
@@ -452,7 +448,7 @@
       const banner = document.getElementById('loadingBanner');
       const loadingText = document.getElementById('loadingText');
       banner.classList.remove('hidden');
-      loadingText.textContent = `正在同步「${config.sheetName}」題庫...`;
+      loadingText.textContent = `正在同步「${config.sheetName}」...`;
 
       const url = `https://docs.google.com/spreadsheets/d/${config.sheetId}/gviz/tq?sheet=${encodeURIComponent(config.sheetName)}&tqx=out:json`;
       try {
@@ -467,14 +463,15 @@
           const c = r.c || [];
           const val = (i) => (c[i] && c[i].v !== null && c[i].v !== undefined) ? String(c[i].v).trim() : '';
           
-          const grade = val(0);    // grade
-          const unit = val(1);     // unit
-          const type = val(2);     // type (學習類別/題型，如：單字、文法、克漏字、文意選填)
-          const question = val(3); // question (題目或文章內文)
-          const wordBank = val(4); // 單字庫 / 備註
+          const id = val(0);       // A 欄: id
+          const grade = val(1);    // B 欄: grade
+          const unit = val(2);     // C 欄: unit
+          const type = val(3);     // D 欄: type (學習類別/題型)
+          const question = val(4); // E 欄: question
 
-          if (!grade || !question || grade === 'grade') return;
+          if (!grade || !question || grade.toLowerCase() === 'grade') return;
 
+          // F ~ O 欄對應 optA ~ optJ (index 5 到 14)
           let options = {};
           const optionKeys = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
           optionKeys.forEach((key, i) => {
@@ -482,20 +479,19 @@
             if (optVal) options[key] = optVal;
           });
 
-          const answer = val(15).toUpperCase();
-          const explanation = val(16) || '無詳細解析';
+          const answer = val(15).toUpperCase();  // P 欄: answer
+          const explanation = val(16) || '無詳細解析'; // Q 欄: explanation
 
           const isReadingType = type.includes('閱讀') || type.includes('克漏字') || type.includes('選填') || type.includes('素養');
 
           parsed.push({
-            id: `q_${idx}`,
+            id: id || `q_${idx}`,
             grade,
             unit: unit || '綜合單元',
             category: type || '綜合練習',
             isReading: isReadingType,
             passage: isReadingType ? question : '',
             question: isReadingType ? `請根據文章回答問題：` : question,
-            wordBank,
             options,
             answer,
             explanation
@@ -506,7 +502,7 @@
         banner.classList.add('hidden');
       } catch (err) {
         console.error('題庫載入失敗:', err);
-        loadingText.textContent = '❌ 載入失敗，請確認 Google 試算表 ID 正確且已設為公開共用。';
+        loadingText.textContent = '❌ 載入失敗，請確認 Google 試算表 ID 正確、工作表名稱為「單字文法題庫」且已設為公開共用。';
       }
     }
 
@@ -730,7 +726,6 @@
       document.getElementById('qUnitBadge').textContent = q.unit;
 
       const passageBox = document.getElementById('readingPassageBox');
-      const wordBankBox = document.getElementById('wordBankBox');
       const readingTypeLabel = document.getElementById('readingTypeLabel');
 
       if (q.passage) {
@@ -738,16 +733,6 @@
         readingTypeLabel.textContent = `📖 ${q.category}（文章內文）`;
         document.getElementById('readingUnitTag').textContent = q.unit;
         document.getElementById('readingPassageContent').innerHTML = makeWordsClickable(q.passage);
-
-        if (q.wordBank) {
-          wordBankBox.classList.remove('hidden');
-          const words = q.wordBank.split(/[,，]/).map(w => w.trim()).filter(Boolean);
-          document.getElementById('wordBankList').innerHTML = words.map(w =>
-            `<span class="px-2.5 py-1 bg-amber-100 text-amber-900 font-semibold rounded-lg text-sm border border-amber-300">${makeWordsClickable(w)}</span>`
-          ).join('');
-        } else {
-          wordBankBox.classList.add('hidden');
-        }
       } else {
         passageBox.classList.add('hidden');
       }
@@ -907,7 +892,7 @@
 
     function saveAdminSettings() {
       config.sheetId = document.getElementById('adminSheetIdInput').value.trim();
-      config.sheetName = document.getElementById('adminSheetNameInput').value.trim() || '工作表1';
+      config.sheetName = document.getElementById('adminSheetNameInput').value.trim() || '單字文法題庫';
       localStorage.setItem('yh_sheet_id', config.sheetId);
       localStorage.setItem('yh_sheet_name', config.sheetName);
       document.getElementById('adminModal').classList.add('hidden');
