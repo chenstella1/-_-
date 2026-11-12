@@ -60,7 +60,7 @@
   <!-- 頂部導覽列 -->
   <header class="bg-emerald-700 text-white shadow-md no-print sticky top-0 z-30">
     <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
-      <div class="flex items-center gap-2 cursor-pointer" onclick="switchView('setup')">
+      <div class="flex items-center gap-2 cursor-pointer" onclick="switchView('mode-select')">
         <span class="text-2xl">🌿</span>
         <div>
           <h1 class="font-bold text-lg leading-tight">優華數位英文學習刷題網</h1>
@@ -68,7 +68,7 @@
         </div>
       </div>
       <div class="flex flex-wrap items-center gap-2">
-        <button onclick="switchView('setup')" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-sm font-medium transition">🏠 首頁</button>
+        <button onclick="switchView('mode-select')" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-sm font-medium transition">🏠 專區首頁</button>
         <button onclick="openVocabModal()" class="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold text-sm shadow transition flex items-center gap-1">
           📖 我的單字庫 <span id="vocabCountBadge" class="bg-white text-amber-800 px-1.5 py-0.5 rounded-full text-xs">0</span>
         </button>
@@ -107,8 +107,8 @@
       </div>
     </section>
 
-    <!-- 1. 學生選單設定畫面 -->
-    <section id="view-setup" class="space-y-6 no-print">
+    <!-- 0. 模式選擇畫面（登入後的雙專區首頁） -->
+    <section id="view-mode-select" class="space-y-6 no-print">
       <div class="bg-white p-6 rounded-2xl shadow-sm border border-emerald-100 space-y-4">
         <div class="flex items-center justify-between">
           <h2 class="text-lg font-bold text-emerald-900 flex items-center gap-2">
@@ -120,6 +120,32 @@
         <div id="calendarGrid" class="grid grid-cols-7 gap-2 text-center text-sm"></div>
       </div>
 
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+        <!-- 單題專區卡片 -->
+        <div onclick="selectLearningMode('single')" class="bg-white p-8 rounded-2xl shadow-sm border-2 border-emerald-200 hover:border-emerald-500 hover:shadow-md transition cursor-pointer flex flex-col items-center text-center space-y-4 group">
+          <div class="w-16 h-16 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-3xl group-hover:scale-110 transition">📝</div>
+          <h3 class="text-xl font-bold text-emerald-900">單字文法單題練習專區</h3>
+          <p class="text-sm text-slate-500">精選單字、片語與文法單選題，扎實建立英文基礎與應試能力。</p>
+          <span class="px-5 py-2.5 bg-emerald-600 group-hover:bg-emerald-700 text-white font-bold rounded-xl text-sm transition shadow">進入單題專區 →</span>
+        </div>
+
+        <!-- 閱讀練習專區卡片 -->
+        <div onclick="selectLearningMode('reading')" class="bg-white p-8 rounded-2xl shadow-sm border-2 border-amber-200 hover:border-amber-500 hover:shadow-md transition cursor-pointer flex flex-col items-center text-center space-y-4 group">
+          <div class="w-16 h-16 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center text-3xl group-hover:scale-110 transition">📖</div>
+          <h3 class="text-xl font-bold text-amber-900">閱讀與克漏字練習專區</h3>
+          <p class="text-sm text-slate-500">包含克漏字測驗、文意選填與素養閱讀。支援長文置頂、點擊即查單字與發音！</p>
+          <span class="px-5 py-2.5 bg-amber-500 group-hover:bg-amber-600 text-slate-900 font-bold rounded-xl text-sm transition shadow">進入閱讀專區 →</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 1. 學生選單設定畫面（過濾條件） -->
+    <section id="view-setup" class="hidden space-y-6 no-print">
+      <div class="flex items-center justify-between bg-white p-4 rounded-2xl border border-emerald-100">
+        <button onclick="switchView('mode-select')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-sm font-bold text-slate-700">← 返回選擇專區</button>
+        <h2 id="currentZoneTitle" class="font-bold text-emerald-900 text-base">目前專區：載入中...</h2>
+      </div>
+
       <div class="bg-white p-6 rounded-2xl shadow-sm border border-emerald-100">
         <div class="flex items-center justify-between mb-3">
           <h2 class="text-lg font-bold text-emerald-900">選擇年級（可複選多個）</h2>
@@ -128,7 +154,6 @@
         <div id="gradeFilters" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2.5"></div>
       </div>
 
-      <!-- 學習類別篩選區塊（已新增 全選 / 清除 按鈕） -->
       <div class="bg-white p-6 rounded-2xl shadow-sm border border-emerald-100">
         <div class="flex items-center justify-between mb-2">
           <h2 class="text-lg font-bold text-emerald-900">學習類別 / 題型（可複選多個）</h2>
@@ -216,7 +241,7 @@
         </div>
 
         <div class="flex justify-between items-center pt-2">
-          <button onclick="switchView('setup')" class="text-sm text-slate-500 hover:text-slate-700">← 返回選單</button>
+          <button onclick="switchView('setup')" class="text-sm text-slate-500 hover:text-slate-700">← 返回篩選設定</button>
           <button id="nextQuestionBtn" onclick="nextQuestion()" class="hidden px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow transition">
             下一題 →
           </button>
@@ -246,8 +271,8 @@
         <button onclick="switchView('wrong')" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl shadow transition">
           ❌ 檢視本次錯題本
         </button>
-        <button onclick="switchView('setup')" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow transition">
-          🔄 再練一次
+        <button onclick="switchView('mode-select')" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow transition">
+          🏠 返回專區首頁
         </button>
       </div>
     </section>
@@ -270,7 +295,7 @@
     <!-- 5. 列印試卷 -->
     <section id="view-print" class="hidden space-y-6">
       <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between no-print">
-        <button onclick="switchView('setup')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 rounded-xl text-sm font-bold">← 返回選單</button>
+        <button onclick="switchView('setup')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 rounded-xl text-sm font-bold">← 返回篩選設定</button>
         <button onclick="window.print()" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow">🖨️ 立即列印 / 另存 PDF（含試卷與詳解）</button>
       </div>
       <div id="printableSheet" class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200"></div>
@@ -346,6 +371,7 @@
 
     let currentUser = localStorage.getItem('yh_user_email') || '';
     let allQuestions = [];
+    let currentMode = 'single'; // 'single' 或 'reading'
     let currentQuiz = [];
     let currentIndex = 0;
     let score = 0;
@@ -380,11 +406,11 @@
       fetchQuestions();
 
       if (currentUser === 'yhstella2@gmail.com') {
-        document.getElementById('view-setup').classList.add('hidden');
+        ['view-mode-select', 'view-setup'].forEach(id => document.getElementById(id).classList.add('hidden'));
         switchView('admin');
         loadAdminData();
       } else {
-        switchView('setup');
+        switchView('mode-select');
         renderCalendar();
       }
     }
@@ -443,13 +469,12 @@
           
           const grade = val(0);    // grade
           const unit = val(1);     // unit
-          const type = val(2);     // type (學習類別/題型)
+          const type = val(2);     // type (學習類別/題型，如：單字、文法、克漏字、文意選填)
           const question = val(3); // question (題目或文章內文)
           const wordBank = val(4); // 單字庫 / 備註
 
           if (!grade || !question || grade === 'grade') return;
 
-          // 動態抓取 optA 到 optJ (index 5 到 14) 作為選項
           let options = {};
           const optionKeys = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
           optionKeys.forEach((key, i) => {
@@ -457,16 +482,19 @@
             if (optVal) options[key] = optVal;
           });
 
-          const answer = val(15).toUpperCase();  // answer (index 15)
-          const explanation = val(16) || '無詳細解析'; // explanation (index 16)
+          const answer = val(15).toUpperCase();
+          const explanation = val(16) || '無詳細解析';
+
+          const isReadingType = type.includes('閱讀') || type.includes('克漏字') || type.includes('選填') || type.includes('素養');
 
           parsed.push({
             id: `q_${idx}`,
             grade,
             unit: unit || '綜合單元',
             category: type || '綜合練習',
-            passage: (type.includes('閱讀') || type.includes('克漏字') || type.includes('選填')) ? question : '',
-            question: (type.includes('閱讀') || type.includes('克漏字') || type.includes('選填')) ? `請根據文章回答問題：` : question,
+            isReading: isReadingType,
+            passage: isReadingType ? question : '',
+            question: isReadingType ? `請根據文章回答問題：` : question,
             wordBank,
             options,
             answer,
@@ -476,16 +504,25 @@
 
         allQuestions = parsed;
         banner.classList.add('hidden');
-        renderFilterCheckboxes();
       } catch (err) {
         console.error('題庫載入失敗:', err);
         loadingText.textContent = '❌ 載入失敗，請確認 Google 試算表 ID 正確且已設為公開共用。';
       }
     }
 
+    function selectLearningMode(mode) {
+      currentMode = mode;
+      document.getElementById('currentZoneTitle').textContent = mode === 'single' ? '📝 目前專區：單字文法單題練習' : '📖 目前專區：閱讀與克漏字練習';
+      switchView('setup');
+      renderFilterCheckboxes();
+    }
+
     function renderFilterCheckboxes() {
+      // 根據當前選擇的專區過濾題目
+      const targetQuestions = allQuestions.filter(q => currentMode === 'single' ? !q.isReading : q.isReading);
+      
       const grades = {}, categories = {}, units = {};
-      allQuestions.forEach(q => {
+      targetQuestions.forEach(q => {
         grades[q.grade] = (grades[q.grade] || 0) + 1;
         categories[q.category] = (categories[q.category] || 0) + 1;
         units[q.unit] = (units[q.unit] || 0) + 1;
@@ -499,7 +536,7 @@
 
     function renderCheckboxGroup(containerId, countMap, groupName) {
       const container = document.getElementById(containerId);
-      container.innerHTML = '';
+      container.innerHTML = Object.entries(countMap).length === 0 ? `<p class="text-xs text-slate-400 py-2">此專區目前尚無資料</p>` : '';
       Object.entries(countMap).forEach(([label, count]) => {
         const item = document.createElement('label');
         item.className = 'flex items-center justify-between p-2.5 border rounded-xl cursor-pointer hover:bg-emerald-50 transition text-sm border-slate-200';
@@ -521,7 +558,6 @@
       updateMatchedCount();
     }
 
-    // 新增：精準控制特定群組全選 (checked = true) 或清除 (checked = false)
     function setAllCheckboxes(name, checked) {
       const boxes = document.querySelectorAll(`input[name="${name}"]`);
       boxes.forEach(b => b.checked = checked);
@@ -529,11 +565,12 @@
     }
 
     function getFilteredQuestions() {
+      const targetQuestions = allQuestions.filter(q => currentMode === 'single' ? !q.isReading : q.isReading);
       const selGrades = Array.from(document.querySelectorAll('input[name="grade"]:checked')).map(b => b.value);
       const selCats = Array.from(document.querySelectorAll('input[name="category"]:checked')).map(b => b.value);
       const selUnits = Array.from(document.querySelectorAll('input[name="unit"]:checked')).map(b => b.value);
 
-      return allQuestions.filter(q => {
+      return targetQuestions.filter(q => {
         const matchGrade = selGrades.length === 0 || selGrades.includes(q.grade);
         const matchCat = selCats.length === 0 || selCats.includes(q.category);
         const matchUnit = selUnits.length === 0 || selUnits.includes(q.unit);
@@ -853,7 +890,7 @@
     }
 
     function switchView(viewName) {
-      ['setup', 'quiz', 'summary', 'wrong', 'print', 'admin'].forEach(v => document.getElementById(`view-${v}`).classList.add('hidden'));
+      ['mode-select', 'setup', 'quiz', 'summary', 'wrong', 'print', 'admin'].forEach(v => document.getElementById(`view-${v}`).classList.add('hidden'));
       document.getElementById(`view-${viewName}`).classList.remove('hidden');
       if (viewName === 'wrong') renderWrongList();
     }
