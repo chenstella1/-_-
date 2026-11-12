@@ -8,8 +8,6 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- html2pdf.js 支援轉成 PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  <!-- html-docx-js 支援轉成 Word (.docx) -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html-docx-js/0.3.1/html-docx.js"></script>
   <script>
     tailwind.config = {
       theme: {
@@ -28,7 +26,7 @@
     }
   </script>
   <style>
-    /* 全站套用字級 16px 與行距 2 */
+    /* 全站強制設定字級 16px 與行距 2 */
     body {
       font-size: 16px !important;
       line-height: 2 !important;
@@ -508,47 +506,31 @@
         const data = JSON.parse(jsonText);
         
         const rows = data.table.rows || [];
-        rawQuestions = rows.map((r, idx) => {
-          const c = r.c || [];
-          return {
-            id: idx + 1,
-            grade: c[1] ? String(c[1].v).trim() : '',       // B 欄: 年級
-            category: c[2] ? String(c[2].v).trim() : '',    // C 欄: 學習類別
-            title: c[3] ? String(c[3].v).trim() : '',       // D 欄: 題目
-            optionA: c[4] ? String(c[4].v) : '',            // E 欄: A
-            optionB: c[5] ? String(c[5].v) : '',            // F 欄: B
-            optionC: c[6] ? String(c[6].v) : '',            // G 欄: C
-            optionD: c[7] ? String(c[7].v) : '',            // H 欄: D
-            optionE: c[8] ? String(c[8].v) : '',            // I 欄: E (選填)
-            optionF: c[9] ? String(c[9].v) : '',            // J 欄: F (選填)
-            optionG: c[10] ? String(c[10].v) : '',          // K 欄: G (選填)
-            optionH: c[11] ? String(c[11].v) : '',          // L 欄: H (選填)
-            answer: c[12] ? String(c[12].v).trim().toUpperCase() : (c[8] && !c[8].v ? c[8] : ''), // 根據欄位依序調整
-            // 由於欄位變多，為確保與原本表格相容，我們用動態抓取邏輯：
-            // 假設原本 J 是解析。若加入了 E~H，解析欄位順序會往後。
-            // 我們這裡自動抓取最後一個非空欄位當作解析，答案倒數第二個欄位。
-          };
-        });
-
-        // 更穩健地對應 Google Sheet 欄位 (支援任意欄位數新增)
+        
+        // 精準對應 Google Sheet 欄位：
+        // cols[0] = A欄(時間戳記)
+        // cols[1] = B欄(年級)
+        // cols[2] = C欄(學習類別)
+        // cols[3] = D欄(題目)
+        // cols[4] ~ cols[11] = E~L欄(選項 A ~ H)
+        // cols[12] = M欄(正確答案)
+        // cols[13] = N欄(解析)
         rawQuestions = rows.map((r, idx) => {
           const c = r.c || [];
           const cols = c.map(cell => cell ? String(cell.v || '').trim() : '');
-          // cols[0] = A欄(時間戳記等), cols[1] = 年級, cols[2] = 學習類別, cols[3] = 題目
-          // 最後兩欄通常為：倒數第2欄 = 答案，最後1欄 = 解析
-          // 中間為選項 A, B, C, D, E, F, G, H...
+          
           const grade = cols[1] || '';
           const category = cols[2] || '';
           const title = cols[3] || '';
-          const answer = cols[cols.length - 2] || '';
-          const analysis = cols[cols.length - 1] || '暫無詳細解析';
-
-          // 中間的選項從 index 4 開始，直到倒數第 3 個 index 結束
+          
           const optKeys = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
           let opts = {};
           for (let i = 0; i < optKeys.length; i++) {
             opts[`option${optKeys[i]}`] = cols[4 + i] || '';
           }
+
+          const answer = cols[12] ? cols[12].toUpperCase() : '';
+          const analysis = cols[13] || '暫無詳細解析';
 
           return {
             id: idx + 1,
@@ -910,25 +892,39 @@
       html2pdf().from(element).set(opt).save();
     }
 
+    // 完美修復的 Word (.docx) 匯出功能
     function exportToWord(elementId, filename) {
       const element = document.getElementById(elementId);
+      if (!element) return;
+
       const htmlContent = `
         <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-        <head><meta charset='utf-8'><title>${filename}</title>
-        <style>
-          body { font-family: 'Microsoft JhengHei', Arial, sans-serif; font-size: 16px; line-height: 2.0; }
-        </style>
+        <head>
+          <meta charset='utf-8'>
+          <title>${filename}</title>
+          <style>
+            body { font-family: 'Microsoft JhengHei', 'DFKai-SB', Arial, sans-serif; font-size: 16px; line-height: 2.0; color: #333; }
+            div { margin-bottom: 8px; }
+          </style>
         </head>
-        <body>${element.innerHTML}</body>
+        <body>
+          ${element.innerHTML}
+        </body>
         </html>
       `;
-      const converted = htmlDocx.asBlob(htmlContent);
+
+      const blob = new Blob(['\ufeff' + htmlContent], {
+        type: 'application/msword'
+      });
+
+      const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.href = URL.createObjectURL(converted);
-      link.download = `${filename}.docx`;
+      link.href = url;
+      link.download = `${filename}.doc`; // 使用 .doc 格式相容性最高，Word 可直接完美開啟
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      URL.revokeObjectURL(url);
     }
 
     function showStatus(msg, type) {
