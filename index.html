@@ -466,29 +466,28 @@
           const id = val(0);       // A 欄: id
           const grade = val(1);    // B 欄: grade
           const unit = val(2);     // C 欄: unit
-          const type = val(3);     // D 欄: type (學習類別/題型)
-          const question = val(4); // E 欄: question
+          const question = val(3); // D 欄: question
 
           if (!grade || !question || grade.toLowerCase() === 'grade') return;
 
-          // F ~ O 欄對應 optA ~ optJ (index 5 到 14)
+          // E ~ H 欄對應 optA ~ optD (index 4 到 7)
           let options = {};
-          const optionKeys = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
+          const optionKeys = ['A', 'B', 'C', 'D'];
           optionKeys.forEach((key, i) => {
-            const optVal = val(5 + i);
+            const optVal = val(4 + i);
             if (optVal) options[key] = optVal;
           });
 
-          const answer = val(15).toUpperCase();  // P 欄: answer
-          const explanation = val(16) || '無詳細解析'; // Q 欄: explanation
+          const answer = val(8).toUpperCase();     // I 欄: answer
+          const explanation = val(9) || '無詳細解析'; // J 欄: explanation
 
-          const isReadingType = type.includes('閱讀') || type.includes('克漏字') || type.includes('選填') || type.includes('素養');
+          const isReadingType = unit.includes('閱讀') || unit.includes('克漏字') || unit.includes('選填') || unit.includes('素養') || question.length > 100;
 
           parsed.push({
             id: id || `q_${idx}`,
             grade,
             unit: unit || '綜合單元',
-            category: type || '綜合練習',
+            category: unit || '綜合練習',
             isReading: isReadingType,
             passage: isReadingType ? question : '',
             question: isReadingType ? `請根據文章回答問題：` : question,
