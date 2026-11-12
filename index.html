@@ -26,9 +26,9 @@
     }
   </script>
   <style>
-    /* 全站強制設定字級 16px 與行距 2 */
+    /* 全站預設字級 18px 與行距 2 */
     body {
-      font-size: 16px !important;
+      font-size: 18px !important;
       line-height: 2 !important;
     }
     @media print {
@@ -506,15 +506,6 @@
         const data = JSON.parse(jsonText);
         
         const rows = data.table.rows || [];
-        
-        // 精準對應 Google Sheet 欄位：
-        // cols[0] = A欄(時間戳記)
-        // cols[1] = B欄(年級)
-        // cols[2] = C欄(學習類別)
-        // cols[3] = D欄(題目)
-        // cols[4] ~ cols[11] = E~L欄(選項 A ~ H)
-        // cols[12] = M欄(正確答案)
-        // cols[13] = N欄(解析)
         rawQuestions = rows.map((r, idx) => {
           const c = r.c || [];
           const cols = c.map(cell => cell ? String(cell.v || '').trim() : '');
@@ -681,18 +672,18 @@
         }).join('');
 
         const card = document.createElement('div');
-        card.className = "bg-white p-6 rounded-3xl shadow-sm border border-slate-200 card-box leading-[2] text-[16px]";
+        card.className = "bg-white p-6 rounded-3xl shadow-sm border border-slate-200 card-box leading-[2] text-[18px]";
         card.innerHTML = `
           <div class="flex items-center gap-2 mb-3">
             <span class="bg-brand-100 text-brand-700 text-sm px-3 py-1 rounded-full font-bold">第 ${idx + 1} 題</span>
           </div>
-          <div class="text-slate-900 font-bold mb-4 text-[16px]">${q.title}</div>
+          <div class="text-slate-900 font-bold mb-4 text-[18px]">${q.title}</div>
           
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-[16px] mb-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-[18px] mb-4">
             ${optsHtml}
           </div>
 
-          <div id="feedback-${q.id}" class="hidden p-4 rounded-2xl text-[16px] border space-y-1.5"></div>
+          <div id="feedback-${q.id}" class="hidden p-4 rounded-2xl text-[18px] border space-y-1.5"></div>
         `;
         container.appendChild(card);
       });
@@ -707,19 +698,19 @@
       const isCorrect = selectedOpt === correctOpt;
 
       if (isCorrect) {
-        feedbackEl.className = "p-4 rounded-2xl text-[16px] border bg-green-50 border-green-200 text-green-900 font-medium leading-[2]";
+        feedbackEl.className = "p-4 rounded-2xl text-[18px] border bg-green-50 border-green-200 text-green-900 font-medium leading-[2]";
         feedbackEl.innerHTML = `
           <div class="font-bold text-green-700 mb-1">✅ 回答正確！</div>
           <div><strong>正確答案：</strong> (${correctOpt})</div>
-          <div class="text-[16px] text-green-950 mt-1"><strong>【解析】</strong> ${q.analysis}</div>
+          <div class="text-[18px] text-green-950 mt-1"><strong>【解析】</strong> ${q.analysis}</div>
         `;
         if (window.currentQuizSession) window.currentQuizSession.correct++;
       } else {
-        feedbackEl.className = "p-4 rounded-2xl text-[16px] border bg-red-50 border-red-200 text-red-900 font-medium leading-[2]";
+        feedbackEl.className = "p-4 rounded-2xl text-[18px] border bg-red-50 border-red-200 text-red-900 font-medium leading-[2]";
         feedbackEl.innerHTML = `
           <div class="font-bold text-red-700 mb-1">❌ 回答錯誤 (已自動收錄至錯題區)</div>
           <div><strong>您的選擇：</strong> ${selectedOpt} | <strong>正確答案：</strong> (${correctOpt})</div>
-          <div class="text-[16px] text-red-950 mt-1"><strong>【解析】</strong> ${q.analysis}</div>
+          <div class="text-[18px] text-red-950 mt-1"><strong>【解析】</strong> ${q.analysis}</div>
         `;
         if (window.currentQuizSession) {
           window.currentQuizSession.wrong++;
@@ -758,11 +749,16 @@
     }
 
     function renderPrintableQuizAndAnswers(container, questions) {
+      const selectedCategories = Array.from(document.querySelectorAll('.category-cb:checked')).map(cb => cb.value).join(', ');
+
       let html = `
-        <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 card-box leading-[2] text-[16px]">
-          <div class="text-center border-b border-slate-200 pb-5 mb-6">
-            <h1 class="text-2xl font-black text-slate-800">優華數位英文 - 隨堂測驗卷</h1>
-            <p class="text-sm text-slate-500 mt-1">班級：_______ 座號：_______ 姓名：_______________</p>
+        <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 card-box leading-[2] text-[18px]">
+          <div class="relative border-b border-slate-200 pb-5 mb-6">
+            <!-- 右上角學習類別，字級 8 -->
+            <div class="absolute top-0 right-0 text-slate-500 font-medium text-[8px]">
+              ${selectedCategories ? `學習類別：${selectedCategories}` : ''}
+            </div>
+            <h1 class="text-2xl font-black text-slate-800 text-center">優華數位英文 - 隨堂測驗卷</h1>
           </div>
           <div class="space-y-6">
       `;
@@ -776,8 +772,8 @@
 
         html += `
           <div class="space-y-2">
-            <div class="font-bold text-slate-900 text-[16px]">第 ${idx + 1} 題：${q.title}</div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 pl-4 text-[16px] text-slate-700">
+            <div class="font-bold text-slate-900 text-[18px]">第 ${idx + 1} 題：${q.title}</div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 pl-4 text-[18px] text-slate-700">
               ${optsHtml}
             </div>
           </div>
@@ -788,7 +784,7 @@
           </div>
         </div>
         <div class="page-break"></div>
-        <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 card-box leading-[2] text-[16px]">
+        <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 card-box leading-[2] text-[18px]">
           <div class="border-b border-slate-200 pb-4 mb-6">
             <h2 class="text-xl font-black text-slate-800">參考答案與詳細解析</h2>
           </div>
@@ -797,7 +793,7 @@
 
       questions.forEach((q, idx) => {
         html += `
-          <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 text-[16px] space-y-1">
+          <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 text-[18px] space-y-1">
             <div class="font-bold text-slate-900">第 ${idx + 1} 題：${q.title}</div>
             <div class="text-brand-700 font-bold">正確答案：(${q.answer})</div>
             <div class="text-slate-600"><strong>【解析】</strong> ${q.analysis}</div>
@@ -848,16 +844,16 @@
         }).join('');
 
         return `
-          <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 card-box space-y-3 leading-[2] text-[16px]">
+          <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 card-box space-y-3 leading-[2] text-[18px]">
             <div class="flex justify-between items-center">
               <span class="bg-red-100 text-red-700 text-xs px-3 py-1 rounded-full font-bold">錯題 #${idx + 1} (${q.grade} / ${q.category})</span>
               <button onclick="removeWrongItem(${q.id})" class="text-slate-400 hover:text-red-600 text-xs font-bold no-print">❌ 移除此題</button>
             </div>
-            <div class="text-slate-900 font-bold text-[16px]">${q.title}</div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 pl-2 text-[16px] text-slate-700">
+            <div class="text-slate-900 font-bold text-[18px]">${q.title}</div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 pl-2 text-[18px] text-slate-700">
               ${optsHtml}
             </div>
-            <div class="p-4 rounded-2xl bg-brand-50 border border-brand-200 text-brand-900 text-[16px] space-y-1">
+            <div class="p-4 rounded-2xl bg-brand-50 border border-brand-200 text-brand-900 text-[18px] space-y-1">
               <div class="font-bold text-brand-700">正確答案：(${q.answer})</div>
               <div><strong>【解析】</strong> ${q.analysis}</div>
             </div>
@@ -892,7 +888,6 @@
       html2pdf().from(element).set(opt).save();
     }
 
-    // 完美修復的 Word (.docx) 匯出功能
     function exportToWord(elementId, filename) {
       const element = document.getElementById(elementId);
       if (!element) return;
@@ -903,7 +898,7 @@
           <meta charset='utf-8'>
           <title>${filename}</title>
           <style>
-            body { font-family: 'Microsoft JhengHei', 'DFKai-SB', Arial, sans-serif; font-size: 16px; line-height: 2.0; color: #333; }
+            body { font-family: 'Microsoft JhengHei', 'DFKai-SB', Arial, sans-serif; font-size: 18px; line-height: 2.0; color: #333; }
             div { margin-bottom: 8px; }
           </style>
         </head>
@@ -920,7 +915,7 @@
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `${filename}.doc`; // 使用 .doc 格式相容性最高，Word 可直接完美開啟
+      link.download = `${filename}.doc`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
