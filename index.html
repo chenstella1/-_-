@@ -141,9 +141,15 @@
             </div>
           </div>
 
-          <!-- 學習類別複選區 -->
+          <!-- 學習類別複選區 (加上全選/清除按鈕) -->
           <div class="md:col-span-4 border-r border-slate-100 pr-0 md:pr-4">
-            <label class="block text-sm font-semibold text-slate-600 uppercase tracking-wider mb-2.5">2. 學習類別 (可複選多個)</label>
+            <div class="flex items-center justify-between mb-2.5">
+              <label class="block text-sm font-semibold text-slate-600 uppercase tracking-wider">2. 學習類別 (可複選多個)</label>
+              <div class="space-x-1">
+                <button type="button" onclick="toggleAllCategories(true)" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-0.5 rounded font-medium transition-colors">全選</button>
+                <button type="button" onclick="toggleAllCategories(false)" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-0.5 rounded font-medium transition-colors">清除</button>
+              </div>
+            </div>
             <div id="category-checkboxes" class="space-y-2 text-sm max-h-48 overflow-y-auto pr-1">
               <span class="text-slate-400 text-xs">請先選擇年級</span>
             </div>
@@ -565,6 +571,14 @@
           </label>
         `;
       }).join('');
+    }
+
+    // 學習類別：全選 / 清除功能
+    function toggleAllCategories(select) {
+      const checkboxes = document.querySelectorAll('.category-cb');
+      checkboxes.forEach(cb => {
+        cb.checked = select;
+      });
     }
 
     function getFilteredQuestions() {
