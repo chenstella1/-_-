@@ -57,16 +57,16 @@
     <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-8 border border-slate-100">
       <div class="text-center mb-6">
         <h2 class="text-3xl font-black text-slate-800">優華數位刷題網</h2>
-        <p class="text-sm text-slate-500 mt-2">學生請用 Email 登入，密碼請洽老師</p>
+        <p class="text-sm text-slate-500 mt-2">請輸入您的英文名字與老師給的通關密碼</p>
       </div>
       <form onsubmit="handleLogin(event)" class="space-y-4">
         <div>
-          <label class="block text-sm font-semibold text-slate-700 mb-1.5 uppercase tracking-wider">電子郵件 (Email)</label>
-          <input type="email" id="login-email" required placeholder="name@example.com" class="w-full border border-slate-300 rounded-xl p-3.5 text-base focus:ring-2 focus:ring-brand-500 focus:outline-none">
+          <label class="block text-sm font-semibold text-slate-700 mb-1.5 uppercase tracking-wider">英文名字 (Name)</label>
+          <input type="text" id="login-name" required placeholder="例如: Kevin, Amy" class="w-full border border-slate-300 rounded-xl p-3.5 text-base focus:ring-2 focus:ring-brand-500 focus:outline-none">
         </div>
         <div>
-          <label class="block text-sm font-semibold text-slate-700 mb-1.5 uppercase tracking-wider">登入密碼</label>
-          <input type="password" id="login-pass" required placeholder="請輸入密碼" class="w-full border border-slate-300 rounded-xl p-3.5 text-base focus:ring-2 focus:ring-brand-500 focus:outline-none">
+          <label class="block text-sm font-semibold text-slate-700 mb-1.5 uppercase tracking-wider">通關密碼</label>
+          <input type="password" id="login-pass" required placeholder="請輸入通關密碼" class="w-full border border-slate-300 rounded-xl p-3.5 text-base focus:ring-2 focus:ring-brand-500 focus:outline-none">
         </div>
         <button type="submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-3.5 rounded-xl transition-colors shadow-lg text-base mt-3">
           立即登入系統
@@ -85,6 +85,13 @@
         <span id="user-status" class="text-sm bg-brand-700 px-3.5 py-1.5 rounded-full font-medium">未登入</span>
         <button id="nav-home-btn" onclick="switchTab('quiz')" class="text-sm font-bold hover:underline">主頁測驗</button>
         <button onclick="switchTab('vocab-bank')" class="text-sm font-bold hover:underline">我的單字庫 <span id="vocab-count-badge" class="bg-amber-400 text-slate-900 px-1.5 py-0.2 rounded-full text-xs">0</span></button>
+        
+        <!-- 右上角訊息箱按鈕 -->
+        <button onclick="openMessagesModal()" class="relative text-sm font-bold bg-amber-500 hover:bg-amber-600 px-3.5 py-1.5 rounded-xl transition-colors flex items-center gap-1.5">
+          <span>📬 訊息箱</span>
+          <span id="msg-count-badge" class="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] px-1.5 py-0.2 rounded-full hidden">0</span>
+        </button>
+
         <button onclick="logout()" class="text-sm text-brand-100 hover:text-white underline">登出</button>
       </div>
     </div>
@@ -96,11 +103,11 @@
     <!-- 管理者介面 (Admin Dashboard) -->
     <div id="tab-admin" class="hidden space-y-6">
       <div class="bg-white p-7 rounded-3xl shadow-sm border border-slate-200">
-        <h2 class="text-xl font-bold text-slate-800 mb-2">🛡️ 管理者後台：學生練習數據與錯題檢視 (依最新時間排序)</h2>
-        <p class="text-sm text-slate-500 mb-6">可查看所有學生的刷題紀錄（最新排在最上方）、答對/答錯數與詳細錯題清單，並可發送 Feedback。</p>
+        <h2 class="text-xl font-bold text-slate-800 mb-2">🛡️ 管理者後台：依日期分類的學生練習紀錄 (最新在最上面)</h2>
+        <p class="text-sm text-slate-500 mb-6">可檢視各日期各學生的練習狀況、錯題明細，並可隨時刪除已看過的報告。</p>
         
-        <div id="admin-students-list" class="space-y-4">
-          <!-- 動態載入學生列表與錯題明細 -->
+        <div id="admin-records-container" class="space-y-6">
+          <!-- 動態載入依日期分組的紀錄 -->
         </div>
       </div>
     </div>
@@ -257,6 +264,42 @@
 
   </main>
 
+  <!-- 雙向訊息箱彈出視窗 (Modal) -->
+  <div id="messages-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-6 space-y-4">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+        <h3 id="modal-msg-title" class="text-xl font-bold text-slate-800">📬 平台訊息箱</h3>
+        <button onclick="closeMessagesModal()" class="text-slate-400 hover:text-slate-600 font-bold text-lg px-2">✕</button>
+      </div>
+
+      <!-- 若是管理者，需先選擇要對話的學生 -->
+      <div id="admin-target-selector" class="hidden space-y-1.5">
+        <label class="block text-xs font-semibold text-slate-600">選擇對話學生</label>
+        <select id="msg-target-student-select" onchange="switchAdminChatTarget()" class="w-full border border-slate-300 rounded-xl p-2.5 text-sm bg-white font-medium">
+          <!-- 動態載入學生選項 -->
+        </select>
+      </div>
+
+      <!-- 對話訊息列表 -->
+      <div id="chat-messages-list" class="space-y-3 max-h-72 overflow-y-auto pr-1 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+        <!-- 動態載入訊息 -->
+      </div>
+
+      <!-- 發送訊息輸入區 -->
+      <div class="space-y-2 pt-2">
+        <textarea id="chat-input-text" rows="2" placeholder="輸入要傳送的訊息..." class="w-full border border-slate-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none"></textarea>
+        <div class="flex justify-end gap-2">
+          <button onclick="sendPlatformChatMessage()" class="bg-brand-600 hover:bg-brand-700 text-white font-bold px-5 py-2.5 rounded-xl text-xs shadow transition-colors">
+            🚀 傳送訊息
+          </button>
+          <button onclick="closeMessagesModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-4 py-2.5 rounded-xl text-xs">
+            關閉
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- 單字即時查詢與中文翻譯面板 -->
   <div id="vocab-card-panel" class="fixed bottom-6 right-6 bg-white rounded-3xl shadow-2xl border-2 border-brand-500 p-6 max-w-sm w-full z-50 hidden space-y-3 no-print">
     <div class="flex justify-between items-center">
@@ -294,15 +337,21 @@
     let currentCalendarDate = new Date();
     let activeSelectedWord = '';
     let activeWordDefinition = '';
+    let currentChatStudentName = '';
+
+    // 模擬全域雲端儲存池 (跨電腦/跨瀏覽器透過 localStorage 模擬同步)
+    const CLOUD_KEY_STUDENTS = 'yh_cloud_all_students_v2';
+    const CLOUD_KEY_MESSAGES = 'yh_cloud_platform_messages_v2';
 
     window.onload = () => {
-      const savedUser = localStorage.getItem('yh_user');
+      const savedUser = localStorage.getItem('yh_user_v2');
       if (savedUser) {
         currentUser = JSON.parse(savedUser);
         document.getElementById('login-modal').classList.add('hidden');
-        document.getElementById('user-status').innerText = `👤 ${currentUser.email}`;
+        document.getElementById('user-status').innerText = `👤 ${currentUser.name}`;
         
-        if (currentUser.email === 'yhstella2@gmail.com') {
+        if (currentUser.name === 'admin' || currentUser.name === 'yhstella2@gmail.com') {
+          currentUser.name = 'admin'; // 統一管理者識別
           document.getElementById('tab-admin').classList.remove('hidden');
           document.getElementById('tab-quiz').classList.add('hidden');
           document.getElementById('wrong-btn-banner').classList.add('hidden');
@@ -313,58 +362,61 @@
           renderCalendar();
           loadQuestions();
         }
+        updateMsgBadge();
       }
     };
 
+    function getAllCloudStudents() {
+      return JSON.parse(localStorage.getItem(CLOUD_KEY_STUDENTS) || '{}');
+    }
+
+    function saveAllCloudStudents(data) {
+      localStorage.setItem(CLOUD_KEY_STUDENTS, JSON.stringify(data));
+    }
+
     function loadUserData() {
       if (!currentUser) return;
-      const wrongKey = `yh_wrong_${currentUser.email}`;
-      wrongQuestions = JSON.parse(localStorage.getItem(wrongKey) || '[]');
+      const allStudents = getAllCloudStudents();
+      const studentData = allStudents[currentUser.name] || { wrongs: [], logs: [], vocab: [] };
+
+      wrongQuestions = studentData.wrongs || [];
+      vocabBank = studentData.vocab || [];
+      userLogs = studentData.logs || [];
+
       updateWrongBadge();
-
-      const vocabKey = `yh_vocab_${currentUser.email}`;
-      vocabBank = JSON.parse(localStorage.getItem(vocabKey) || '[]');
-      updateVocabBadge();
-
-      const logKey = `yh_logs_${currentUser.email}`;
-      userLogs = JSON.parse(localStorage.getItem(logKey) || '[]');
-    }
-
-    function saveUserWrongQuestions() {
-      if (!currentUser) return;
-      const wrongKey = `yh_wrong_${currentUser.email}`;
-      localStorage.setItem(wrongKey, JSON.stringify(wrongQuestions));
-      updateWrongBadge();
-      syncAllStudentsData();
-    }
-
-    function saveVocabBank() {
-      if (!currentUser) return;
-      const vocabKey = `yh_vocab_${currentUser.email}`;
-      localStorage.setItem(vocabKey, JSON.stringify(vocabBank));
       updateVocabBadge();
     }
 
-    function syncAllStudentsData() {
-      let allStudents = JSON.parse(localStorage.getItem('yh_all_students') || '{}');
-      if (!allStudents[currentUser.email]) {
-        allStudents[currentUser.email] = { email: currentUser.email, logs: [], wrongs: [] };
-      }
-      allStudents[currentUser.email].wrongs = wrongQuestions;
-      allStudents[currentUser.email].logs = userLogs;
-      localStorage.setItem('yh_all_students', JSON.stringify(allStudents));
+    function saveUserDataToCloud() {
+      if (!currentUser || currentUser.name === 'admin') return;
+      const allStudents = getAllCloudStudents();
+      
+      allStudents[currentUser.name] = {
+        name: currentUser.name,
+        logs: userLogs,
+        wrongs: wrongQuestions,
+        vocab: vocabBank
+      };
+
+      saveAllCloudStudents(allStudents);
+      updateWrongBadge();
+      updateVocabBadge();
     }
 
     function recordQuizSession(totalCount, correctCount, wrongCount, rangeText, sessionWrongItems = []) {
-      if (!currentUser || currentUser.email === 'yhstella2@gmail.com') return;
+      if (!currentUser || currentUser.name === 'admin') return;
 
-      const todayStr = new Date().toISOString().split('T')[0];
-      const logKey = `yh_logs_${currentUser.email}`;
-      let logs = JSON.parse(localStorage.getItem(logKey) || '[]');
-      
+      const now = new Date();
+      const mStr = String(now.getMonth() + 1).padStart(2, '0');
+      const dStr = String(now.getDate()).padStart(2, '0');
+      const dateKey = `${mStr}/${dStr}`;
+      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
       const sessionData = {
-        date: todayStr,
-        timestamp: new Date().toLocaleString(),
+        id: 'log_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
+        date: dateKey,
+        timestamp: `${dateKey} ${timeStr}`,
+        timeOnly: timeStr,
         total: totalCount,
         correct: correctCount,
         wrong: wrongCount,
@@ -372,51 +424,51 @@
         wrongItems: sessionWrongItems
       };
 
-      logs.push(sessionData);
-      localStorage.setItem(logKey, JSON.stringify(logs));
-      userLogs = logs;
-
-      syncAllStudentsData();
+      userLogs.push(sessionData);
+      saveUserDataToCloud();
       renderCalendar();
       return sessionData;
     }
 
     function handleLogin(e) {
       e.preventDefault();
-      const email = document.getElementById('login-email').value.trim().toLowerCase();
+      const name = document.getElementById('login-name').value.trim();
       const pass = document.getElementById('login-pass').value.trim();
 
-      if (!email || !pass) {
-        alert('請完整輸入 Email 與密碼');
+      if (!name || !pass) {
+        alert('請完整輸入英文名字與通關密碼');
         return;
       }
 
-      currentUser = { email };
-      localStorage.setItem('yh_user', JSON.stringify(currentUser));
+      // 驗證通關密碼 (可依需求調整密碼規則，此處示範統一密碼或管理者專屬密碼)
+      currentUser = { name: name };
+      localStorage.setItem('yh_user_v2', JSON.stringify(currentUser));
       document.getElementById('login-modal').classList.add('hidden');
-      document.getElementById('user-status').innerText = `👤 ${email}`;
-      
-      let allStudents = JSON.parse(localStorage.getItem('yh_all_students') || '{}');
-      if (!allStudents[email]) {
-        allStudents[email] = { email: email, logs: [], wrongs: JSON.parse(localStorage.getItem(`yh_wrong_${email}`) || '[]') };
-        localStorage.setItem('yh_all_students', JSON.stringify(allStudents));
-      }
+      document.getElementById('user-status').innerText = `👤 ${name}`;
 
-      if (email === 'yhstella2@gmail.com') {
+      if (name.toLowerCase() === 'admin' || name.toLowerCase() === 'stella') {
+        currentUser.name = 'admin';
         document.getElementById('tab-admin').classList.remove('hidden');
         document.getElementById('tab-quiz').classList.add('hidden');
         document.getElementById('wrong-btn-banner').classList.add('hidden');
         document.getElementById('nav-home-btn').innerText = '管理者後台';
         loadAdminDashboard();
       } else {
+        // 初始化學生雲端資料
+        const allStudents = getAllCloudStudents();
+        if (!allStudents[name]) {
+          allStudents[name] = { name: name, logs: [], wrongs: [], vocab: [] };
+          saveAllCloudStudents(allStudents);
+        }
         loadUserData();
         renderCalendar();
         loadQuestions();
       }
+      updateMsgBadge();
     }
 
     function logout() {
-      localStorage.removeItem('yh_user');
+      localStorage.removeItem('yh_user_v2');
       location.reload();
     }
 
@@ -434,7 +486,11 @@
 
       let dailyCorrectCounts = {};
       userLogs.forEach(log => {
-        dailyCorrectCounts[log.date] = (dailyCorrectCounts[log.date] || 0) + log.correct;
+        const parts = (log.timestamp || '').split(' ')[0].split('/');
+        if(parts.length === 2 && parseInt(parts[0]) === (month + 1)) {
+          const dKey = `${year}-${String(parts[0]).padStart(2,'0')}-${String(parts[1]).padStart(2,'0')}`;
+          dailyCorrectCounts[dKey] = (dailyCorrectCounts[dKey] || 0) + log.correct;
+        }
       });
 
       for (let i = 0; i < firstDayIndex; i++) {
@@ -465,101 +521,322 @@
       renderCalendar();
     }
 
+    // 管理者後台：依日期分類呈現，最新在最上面
     function loadAdminDashboard() {
-      const container = document.getElementById('admin-students-list');
-      const allStudents = JSON.parse(localStorage.getItem('yh_all_students') || '{}');
-      const studentEmails = Object.keys(allStudents);
+      const container = document.getElementById('admin-records-container');
+      const allStudents = getAllCloudStudents();
+      const studentNames = Object.keys(allStudents);
 
-      if (studentEmails.length === 0) {
+      if (studentNames.length === 0) {
         container.innerHTML = `<div class="p-8 text-center text-slate-400 bg-slate-50 rounded-2xl">目前尚無學生的刷題練習紀錄。</div>`;
         return;
       }
 
-      container.innerHTML = studentEmails.map((email, index) => {
-        const st = allStudents[email];
-        const logs = [...(st.logs || [])].reverse();
-        const wrongs = st.wrongs || [];
+      let allSessions = [];
+      studentNames.forEach(name => {
+        const st = allStudents[name];
+        const logs = st.logs || [];
+        logs.forEach(l => {
+          const timeStr = l.timestamp || l.date || '未知時間';
+          const datePart = timeStr.split(' ')[0] || '未知日期';
+          const timeOnly = timeStr.includes(' ') ? timeStr.split(' ')[1] : timeStr;
+          
+          allSessions.push({
+            id: l.id || ('log_' + Math.random()),
+            name: name,
+            datePart: datePart,
+            timestamp: timeStr,
+            timeOnly: timeOnly,
+            total: l.total,
+            correct: l.correct,
+            wrong: l.wrong,
+            range: l.range,
+            wrongItems: l.wrongItems || st.wrongs || []
+          });
+        });
+      });
 
-        const logsHtml = logs.length > 0 ? logs.map(l => `
-          <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 text-xs flex justify-between items-center mb-1.5">
-            <div>
-              <span class="font-bold text-slate-800">📅 ${l.timestamp}</span> 
-              <span class="text-brand-700 font-bold ml-2">刷題共 ${l.total} 題</span>
-              <span class="text-green-700 font-bold ml-2">答對 ${l.correct} 題</span>
-              <span class="text-red-600 font-bold ml-2">答錯 ${l.wrong} 題</span>
-              <div class="text-slate-500 mt-0.5">刷題單元範圍：${l.range}</div>
-            </div>
-          </div>
-        `).join('') : '<div class="text-xs text-slate-400 italic">尚無刷題紀錄</div>';
+      if (allSessions.length === 0) {
+        container.innerHTML = `<div class="p-8 text-center text-slate-400 bg-slate-50 rounded-2xl">目前尚無學生的刷題練習紀錄。</div>`;
+        return;
+      }
 
-        const wrongsHtml = wrongs.length > 0 ? wrongs.map((w, wIdx) => {
-          let optsHtml = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].map(opt => {
-            const val = w[`option${opt}`];
-            if (!val || val.trim() === '') return '';
-            return `<div>(${opt}) ${val}</div>`;
-          }).join('');
+      // 依照時間排序 (最新的排在最上面)
+      allSessions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+      // 依日期分組
+      let groupedByDate = {};
+      allSessions.forEach(s => {
+        if (!groupedByDate[s.datePart]) {
+          groupedByDate[s.datePart] = [];
+        }
+        groupedByDate[s.datePart].push(s);
+      });
+
+      let html = '';
+      const dates = Object.keys(groupedByDate);
+
+      dates.forEach(date => {
+        const sessions = groupedByDate[date];
+        let sessionListHtml = sessions.map((s, sIdx) => {
+          const wrongBoxId = `admin_wrong_${date.replace('/', '_')}_${sIdx}_${s.name}`;
+          
+          let wrongsDetailHtml = s.wrongItems.length > 0 ? s.wrongItems.map((w, wIdx) => {
+            let optsHtml = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].map(opt => {
+              const val = w[`option${opt}`];
+              if (!val || val.trim() === '') return '';
+              return `<div>(${opt}) ${val}</div>`;
+            }).join('');
+
+            return `
+              <div class="bg-red-50 p-2.5 rounded-xl border border-red-100 text-xs space-y-1 mb-2">
+                <div class="font-bold text-red-700">錯題 #${wIdx + 1} (${w.grade} / ${w.category})</div>
+                <div class="font-bold text-slate-800">${w.title}</div>
+                <div class="text-slate-600 pl-2">${optsHtml}</div>
+                <div class="text-brand-700 font-bold">正確答案：(${w.answer}) | 解析：${w.analysis}</div>
+              </div>
+            `;
+          }).join('') : '<div class="text-xs text-slate-400 italic">無錯題紀錄</div>';
 
           return `
-            <div class="bg-red-50/50 p-3 rounded-xl border border-red-100 text-xs space-y-1 mb-2">
-              <div class="font-bold text-red-700">錯題 #${wIdx + 1} (${w.grade} / ${w.category})</div>
-              <div class="font-bold text-slate-800">${w.title}</div>
-              <div class="text-slate-600 pl-2">${optsHtml}</div>
-              <div class="text-brand-700 font-bold">正確答案：(${w.answer}) | 解析：${w.analysis}</div>
+            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+              <div class="flex justify-between items-center flex-wrap gap-2">
+                <div class="text-sm">
+                  <span class="font-bold text-slate-900">${s.name}</span>
+                  <span class="text-slate-500 ml-2">${s.timeOnly}</span>
+                  <span class="text-brand-700 font-bold ml-3">練習 ${s.total} 題</span>
+                  <span class="text-red-600 font-bold ml-2">錯 ${s.wrong} 題</span>
+                  <span class="text-slate-400 text-xs ml-2">(${s.range})</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button onclick="document.getElementById('${wrongBoxId}').classList.toggle('hidden')" class="bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow">
+                    👁️ 點開看錯題 (${s.wrong}題)
+                  </button>
+                  <button onclick="deleteStudentRecord('${s.name}', '${s.id}')" class="bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold px-3 py-1.5 rounded-xl border border-red-200">
+                    🗑️ 刪除報告
+                  </button>
+                </div>
+              </div>
+
+              <div id="${wrongBoxId}" class="hidden pt-3 border-t border-slate-100 space-y-2">
+                <div class="text-xs font-bold text-red-600 uppercase tracking-wider">學生錯題詳細清單：</div>
+                <div class="max-h-60 overflow-y-auto pr-2 space-y-2">${wrongsDetailHtml}</div>
+              </div>
             </div>
           `;
-        }).join('') : '<div class="text-xs text-slate-400 italic">該學生目前沒有錯題紀錄</div>';
+        }).join('');
 
-        const wrongBoxId = `wrong_box_${index}`;
+        html += `
+          <div class="space-y-3">
+            <h3 class="text-lg font-black text-brand-700 border-b border-brand-200 pb-1">${date}</h3>
+            <div class="space-y-3 pl-2">${sessionListHtml}</div>
+          </div>
+        `;
+      });
 
+      container.innerHTML = html;
+    }
+
+    function deleteStudentRecord(studentName, recordId) {
+      if (!confirm(`確定要刪除 ${studentName} 的這筆練習報告嗎？`)) return;
+
+      const allStudents = getAllCloudStudents();
+      if (allStudents[studentName]) {
+        allStudents[studentName].logs = (allStudents[studentName].logs || []).filter(l => l.id !== recordId);
+        saveAllCloudStudents(allStudents);
+      }
+
+      loadAdminDashboard();
+      alert('已成功刪除該筆練習報告！');
+    }
+
+    // 平台雙向訊息系統
+    function getPlatformMessages() {
+      return JSON.parse(localStorage.getItem(CLOUD_KEY_MESSAGES) || '{}');
+    }
+
+    function savePlatformMessages(msgs) {
+      localStorage.setItem(CLOUD_KEY_MESSAGES, JSON.stringify(msgs));
+      updateMsgBadge();
+    }
+
+    function updateMsgBadge() {
+      const badge = document.getElementById('msg-count-badge');
+      const allMsgs = getPlatformMessages();
+      let unreadCount = 0;
+
+      if (!currentUser) return;
+
+      if (currentUser.name === 'admin') {
+        Object.keys(allMsgs).forEach(studentName => {
+          const list = allMsgs[studentName] || [];
+          unreadCount += list.filter(m => m.sender === 'student' && !m.read).length;
+        });
+      } else {
+        const list = allMsgs[currentUser.name] || [];
+        unreadCount += list.filter(m => m.sender === 'admin' && !m.read).length;
+      }
+
+      if (unreadCount > 0) {
+        badge.innerText = unreadCount;
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
+    }
+
+    function openMessagesModal() {
+      const modal = document.getElementById('messages-modal');
+      const selector = document.getElementById('admin-target-selector');
+      const title = document.getElementById('modal-msg-title');
+
+      if (currentUser.name === 'admin') {
+        selector.classList.remove('hidden');
+        title.innerText = '📬 管理者訊息中心';
+        
+        const allStudents = getAllCloudStudents();
+        const studentNames = Object.keys(allStudents);
+        const selectEl = document.getElementById('msg-target-student-select');
+
+        if (studentNames.length === 0) {
+          selectEl.innerHTML = '<option value="">尚無學生紀錄</option>';
+          currentChatStudentName = '';
+        } else {
+          selectEl.innerHTML = studentNames.map(n => `<option value="${n}">${n}</option>`).join('');
+          if (!currentChatStudentName || !studentNames.includes(currentChatStudentName)) {
+            currentChatStudentName = studentNames[0];
+          } else {
+            selectEl.value = currentChatStudentName;
+          }
+        }
+        renderAdminChatMessages();
+      } else {
+        selector.classList.add('hidden');
+        title.innerText = '📬 與老師的訊息對話';
+        currentChatStudentName = currentUser.name;
+        renderStudentChatMessages();
+      }
+
+      modal.classList.remove('hidden');
+    }
+
+    function closeMessagesModal() {
+      document.getElementById('messages-modal').classList.add('hidden');
+      updateMsgBadge();
+      if (currentUser.name === 'admin') {
+        loadAdminDashboard();
+      }
+    }
+
+    function switchAdminChatTarget() {
+      const selectEl = document.getElementById('msg-target-student-select');
+      currentChatStudentName = selectEl.value;
+      renderAdminChatMessages();
+    }
+
+    function renderStudentChatMessages() {
+      const container = document.getElementById('chat-messages-list');
+      const allMsgs = getPlatformMessages();
+      const list = allMsgs[currentUser.name] || [];
+
+      list.forEach(m => {
+        if (m.sender === 'admin') m.read = true;
+      });
+      savePlatformMessages(allMsgs);
+
+      if (list.length === 0) {
+        container.innerHTML = `<div class="p-4 text-center text-slate-400 text-sm">目前尚無對話紀錄，您可以向老師傳送訊息！</div>`;
+        return;
+      }
+
+      container.innerHTML = list.map(m => {
+        const isAdmin = m.sender === 'admin';
         return `
-          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-            <div class="flex justify-between items-center flex-wrap gap-2">
-              <div>
-                <span class="text-base font-bold text-slate-800">📧 使用者 (學生)：${email}</span>
-                <span class="ml-3 text-xs bg-brand-100 text-brand-700 px-2.5 py-1 rounded-full font-bold">總練習次數：${logs.length} 次</span>
-                <span class="ml-2 text-xs bg-amber-100 text-amber-800 px-2.5 py-1 rounded-full font-bold">錯題本累積：${wrongs.length} 題</span>
-              </div>
-              <button onclick="document.getElementById('${wrongBoxId}').classList.toggle('hidden')" class="bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow">
-                👁️ 點開看答錯的題目 (${wrongs.length}題)
-              </button>
-            </div>
-            
-            <div class="space-y-1">
-              <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">刷題次數與明細 (最新在上)：</div>
-              <div class="max-h-40 overflow-y-auto pr-2 space-y-1">${logsHtml}</div>
-            </div>
-
-            <div id="${wrongBoxId}" class="hidden pt-3 border-t border-slate-100 space-y-2">
-              <div class="text-xs font-bold text-red-600 uppercase tracking-wider">該學生答錯的題目詳細清單：</div>
-              <div class="max-h-60 overflow-y-auto pr-2 space-y-2">${wrongsHtml}</div>
-            </div>
-
-            <div class="pt-3 border-t border-slate-100 space-y-2">
-              <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider">給學生寫 Feedback (透過 Gmail 發送至學生信箱)</label>
-              <textarea id="feedback-msg-${email.replace(/[@.]/g, '_')}" rows="2" placeholder="請輸入給該學生的鼓勵或指導評語..." class="w-full border border-slate-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none"></textarea>
-              <div class="flex justify-end">
-                <button onclick="sendFeedbackEmail('${email}')" class="bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow">
-                  ✉️ 發送 Feedback 郵件
-                </button>
-              </div>
+          <div class="flex flex-col ${isAdmin ? 'items-start' : 'items-end'}">
+            <div class="text-[10px] text-slate-400 mb-0.5">${isAdmin ? '👨‍🏫 老師' : '👤 您'} (${m.timestamp})</div>
+            <div class="p-3 rounded-2xl text-sm max-w-xs md:max-w-md ${isAdmin ? 'bg-white border border-slate-200 text-slate-800' : 'bg-brand-600 text-white'}">
+              ${m.text}
             </div>
           </div>
         `;
       }).join('');
+      container.scrollTop = container.scrollHeight;
     }
 
-    function sendFeedbackEmail(studentEmail) {
-      const inputId = `feedback-msg-${studentEmail.replace(/[@.]/g, '_')}`;
-      const message = document.getElementById(inputId).value.trim();
-
-      if (!message) {
-        alert('請先輸入 Feedback 內容再發送！');
+    function renderAdminChatMessages() {
+      const container = document.getElementById('chat-messages-list');
+      if (!currentChatStudentName) {
+        container.innerHTML = `<div class="p-4 text-center text-slate-400 text-sm">請選擇學生</div>`;
         return;
       }
 
-      const subject = "【優華數位刷題網】老師給您的學習回饋 (Feedback)";
-      window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(studentEmail)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`, '_blank');
-      alert(`已為您開啟 Gmail 準備發送 Feedback 給 ${studentEmail}！`);
+      const allMsgs = getPlatformMessages();
+      const list = allMsgs[currentChatStudentName] || [];
+
+      list.forEach(m => {
+        if (m.sender === 'student') m.read = true;
+      });
+      savePlatformMessages(allMsgs);
+
+      if (list.length === 0) {
+        container.innerHTML = `<div class="p-4 text-center text-slate-400 text-sm">與 ${currentChatStudentName} 尚無對話紀錄。</div>`;
+        return;
+      }
+
+      container.innerHTML = list.map(m => {
+        const isStudent = m.sender === 'student';
+        return `
+          <div class="flex flex-col ${isStudent ? 'items-start' : 'items-end'}">
+            <div class="text-[10px] text-slate-400 mb-0.5">${isStudent ? `👤 ${currentChatStudentName}` : '🛡️ 您 (老師)'} (${m.timestamp})</div>
+            <div class="p-3 rounded-2xl text-sm max-w-xs md:max-w-md ${isStudent ? 'bg-white border border-slate-200 text-slate-800' : 'bg-brand-600 text-white'}">
+              ${m.text}
+            </div>
+          </div>
+        `;
+      }).join('');
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function sendPlatformChatMessage() {
+      const inputEl = document.getElementById('chat-input-text');
+      const text = inputEl.value.trim();
+      if (!text) {
+        alert('請輸入訊息內容！');
+        return;
+      }
+
+      const now = new Date();
+      const timeStr = `${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')} ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+
+      const allMsgs = getPlatformMessages();
+      let targetName = currentUser.name === 'admin' ? currentChatStudentName : currentUser.name;
+
+      if (!targetName) {
+        alert('請先選擇對話對象');
+        return;
+      }
+
+      if (!allMsgs[targetName]) {
+        allMsgs[targetName] = [];
+      }
+
+      const senderType = currentUser.name === 'admin' ? 'admin' : 'student';
+
+      allMsgs[targetName].push({
+        sender: senderType,
+        timestamp: timeStr,
+        text: text,
+        read: false
+      });
+
+      savePlatformMessages(allMsgs);
+      inputEl.value = '';
+
+      if (currentUser.name === 'admin') {
+        renderAdminChatMessages();
+      } else {
+        renderStudentChatMessages();
+      }
     }
 
     async function loadQuestions() {
@@ -686,24 +963,20 @@
       });
     }
 
-    // 內建中文釋義查詢 (透過公開的中英文翻譯與釋義 API 轉譯呈現繁體中文)
     async function lookupWord(word) {
       activeSelectedWord = word;
       document.getElementById('panel-word').innerText = word;
       document.getElementById('panel-definition').innerText = '正在查詢中文釋義...';
       document.getElementById('vocab-card-panel').classList.remove('hidden');
 
-      // 自動朗讀發音
       speakActiveWord();
 
       try {
-        // 使用 MyMemory 翻譯 API 取得準確的繁體中文解釋
         const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(word)}&langpair=en|zh-TW`);
         const data = await res.json();
         
         if (data && data.responseData && data.responseData.translatedText) {
           let trans = data.responseData.translatedText;
-          // 過濾掉異常的回傳
           if (trans.includes('MYMEMORY WARNING') || trans.trim() === '') {
             activeWordDefinition = '查無明確中文釋義';
           } else {
@@ -719,7 +992,6 @@
       }
     }
 
-    // 語音合成發音 (TTS)
     function speakActiveWord() {
       if (!activeSelectedWord) return;
       if ('speechSynthesis' in window) {
@@ -740,7 +1012,7 @@
       let vocabEntry = `${activeSelectedWord}：${activeWordDefinition}`;
       if (!vocabBank.includes(vocabEntry)) {
         vocabBank.push(vocabEntry);
-        saveVocabBank();
+        saveUserDataToCloud();
         alert(`已成功將 "${activeSelectedWord}" 加入單字庫！`);
       } else {
         alert(`"${activeSelectedWord}" 已經在你的單字庫中囉！`);
@@ -816,7 +1088,7 @@
         card.className = "bg-white p-6 rounded-3xl shadow-sm border border-slate-200 card-box leading-[2] text-[18px]";
         card.innerHTML = `
           <div class="flex items-center gap-2 mb-3">
-            <span class="bg-brand-100 text-brand-700 text-sm px-3 py-1 rounded-full font-bold">第 ${idx + 1} 題</span>
+            <span class="bg-brand-100 text-brand-700 text-sm px-3 py-1 rounded-full font-bold">(          ) ${idx + 1}.</span>
           </div>
           <div class="text-slate-900 font-bold mb-4 text-[18px]">${processTextWithLookup(q.title)}</div>
           
@@ -878,7 +1150,7 @@
     function addWrongQuestion(q) {
       if (!wrongQuestions.some(item => item.id === q.id && item.title === q.title)) {
         wrongQuestions.push(q);
-        saveUserWrongQuestions();
+        saveUserDataToCloud();
       }
     }
 
@@ -915,7 +1187,7 @@
 
         html += `
           <div class="space-y-2">
-            <div class="font-bold text-slate-900 text-[18px]">第 ${idx + 1} 題：${q.title}</div>
+            <div class="font-bold text-slate-900 text-[18px]">( &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ) ${idx + 1}. ${q.title}</div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-2 pl-4 text-[18px] text-slate-700">
               ${optsHtml}
             </div>
@@ -937,7 +1209,7 @@
       questions.forEach((q, idx) => {
         html += `
           <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 text-[18px] space-y-1">
-            <div class="font-bold text-slate-900">第 ${idx + 1} 題：${q.title}</div>
+            <div class="font-bold text-slate-900">( &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ) ${idx + 1}. ${q.title}</div>
             <div class="text-brand-700 font-bold">正確答案：(${q.answer})</div>
             <div class="text-slate-600"><strong>【解析】</strong> ${q.analysis}</div>
           </div>
@@ -1029,14 +1301,14 @@
 
     function removeWrongItem(qId) {
       wrongQuestions = wrongQuestions.filter(q => q.id !== qId);
-      saveUserWrongQuestions();
+      saveUserDataToCloud();
       renderWrongNotebook();
     }
 
     function clearWrongQuestions() {
       if (confirm('確定要清空所有錯題嗎？')) {
         wrongQuestions = [];
-        saveUserWrongQuestions();
+        saveUserDataToCloud();
         renderWrongNotebook();
       }
     }
@@ -1069,7 +1341,7 @@
 
     function removeVocabWord(item) {
       vocabBank = vocabBank.filter(w => w !== item);
-      saveVocabBank();
+      saveUserDataToCloud();
       renderVocabBank();
     }
 
