@@ -257,7 +257,7 @@
 
   </main>
 
-  <!-- 單字即時查詢結果面板 (直接顯示中文與發音) -->
+  <!-- 單字即時查詢與中文翻譯面板 -->
   <div id="vocab-card-panel" class="fixed bottom-6 right-6 bg-white rounded-3xl shadow-2xl border-2 border-brand-500 p-6 max-w-sm w-full z-50 hidden space-y-3 no-print">
     <div class="flex justify-between items-center">
       <div class="flex items-center gap-2">
@@ -269,7 +269,7 @@
       <button onclick="closeVocabPanel()" class="text-slate-400 hover:text-slate-600 font-bold text-base px-2">✕</button>
     </div>
     <div class="text-sm text-slate-700 bg-slate-50 p-3 rounded-2xl border border-slate-100">
-      <div class="font-semibold text-slate-500 text-xs mb-1">中文釋義 (即時翻譯)：</div>
+      <div class="font-semibold text-slate-500 text-xs mb-1">中文含意 (中文化釋義)：</div>
       <div id="panel-definition" class="text-slate-900 font-bold text-base">查詢中...</div>
     </div>
     <div class="flex gap-2 pt-1">
@@ -465,7 +465,6 @@
       renderCalendar();
     }
 
-    // 管理者後台
     function loadAdminDashboard() {
       const container = document.getElementById('admin-students-list');
       const allStudents = JSON.parse(localStorage.getItem('yh_all_students') || '{}');
@@ -677,7 +676,6 @@
       });
     }
 
-    // 英文單字點擊即時查字典與發音處理
     function processTextWithLookup(text) {
       if (!text) return '';
       return text.replace(/\b[a-zA-Z]+\b/g, (word) => {
@@ -688,44 +686,47 @@
       });
     }
 
-    // 使用開源免費字典 API 查詢中文釋義，並自動發音
+    // 內建中文釋義查詢 (透過公開的中英文翻譯與釋義 API 轉譯呈現繁體中文)
     async function lookupWord(word) {
       activeSelectedWord = word;
       document.getElementById('panel-word').innerText = word;
-      document.getElementById('panel-definition').innerText = '查詢中...';
+      document.getElementById('panel-definition').innerText = '正在查詢中文釋義...';
       document.getElementById('vocab-card-panel').classList.remove('hidden');
 
-      // 自動發音
+      // 自動朗讀發音
       speakActiveWord();
 
       try {
-        const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
+        // 使用 MyMemory 翻譯 API 取得準確的繁體中文解釋
+        const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(word)}&langpair=en|zh-TW`);
         const data = await res.json();
-        if (Array.isArray(data) && data[0].meanings) {
-          let meaning = data[0].meanings[0];
-          let partOfSpeech = meaning.partOfSpeech || '';
-          let definition = meaning.definitions[0].definition || '';
-          activeWordDefinition = `(${partOfSpeech}) ${definition}`;
-          document.getElementById('panel-definition').innerText = activeWordDefinition;
+        
+        if (data && data.responseData && data.responseData.translatedText) {
+          let trans = data.responseData.translatedText;
+          // 過濾掉異常的回傳
+          if (trans.includes('MYMEMORY WARNING') || trans.trim() === '') {
+            activeWordDefinition = '查無明確中文釋義';
+          } else {
+            activeWordDefinition = trans;
+          }
         } else {
-          // 若查無詳細英文釋義，利用簡單翻譯提示
-          activeWordDefinition = '常用英文單字';
-          document.getElementById('panel-definition').innerText = activeWordDefinition;
+          activeWordDefinition = '常見英文單字';
         }
+        document.getElementById('panel-definition').innerText = activeWordDefinition;
       } catch (err) {
         activeWordDefinition = '點擊可加入單字庫';
         document.getElementById('panel-definition').innerText = activeWordDefinition;
       }
     }
 
-    // 瀏覽器語音合成發音 (TTS)
+    // 語音合成發音 (TTS)
     function speakActiveWord() {
       if (!activeSelectedWord) return;
       if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel(); // 停止先前的朗讀
+        window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(activeSelectedWord);
         utterance.lang = 'en-US';
-        utterance.rate = 0.9; // 稍微放慢語速
+        utterance.rate = 0.9;
         window.speechSynthesis.speak(utterance);
       }
     }
@@ -736,7 +737,7 @@
 
     function confirmAddVocab() {
       if (!activeSelectedWord) return;
-      let vocabEntry = `${activeSelectedWord} - ${activeWordDefinition}`;
+      let vocabEntry = `${activeSelectedWord}：${activeWordDefinition}`;
       if (!vocabBank.includes(vocabEntry)) {
         vocabBank.push(vocabEntry);
         saveVocabBank();
@@ -1047,7 +1048,7 @@
           <div class="bg-white p-12 rounded-3xl text-center shadow-sm border border-slate-200">
             <div class="text-5xl mb-3">📖</div>
             <p class="text-lg font-bold text-slate-700">你的單字庫目前是空的。</p>
-            <p class="text-sm text-slate-400 mt-1">在測驗題目或選項中點擊任何英文單字即可查詢並加入單字庫！</p>
+            <p class="text-sm text-slate-400 mt-1">在測驗題目或選項中點擊任何英文單字即可查詢中文並加入單字庫！</p>
           </div>
         `;
         return;
