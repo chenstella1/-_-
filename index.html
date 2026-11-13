@@ -43,6 +43,7 @@
       border-bottom: 1px dashed #059669;
       cursor: pointer;
       color: #047857;
+      font-weight: 600;
     }
     .lookup-word:hover {
       background-color: #dcfce7;
@@ -244,7 +245,7 @@
       <div class="bg-white p-7 rounded-3xl shadow-sm border border-slate-200 flex flex-wrap justify-between items-center gap-4 no-print">
         <div>
           <h2 class="text-xl font-bold text-slate-800">📖 我的單字庫</h2>
-          <p class="text-sm text-slate-500 mt-1">你在測驗中長按或點擊查詢並加入的生字會儲存於此，學會後可隨時刪除。</p>
+          <p class="text-sm text-slate-500 mt-1">你在測驗中點擊查詢並加入的生字會儲存於此，學會後可隨時刪除。</p>
         </div>
         <div>
           <button onclick="switchTab('quiz')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-sm font-bold px-4 py-2.5 rounded-xl">返回主頁測驗</button>
@@ -256,22 +257,28 @@
 
   </main>
 
-  <!-- 單字查字典與加入單字庫 Modal -->
-  <div id="vocab-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-6 space-y-4 text-center">
-      <h3 id="modal-word-title" class="text-2xl font-black text-brand-700">Word</h3>
-      <p class="text-sm text-slate-500">線上字典與發音輔助</p>
-      <div class="flex flex-col gap-2.5 pt-2">
-        <a id="modal-dict-link" href="#" target="_blank" class="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-3 rounded-xl transition-colors">
-          🔍 開啟線上字典與發音
-        </a>
-        <button onclick="confirmAddVocab()" class="bg-brand-600 hover:bg-brand-700 text-white font-bold py-3 rounded-xl transition-colors shadow">
-          ⭐ 加入我的單字庫
-        </button>
-        <button onclick="closeVocabModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2.5 rounded-xl transition-colors">
-          關閉
+  <!-- 單字即時查詢結果面板 (直接顯示中文與發音) -->
+  <div id="vocab-card-panel" class="fixed bottom-6 right-6 bg-white rounded-3xl shadow-2xl border-2 border-brand-500 p-6 max-w-sm w-full z-50 hidden space-y-3 no-print">
+    <div class="flex justify-between items-center">
+      <div class="flex items-center gap-2">
+        <span id="panel-word" class="text-2xl font-black text-brand-700">Word</span>
+        <button onclick="speakActiveWord()" class="p-2 bg-brand-100 hover:bg-brand-200 text-brand-700 rounded-full text-xs font-bold transition-colors" title="播放發音">
+          🔊 發音
         </button>
       </div>
+      <button onclick="closeVocabPanel()" class="text-slate-400 hover:text-slate-600 font-bold text-base px-2">✕</button>
+    </div>
+    <div class="text-sm text-slate-700 bg-slate-50 p-3 rounded-2xl border border-slate-100">
+      <div class="font-semibold text-slate-500 text-xs mb-1">中文釋義 (即時翻譯)：</div>
+      <div id="panel-definition" class="text-slate-900 font-bold text-base">查詢中...</div>
+    </div>
+    <div class="flex gap-2 pt-1">
+      <button onclick="confirmAddVocab()" class="flex-1 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold py-2.5 rounded-xl shadow transition-colors">
+        ⭐ 加入我的單字庫
+      </button>
+      <button onclick="closeVocabPanel()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold px-4 py-2.5 rounded-xl transition-colors">
+        關閉
+      </button>
     </div>
   </div>
 
@@ -286,6 +293,7 @@
     let userLogs = [];
     let currentCalendarDate = new Date();
     let activeSelectedWord = '';
+    let activeWordDefinition = '';
 
     window.onload = () => {
       const savedUser = localStorage.getItem('yh_user');
@@ -327,7 +335,6 @@
       const wrongKey = `yh_wrong_${currentUser.email}`;
       localStorage.setItem(wrongKey, JSON.stringify(wrongQuestions));
       updateWrongBadge();
-
       syncAllStudentsData();
     }
 
@@ -458,7 +465,7 @@
       renderCalendar();
     }
 
-    // 依時間最新排序的管理者後台
+    // 管理者後台
     function loadAdminDashboard() {
       const container = document.getElementById('admin-students-list');
       const allStudents = JSON.parse(localStorage.getItem('yh_all_students') || '{}');
@@ -471,7 +478,6 @@
 
       container.innerHTML = studentEmails.map((email, index) => {
         const st = allStudents[email];
-        // 依照時間排序 (最新的排在最前面)
         const logs = [...(st.logs || [])].reverse();
         const wrongs = st.wrongs || [];
 
@@ -497,7 +503,7 @@
           return `
             <div class="bg-red-50/50 p-3 rounded-xl border border-red-100 text-xs space-y-1 mb-2">
               <div class="font-bold text-red-700">錯題 #${wIdx + 1} (${w.grade} / ${w.category})</div>
-              <div class="font-bold text-slate-800">${processTextWithLookup(w.title)}</div>
+              <div class="font-bold text-slate-800">${w.title}</div>
               <div class="text-slate-600 pl-2">${optsHtml}</div>
               <div class="text-brand-700 font-bold">正確答案：(${w.answer}) | 解析：${w.analysis}</div>
             </div>
@@ -671,39 +677,74 @@
       });
     }
 
-    // 英文單字點擊或長按查字典處理
+    // 英文單字點擊即時查字典與發音處理
     function processTextWithLookup(text) {
       if (!text) return '';
-      // 將英文單字用 span 包裹以便點擊查詢
       return text.replace(/\b[a-zA-Z]+\b/g, (word) => {
         if (word.length > 1) {
-          return `<span class="lookup-word" onclick="openVocabModal('${word}')">${word}</span>`;
+          return `<span class="lookup-word" onclick="lookupWord('${word}')">${word}</span>`;
         }
         return word;
       });
     }
 
-    function openVocabModal(word) {
+    // 使用開源免費字典 API 查詢中文釋義，並自動發音
+    async function lookupWord(word) {
       activeSelectedWord = word;
-      document.getElementById('modal-word-title').innerText = word;
-      document.getElementById('modal-dict-link').href = `https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/${word}`;
-      document.getElementById('vocab-modal').classList.remove('hidden');
+      document.getElementById('panel-word').innerText = word;
+      document.getElementById('panel-definition').innerText = '查詢中...';
+      document.getElementById('vocab-card-panel').classList.remove('hidden');
+
+      // 自動發音
+      speakActiveWord();
+
+      try {
+        const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
+        const data = await res.json();
+        if (Array.isArray(data) && data[0].meanings) {
+          let meaning = data[0].meanings[0];
+          let partOfSpeech = meaning.partOfSpeech || '';
+          let definition = meaning.definitions[0].definition || '';
+          activeWordDefinition = `(${partOfSpeech}) ${definition}`;
+          document.getElementById('panel-definition').innerText = activeWordDefinition;
+        } else {
+          // 若查無詳細英文釋義，利用簡單翻譯提示
+          activeWordDefinition = '常用英文單字';
+          document.getElementById('panel-definition').innerText = activeWordDefinition;
+        }
+      } catch (err) {
+        activeWordDefinition = '點擊可加入單字庫';
+        document.getElementById('panel-definition').innerText = activeWordDefinition;
+      }
     }
 
-    function closeVocabModal() {
-      document.getElementById('vocab-modal').classList.add('hidden');
+    // 瀏覽器語音合成發音 (TTS)
+    function speakActiveWord() {
+      if (!activeSelectedWord) return;
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel(); // 停止先前的朗讀
+        const utterance = new SpeechSynthesisUtterance(activeSelectedWord);
+        utterance.lang = 'en-US';
+        utterance.rate = 0.9; // 稍微放慢語速
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+
+    function closeVocabPanel() {
+      document.getElementById('vocab-card-panel').classList.add('hidden');
     }
 
     function confirmAddVocab() {
       if (!activeSelectedWord) return;
-      if (!vocabBank.includes(activeSelectedWord)) {
-        vocabBank.push(activeSelectedWord);
+      let vocabEntry = `${activeSelectedWord} - ${activeWordDefinition}`;
+      if (!vocabBank.includes(vocabEntry)) {
+        vocabBank.push(vocabEntry);
         saveVocabBank();
         alert(`已成功將 "${activeSelectedWord}" 加入單字庫！`);
       } else {
         alert(`"${activeSelectedWord}" 已經在你的單字庫中囉！`);
       }
-      closeVocabModal();
+      closeVocabPanel();
     }
 
     function updateVocabBadge() {
@@ -826,7 +867,6 @@
           const s = window.currentQuizSession;
           recordQuizSession(s.total, s.correct, s.wrong, s.rangeText, s.wrongItems);
           
-          // 顯示測驗結算畫面 (如: 共10題，錯3題)
           const summaryEl = document.getElementById('quiz-score-summary');
           summaryEl.innerText = `本次測驗共 ${s.total} 題｜答對 ${s.correct} 題｜答錯 ${s.wrong} 題`;
           document.getElementById('quiz-finish-actions').classList.remove('hidden');
@@ -972,7 +1012,6 @@
       }).join('');
     }
 
-    // 錯題再次練習功能
     function startWrongPractice() {
       if (wrongQuestions.length === 0) {
         alert('目前沒有錯題可以練習！');
@@ -1001,7 +1040,6 @@
       }
     }
 
-    // 渲染單字庫
     function renderVocabBank() {
       const container = document.getElementById('vocab-list-container');
       if (vocabBank.length === 0) {
@@ -1009,28 +1047,27 @@
           <div class="bg-white p-12 rounded-3xl text-center shadow-sm border border-slate-200">
             <div class="text-5xl mb-3">📖</div>
             <p class="text-lg font-bold text-slate-700">你的單字庫目前是空的。</p>
-            <p class="text-sm text-slate-400 mt-1">在測驗題目或選項中點擊任何英文單字即可加入單字庫！</p>
+            <p class="text-sm text-slate-400 mt-1">在測驗題目或選項中點擊任何英文單字即可查詢並加入單字庫！</p>
           </div>
         `;
         return;
       }
 
-      container.innerHTML = vocabBank.map((word, idx) => `
+      container.innerHTML = vocabBank.map((item, idx) => `
         <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex justify-between items-center">
           <div class="flex items-center gap-4">
             <span class="bg-brand-100 text-brand-700 text-xs px-2.5 py-1 rounded-full font-bold">#${idx + 1}</span>
-            <span class="text-xl font-black text-slate-800">${word}</span>
+            <span class="text-lg font-bold text-slate-800">${item}</span>
           </div>
           <div class="flex items-center gap-3">
-            <a href="https://dictionary.cambridge.org/zht/詞典/英語-漢語-繁體/${word}" target="_blank" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3.5 py-2 rounded-xl">🔍 查字典/發音</a>
-            <button onclick="removeVocabWord('${word}')" class="bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold px-3.5 py-2 rounded-xl border border-red-200">🗑️ 刪除已學會</button>
+            <button onclick="removeVocabWord('${item}')" class="bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold px-3.5 py-2 rounded-xl border border-red-200">🗑️ 刪除已學會</button>
           </div>
         </div>
       `).join('');
     }
 
-    function removeVocabWord(word) {
-      vocabBank = vocabBank.filter(w => w !== word);
+    function removeVocabWord(item) {
+      vocabBank = vocabBank.filter(w => w !== item);
       saveVocabBank();
       renderVocabBank();
     }
